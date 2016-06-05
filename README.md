@@ -10,7 +10,7 @@ correctly. Thus, this program ease overclocking of Radeon GPU's under console en
 ### WARNING
 
 This program changes graphics card's clocks and voltages. This program can easily
-DAMAGE your hardware if it will be used UNCAREFULLY.
+DAMAGE your hardware if it will be used CARELESSLY.
 
 Before any setting of AMD Overdrive parameters (clocks, voltages, fan speeds),
 please STOP ANY the GPU computations and the GPU renderings.

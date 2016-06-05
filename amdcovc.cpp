@@ -44,6 +44,8 @@ extern "C" {
 #endif
 #include "../include/adl_sdk.h"
 
+#define AMDCOVC_VERSION "0.1.1.1"
+
 // Memory allocation function
 void* __stdcall ADL_Main_Memory_Alloc (int iSize)
 {
@@ -1102,8 +1104,9 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
 }
 
 static const char* helpAndUsageString =
-"amdcovc 0.1 by Mateusz Szpakowski (matszpk@interia.pl)\n"
+"amdcovc " AMDCOVC_VERSION " by Mateusz Szpakowski (matszpk@interia.pl)\n"
 "Program is distributed under terms of the GPLv2.\n"
+"Program available at https://github.com/matszpk/amdcovc.\n"
 "\n"
 "Usage: amdcovc [--help|-?] [--verbose|-v] [-a LIST|--adapters=LIST] [PARAM ...]\n"
 "Print AMD Overdrive informations if no parameter given.\n"
@@ -1190,8 +1193,10 @@ try
         }
         else if (::strcmp(argv[i], "--version")==0)
         {
-            std::cout << "amdcovc 0.1.1 by Mateusz Szpakowski (matszpk@interia.pl)\n"
-            "Program is distributed under terms of the GPLv2.\n" << std::endl;
+            std::cout << "amdcovc " AMDCOVC_VERSION
+            " by Mateusz Szpakowski (matszpk@interia.pl)\n"
+            "Program is distributed under terms of the GPLv2.\n"
+            "Program available at https://github.com/matszpk/amdcovc.\n"<< std::endl;
             return 0;
         }
         else
