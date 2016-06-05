@@ -44,6 +44,8 @@ make
 
 ### Invoking program
 
+NOTE: If no X11 server is running, then this program requires root privileges.
+
 To run program, just type:
 
 ```

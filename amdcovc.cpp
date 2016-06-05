@@ -1126,11 +1126,16 @@ static const char* helpAndUsageString =
 "\n"
 "List of options:\n"
 "  -a, --adapters=LIST       print informations only for these adapters\n"
+"                            List is comma-separated\n"
 "  -v, --verbose             print verbose informations\n"
 "      --version             print version\n"
 "  -?, --help                print help\n"
 "\n"
 "Sample usage:\n"
+"amdcovc\n"
+"    print short informations about state of the adapters\n"
+"amdcovc -a 1,2\n"
+"    print short informations about adapter 1 and 2\n"
 "amdcovc coreclk:1=900 coreclk=1000\n"
 "    set core clock to 900 for adapter 1, set core clock to 1000 for adapter 0\n"
 "amdcovc coreclk:1:0=900 coreclk:0:1=1000\n"
@@ -1147,7 +1152,9 @@ static const char* helpAndUsageString =
 "\n"
 "IMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
 "please STOP ANY GPU computations and GPU renderings.\n"
-"Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n";
+"Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n"
+"\n"
+"If no X11 server is running, then this program requires root privileges.\n";
 
 int main(int argc, const char** argv)
 try
@@ -1183,7 +1190,7 @@ try
         }
         else if (::strcmp(argv[i], "--version")==0)
         {
-            std::cout << "amdcovc 0.1 by Mateusz Szpakowski (matszpk@interia.pl)\n"
+            std::cout << "amdcovc 0.1.1 by Mateusz Szpakowski (matszpk@interia.pl)\n"
             "Program is distributed under terms of the GPLv2.\n" << std::endl;
             return 0;
         }
