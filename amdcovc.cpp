@@ -1263,7 +1263,7 @@ static const char* helpAndUsageString =
 "  icoreclk[:ADAPTERS]=CLOCK             set core clock in MHz for idle level\n"
 "  imemclk[:ADAPTERS]=CLOCK              set memory clock in MHz for idle level\n"
 "  ivcore[:ADAPTERS]=VOLTAGE             set Vddc voltage  in Volts for idle level\n"
-"  fanspeed[:[ADAPTER][:THID]]=PERCENT   set fanspeed in percents\n"
+"  fanspeed[:[ADAPTERS][:THID]]=PERCENT  set fanspeed in percents\n"
 "Extra specifiers in parameters:\n"
 "  ADAPTERS                  adapter (devices) index list (default is 0)\n"
 "  LEVEL                     performance level (typically 0 or 1, default is last)\n"
