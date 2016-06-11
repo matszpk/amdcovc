@@ -1078,6 +1078,7 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
                     std::cerr << "Performance level out of range in '" <<
                             param.argText << "'!" << std::endl;
                     failed = true;
+                    continue;
                 }
                 switch(param.type)
                 {
@@ -1228,7 +1229,6 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
                 }
                 changedDevices[i] = true;
             }
-
     /// set fan speeds
     for (int i = 0; i < realAdaptersNum; i++)
         if (fanSpeedSetups[i].isSet)
