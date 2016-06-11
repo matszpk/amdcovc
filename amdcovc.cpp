@@ -768,17 +768,19 @@ struct OVCParameter
     std::string argText;
 };
 
-static OVCParameter parseOVCParameter(const char* string)
+static bool parseOVCParameter(const char* string, OVCParameter& param)
 {
     const char* afterName = strchr(string, ':');
     if (afterName==nullptr)
     {
         afterName = strchr(string, '=');
         if (afterName==nullptr)
-            throw Error("This is not parameter");
+        {
+            std::cerr << "This is not parameter: '" << string << "'!" << std::endl;
+            return false;
+        }
     }
     std::string name(string, afterName);
-    OVCParameter param;
     param.argText = string;
     param.adapterIndex = 0;
     param.partId = 0;
@@ -820,7 +822,10 @@ static OVCParameter parseOVCParameter(const char* string)
         partIdSet = true;
     }
     else
-        throw Error("Wrong parameter name");
+    {
+        std::cout << "Wrong parameter name in '" << string << "'!" << std::endl;
+        return false;
+    }
     
     char* next;
     if (*afterName==':')
@@ -829,13 +834,19 @@ static OVCParameter parseOVCParameter(const char* string)
         errno = 0;
         int value = strtol(afterName, &next, 10);
         if (errno!=0)
-            throw Error("Can't parse device index");
+        {
+            std::cerr << "Can't parse adapter index in '" << string << "'!" << std::endl;
+            return false;
+        }
         if (afterName != next)
             param.adapterIndex = value;
         afterName = next;
     }
     else if (*afterName==0)
-        throw Error("Unterminated parameter");
+    {
+        std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+        return false;
+    }
     
     if (*afterName==':' && !partIdSet)
     {
@@ -843,13 +854,19 @@ static OVCParameter parseOVCParameter(const char* string)
         errno = 0;
         int value = strtol(afterName, &next, 10);
         if (errno!=0)
-            throw Error("Can't parse partId");
+        {
+            std::cerr << "Can't parse partId in '" << string << "'!" << std::endl;
+            return false;
+        }
         if (afterName != next)
             param.partId = value;
         afterName = next;
     }
     else if (*afterName==0)
-        throw Error("Unterminated parameter");
+    {
+        std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+        return false;
+    }
     
     if (*afterName=='=')
     {
@@ -864,17 +881,26 @@ static OVCParameter parseOVCParameter(const char* string)
         {
             param.value = strtod(afterName, &next);
             if (errno!=0 || afterName==next)
-                throw Error("Can't parse value");
+            {
+                std::cerr << "Can't parse value in '" << string << "'!" << std::endl;
+                return false;
+            }
             afterName = next;
         }
         if (*afterName!=0)
-            throw Error("Garbages at parameter");
+        {
+            std::cerr << "Garbages in '" << string << "'!" << std::endl;
+            return false;
+        }
     }
     else
-        throw Error("Unterminated parameter");
+    {
+        std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+        return false;
+    }
     /*std::cout << "param: " << int(param.type) << ", dev: " << param.adapterIndex <<
             ", pid: " << param.partId << ", value=" << param.value << std::endl;*/
-    return param;
+    return true;
 }
 
 static void parseAdaptersList(const char* string, std::vector<int>& adapters)
@@ -1201,6 +1227,7 @@ try
     std::vector<int> choosenAdapters;
     bool useAdaptersList = false;
     
+    bool failed = false;
     for (int i = 1; i < argc; i++)
         if (::strcmp(argv[i], "--help")==0 || ::strcmp(argv[i], "-?")==0)
             printHelp = true;
@@ -1233,13 +1260,23 @@ try
             return 0;
         }
         else
-            ovcParameters.push_back(parseOVCParameter(argv[i]));
+        {
+            OVCParameter param;
+            if (parseOVCParameter(argv[i], param))
+                ovcParameters.push_back(param);
+            else
+                failed = true;
+        }
     if (printHelp)
     {
         std::cout << helpAndUsageString;
         std::cout.flush();
         return 0;
     }
+    
+    if (failed)
+        throw Error("Can't parse parameters");
+    
     ATIADLHandle handle;
     ADLMainControl mainControl(handle, 0);
     int adaptersNum = mainControl.getAdaptersNum();
