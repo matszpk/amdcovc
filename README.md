@@ -1,6 +1,6 @@
 ## AMDCOVC
 
-This is program to control AMD Overdrive settings that is working if graphics card's
+This is program to control AMD Overdrive settings that is working if graphics cards
 are in console-mode. This program has been written to replace `amdconfig` utility
 and allow to overclock Radeon GPU's if no running X11 server. An `amdconfig`
 utility requires a running X11 server and X11 kept configuration to be working

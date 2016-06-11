@@ -601,6 +601,7 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
             adapterInfo.iBusNumber = busNum;
             adapterInfo.iDeviceNumber = devNum;
             adapterInfo.iFunctionNumber = funcNum;
+            adapterInfo.iVendorID = dev->vendor_id;
             strcpy(adapterInfo.strAdapterName, deviceBuf);
             break;
         }
@@ -684,7 +685,11 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
         { i++; continue; }
         if (adapterInfos[ai].strAdapterName[0]==0)
             getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
-        std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n";
+        std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
+                "  Device Topology: " << adapterInfos[ai].iBusNumber << ':' <<
+                adapterInfos[ai].iDeviceNumber << ":" <<
+                adapterInfos[ai].iFunctionNumber << "\n"
+                "  Vendor ID: " << adapterInfos[ai].iVendorID << std::endl;
         ADLFanSpeedInfo fsInfo;
         ADLPMActivity activity;
         mainControl.getCurrentActivity(ai, activity);
@@ -760,6 +765,7 @@ struct OVCParameter
     int partId;
     double value;
     bool useDefault;
+    std::string argText;
 };
 
 static OVCParameter parseOVCParameter(const char* string)
@@ -773,6 +779,7 @@ static OVCParameter parseOVCParameter(const char* string)
     }
     std::string name(string, afterName);
     OVCParameter param;
+    param.argText = string;
     param.adapterIndex = 0;
     param.partId = 0;
     param.useDefault = false;
@@ -915,20 +922,31 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
     std::vector<std::vector<ADLODPerformanceLevel> > defaultPerfLevels(realAdaptersNum);
     std::vector<bool> changedDevices(realAdaptersNum);
     std::fill(changedDevices.begin(), changedDevices.end(), false);
-    try
-    {
+
+    bool failed = false;
     for (OVCParameter param: ovcParams)
         if (param.adapterIndex>=realAdaptersNum || param.adapterIndex<0)
-            throw Error("Some parameters refer to devices that no present!");
+        {
+            std::cerr << "Device out of range in '" << param.argText << "'!" << std::endl;
+            failed = true;
+        }
     
     // check fanspeed
     for (OVCParameter param: ovcParams)
         if (param.type==OVCParamType::FAN_SPEED)
         {
             if(param.partId!=0)
-                throw Error("Some fanspeed parameters have wrong thermalCtrlIndex!");
+            {
+                std::cerr << "Thermal Control Index is not 0 in '" <<
+                        param.argText << "'!" << std::endl;
+                failed = true;
+            }
             if(!param.useDefault && (param.value<0.0 || param.value>100.0))
-                throw Error("Some fanspeed parameters have value out of range!");
+            {
+                std::cerr << "FanSpeed value out of range in '" <<
+                        param.argText << "'!" << std::endl;
+                failed = true;
+            }
         }
     
     for (int ai = 0; ai < realAdaptersNum; ai++)
@@ -951,37 +969,52 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
             int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
                     odParams[i].iNumberOfPerformanceLevels-1;
             if (partId >= odParams[i].iNumberOfPerformanceLevels || partId < 0)
-                throw Error("Some other parameters have wrong performance levels");
+            {
+                std::cerr << "Performance level out of range in '" <<
+                        param.argText << "'!" << std::endl;
+                failed = true;
+            }
             switch(param.type)
             {
                 case OVCParamType::CORE_CLOCK:
                     if (!param.useDefault &&
                         (param.value < odParams[i].sEngineClock.iMin/100.0 ||
                         param.value > odParams[i].sEngineClock.iMax/100.0))
-                        throw Error("Some coreclocks out of range");
+                    {
+                        std::cerr << "Core clock out of range in '" <<
+                                param.argText << "'!" << std::endl;
+                        failed = true;
+                    }
                     break;
                 case OVCParamType::MEMORY_CLOCK:
                     if (!param.useDefault &&
                         (param.value < odParams[i].sMemoryClock.iMin/100.0 ||
                          param.value > odParams[i].sMemoryClock.iMax/100.0))
-                        throw Error("Some memclocks out of range");
+                    {
+                        std::cerr << "Memory clock out of range in '" <<
+                                param.argText << "'!" << std::endl;
+                        failed = true;
+                    }
                     break;
                 case OVCParamType::VDDC_VOLTAGE:
                     if (!param.useDefault &&
                         (param.value < odParams[i].sVddc.iMin/1000.0 ||
                         param.value > odParams[i].sVddc.iMax/1000.0))
-                        throw Error("Some vcores out of range");
+                    {
+                        std::cerr << "Voltage out of range in '" <<
+                                param.argText << "'!" << std::endl;
+                        failed = true;
+                    }
                     break;
                 default:
                     break;
             }
         }
-    }
-    catch(const Error& error)
+    if (failed)
     {
         std::cerr << "NO ANY settings applied. "
-                "Error in parameters or some serious errors!\n" << std::endl;
-        throw;
+                "Error in parameters or some serious errors!" << std::endl;
+        throw Error("Wrong parameters!");
     }
     // print what has been changed
     for (OVCParameter param: ovcParams)
@@ -1084,7 +1117,7 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
             }
             changedDevices[i] = true;
         }
-    
+
     /// set fan speeds
     for (int i = 0; i < realAdaptersNum; i++)
         if (fanSpeedSetups[i].isSet)
