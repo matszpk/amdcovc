@@ -746,9 +746,16 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
     }
 }
 
-static void parseAdaptersList(const char* string, std::vector<int>& adapters)
+static void parseAdaptersList(const char* string, std::vector<int>& adapters,
+                              bool& allAdapters)
 {
     adapters.clear();
+    allAdapters = false;
+    if (::strcmp(string, "all")==0)
+    {
+        allAdapters = true;
+        return;
+    }
     while (true)
     {
         char* endptr;
@@ -780,6 +787,8 @@ static void parseAdaptersList(const char* string, std::vector<int>& adapters)
         else
             throw Error("Garbages at adapter list");
     }
+    std::sort(adapters.begin(), adapters.end());
+    adapters.resize(std::unique(adapters.begin(), adapters.end()) - adapters.begin());
 }
 
 enum class OVCParamType
@@ -1203,14 +1212,14 @@ static const char* helpAndUsageString =
 "\n"
 "List of options:\n"
 "  -a, --adapters=LIST       print informations only for these adapters\n"
-"                            List is comma-separated with ranges 'first-last'\n"
+"                            List is comma-separated with ranges 'first-last' or 'all'\n"
 "  -v, --verbose             print verbose informations\n"
 "      --version             print version\n"
 "  -?, --help                print help\n"
 "\n"
 "Sample usage:\n"
 "amdcovc\n"
-"    print short informations about state of the adapters\n"
+"    print short informations about state of the all adapters\n"
 "amdcovc -a 1,2\n"
 "    print short informations about adapter 1 and 2\n"
 "amdcovc coreclk:1=900 coreclk=1000\n"
@@ -1241,6 +1250,7 @@ try
     std::vector<OVCParameter> ovcParameters;
     std::vector<int> choosenAdapters;
     bool useAdaptersList = false;
+    bool chooseAllAdapters = false;
     
     bool failed = false;
     for (int i = 1; i < argc; i++)
@@ -1250,20 +1260,27 @@ try
             printVerbose = true;
         else if (::strncmp(argv[i], "--adapters=", 11)==0)
         {
-            parseAdaptersList(argv[i]+11, choosenAdapters);
+            parseAdaptersList(argv[i]+11, choosenAdapters, chooseAllAdapters);
             useAdaptersList = true;
         }
         else if (::strcmp(argv[i], "--adapters")==0)
         {
-            parseAdaptersList(argv[++i], choosenAdapters);
-            useAdaptersList = true;
+            if (i+1 < argc)
+            {
+                parseAdaptersList(argv[++i], choosenAdapters, chooseAllAdapters);
+                useAdaptersList = true;
+            }
+            else
+                throw Error("Adapter list not supplied");
         }
         else if (::strncmp(argv[i], "-a", 2)==0)
         {
             if (argv[i][2]!=0)
-                parseAdaptersList(argv[i]+2, choosenAdapters);
+                parseAdaptersList(argv[i]+2, choosenAdapters, chooseAllAdapters);
+            else if (i+1 < argc)
+                parseAdaptersList(argv[++i], choosenAdapters, chooseAllAdapters);
             else
-                parseAdaptersList(argv[++i], choosenAdapters);
+                throw Error("Adapter list not supplied");
             useAdaptersList = true;
         }
         else if (::strcmp(argv[i], "--version")==0)
@@ -1299,15 +1316,10 @@ try
     getActiveAdaptersIndices(mainControl, adaptersNum, activeAdapters);
     
     if (useAdaptersList)
-    {   // sort and check adapter list
-        std::sort(choosenAdapters.begin(), choosenAdapters.end());
-        choosenAdapters.resize(
-                std::unique(choosenAdapters.begin(), choosenAdapters.end()) -
-                    choosenAdapters.begin());
+        // sort and check adapter list
         for (int adapterIndex: choosenAdapters)
             if (adapterIndex>=int(activeAdapters.size()) || adapterIndex<0)
                 throw Error("Some adapter indices out of range");
-    }
     
     if (!ovcParameters.empty())
         setOVCParameters(mainControl, adaptersNum, activeAdapters, ovcParameters);
@@ -1315,10 +1327,10 @@ try
     {
         if (printVerbose)
             printAdaptersInfoVerbose(mainControl, adaptersNum, activeAdapters,
-                        choosenAdapters, useAdaptersList);
+                        choosenAdapters, useAdaptersList && !chooseAllAdapters);
         else
             printAdaptersInfo(mainControl, adaptersNum, activeAdapters,
-                        choosenAdapters, useAdaptersList);
+                        choosenAdapters, useAdaptersList && !chooseAllAdapters);
     }
     if (pciAccess!=nullptr)
         pci_cleanup(pciAccess);
