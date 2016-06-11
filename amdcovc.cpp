@@ -746,6 +746,42 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
     }
 }
 
+static void parseAdaptersList(const char* string, std::vector<int>& adapters)
+{
+    adapters.clear();
+    while (true)
+    {
+        char* endptr;
+        errno = 0;
+        int adapterIndex = strtol(string, &endptr, 10);
+        if (errno!=0 || endptr==string)
+            throw Error("Can't parse adapter index");
+        
+        string = endptr;
+        if (*string == '-')
+        {   // if range
+            string++;
+            errno = 0;
+            int adapterIndexEnd = strtol(string, &endptr, 10);
+            if (errno!=0 || endptr==string)
+                throw Error("Can't parse adapter index");
+            string = endptr;
+            if (adapterIndex>adapterIndexEnd)
+                throw Error("Wrong range of adapter indices in adapter list");
+            for (int i = adapterIndex; i <= adapterIndexEnd; i++)
+                adapters.push_back(i);
+        }
+        else
+            adapters.push_back(adapterIndex);
+        if (*string==0)
+            break;
+        if (*string==',')
+            string++;
+        else
+            throw Error("Garbages at adapter list");
+    }
+}
+
 enum class OVCParamType
 {
     CORE_CLOCK,
@@ -901,27 +937,6 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     /*std::cout << "param: " << int(param.type) << ", dev: " << param.adapterIndex <<
             ", pid: " << param.partId << ", value=" << param.value << std::endl;*/
     return true;
-}
-
-static void parseAdaptersList(const char* string, std::vector<int>& adapters)
-{
-    adapters.clear();
-    while (true)
-    {
-        char* endptr;
-        errno = 0;
-        int adapterIndex = strtol(string, &endptr, 10);
-        if (errno!=0 || endptr==string)
-            throw Error("Can't parse adapter index");
-        adapters.push_back(adapterIndex);
-        string = endptr;
-        if (*string==0)
-            break;
-        if (*string==',')
-            string++;
-        else
-            throw Error("Garbages at adapter list");
-    }
 }
 
 struct FanSpeedSetup
@@ -1188,7 +1203,7 @@ static const char* helpAndUsageString =
 "\n"
 "List of options:\n"
 "  -a, --adapters=LIST       print informations only for these adapters\n"
-"                            List is comma-separated\n"
+"                            List is comma-separated with ranges 'first-last'\n"
 "  -v, --verbose             print verbose informations\n"
 "      --version             print version\n"
 "  -?, --help                print help\n"
