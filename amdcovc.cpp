@@ -1132,8 +1132,7 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
                     std::cout << "default";
                 else
                     std::cout << param.value << "%";
-                std::cout << " for adapter " <<
-                        *ait << " at thermal controller " <<
+                std::cout << " for adapter " << *ait << " at thermal controller " <<
                         param.partId << std::endl;
             }
     for (OVCParameter param: ovcParams)
@@ -1375,6 +1374,7 @@ try
     ATIADLHandle handle;
     ADLMainControl mainControl(handle, 0);
     int adaptersNum = mainControl.getAdaptersNum();
+    /* list for converting user indices to input indices to ADL interface */
     std::vector<int> activeAdapters;
     getActiveAdaptersIndices(mainControl, adaptersNum, activeAdapters);
     
