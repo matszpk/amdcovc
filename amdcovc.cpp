@@ -806,7 +806,8 @@ enum: int {
 struct OVCParameter
 {
     OVCParamType type;
-    int adapterIndex;
+    std::vector<int> adapters;
+    bool allAdapters;
     int partId;
     double value;
     bool useDefault;
@@ -827,7 +828,9 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     }
     std::string name(string, afterName);
     param.argText = string;
-    param.adapterIndex = 0;
+    param.adapters.clear();
+    param.adapters.push_back(0); // default is 0
+    param.allAdapters = false;
     param.partId = 0;
     param.useDefault = false;
     bool partIdSet = false;
@@ -876,16 +879,26 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     if (*afterName==':')
     {   // if is
         afterName++;
-        errno = 0;
-        int value = strtol(afterName, &next, 10);
-        if (errno!=0)
+        try
         {
-            std::cerr << "Can't parse adapter index in '" << string << "'!" << std::endl;
+            const char* afterList = ::strchr(afterName, ':');
+            if (afterList==nullptr)
+                afterList = ::strchr(afterName, '=');
+            if (afterList==nullptr)
+                afterList += strlen(afterName); // to end
+            if (afterList!=afterName)
+            {
+                std::string listString(afterName, afterList);
+                parseAdaptersList(listString.c_str(), param.adapters, param.allAdapters);
+                afterName = afterList;
+            }
+        }
+        catch(const Error& error)
+        {
+            std::cerr << "Can't parse adapter list for '" << string << "': " <<
+                        error.what() << std::endl;
             return false;
         }
-        if (afterName != next)
-            param.adapterIndex = value;
-        afterName = next;
     }
     else if (*afterName==0)
     {
@@ -955,6 +968,38 @@ struct FanSpeedSetup
     bool isSet;
 };
 
+struct AdapterIterator
+{
+    const std::vector<int>& adapters;
+    bool allAdapters;
+    int allAdaptersNum;
+    int position;
+    
+    AdapterIterator(const std::vector<int>& _adapters, bool _allAdapters,
+            int _allAdaptersNum) : adapters(_adapters), allAdapters(_allAdapters),
+            allAdaptersNum(_allAdaptersNum), position(0)
+    { }
+    
+    AdapterIterator& operator++()
+    {
+        position++;
+        return *this;
+    }
+    
+    operator bool() const
+    {
+        return (!allAdapters && position < int(adapters.size())) ||
+                (allAdapters && position < allAdaptersNum);
+    }
+    bool operator!() const
+    {
+        return !((!allAdapters && position < int(adapters.size())) ||
+                (allAdapters && position < allAdaptersNum));
+    }
+    int operator*() const
+    { return allAdapters ? position : adapters[position]; }
+};
+
 static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
             const std::vector<int>& activeAdapters,
             const std::vector<OVCParameter>& ovcParams)
@@ -972,13 +1017,19 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
     std::vector<std::vector<ADLODPerformanceLevel> > defaultPerfLevels(realAdaptersNum);
     std::vector<bool> changedDevices(realAdaptersNum);
     std::fill(changedDevices.begin(), changedDevices.end(), false);
-
+    
     bool failed = false;
     for (OVCParameter param: ovcParams)
-        if (param.adapterIndex>=realAdaptersNum || param.adapterIndex<0)
+        if (!param.allAdapters)
         {
-            std::cerr << "Device out of range in '" << param.argText << "'!" << std::endl;
-            failed = true;
+            bool listFailed = false;
+            for (int adapterIndex: param.adapters)
+                if (!listFailed && (adapterIndex>=realAdaptersNum || adapterIndex<0))
+                {
+                    std::cerr << "Some adapter indices out of range in '" <<
+                                    param.argText << "'!" << std::endl;
+                    listFailed = failed = true;
+                }
         }
     
     // check fanspeed
@@ -1014,159 +1065,169 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
     // check other params
     for (OVCParameter param: ovcParams)
         if (param.type!=OVCParamType::FAN_SPEED)
-        {
-            int i = param.adapterIndex;
-            int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
-                    odParams[i].iNumberOfPerformanceLevels-1;
-            if (partId >= odParams[i].iNumberOfPerformanceLevels || partId < 0)
+            for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum);
+                        ait; ++ait)
             {
-                std::cerr << "Performance level out of range in '" <<
-                        param.argText << "'!" << std::endl;
-                failed = true;
+                int i = *ait;
+                if (i>=realAdaptersNum)
+                    continue;
+                int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
+                        odParams[i].iNumberOfPerformanceLevels-1;
+                if (partId >= odParams[i].iNumberOfPerformanceLevels || partId < 0)
+                {
+                    std::cerr << "Performance level out of range in '" <<
+                            param.argText << "'!" << std::endl;
+                    failed = true;
+                }
+                switch(param.type)
+                {
+                    case OVCParamType::CORE_CLOCK:
+                        if (!param.useDefault &&
+                            (param.value < odParams[i].sEngineClock.iMin/100.0 ||
+                            param.value > odParams[i].sEngineClock.iMax/100.0))
+                        {
+                            std::cerr << "Core clock out of range in '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    case OVCParamType::MEMORY_CLOCK:
+                        if (!param.useDefault &&
+                            (param.value < odParams[i].sMemoryClock.iMin/100.0 ||
+                            param.value > odParams[i].sMemoryClock.iMax/100.0))
+                        {
+                            std::cerr << "Memory clock out of range in '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    case OVCParamType::VDDC_VOLTAGE:
+                        if (!param.useDefault &&
+                            (param.value < odParams[i].sVddc.iMin/1000.0 ||
+                            param.value > odParams[i].sVddc.iMax/1000.0))
+                        {
+                            std::cerr << "Voltage out of range in '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
-            switch(param.type)
-            {
-                case OVCParamType::CORE_CLOCK:
-                    if (!param.useDefault &&
-                        (param.value < odParams[i].sEngineClock.iMin/100.0 ||
-                        param.value > odParams[i].sEngineClock.iMax/100.0))
-                    {
-                        std::cerr << "Core clock out of range in '" <<
-                                param.argText << "'!" << std::endl;
-                        failed = true;
-                    }
-                    break;
-                case OVCParamType::MEMORY_CLOCK:
-                    if (!param.useDefault &&
-                        (param.value < odParams[i].sMemoryClock.iMin/100.0 ||
-                         param.value > odParams[i].sMemoryClock.iMax/100.0))
-                    {
-                        std::cerr << "Memory clock out of range in '" <<
-                                param.argText << "'!" << std::endl;
-                        failed = true;
-                    }
-                    break;
-                case OVCParamType::VDDC_VOLTAGE:
-                    if (!param.useDefault &&
-                        (param.value < odParams[i].sVddc.iMin/1000.0 ||
-                        param.value > odParams[i].sVddc.iMax/1000.0))
-                    {
-                        std::cerr << "Voltage out of range in '" <<
-                                param.argText << "'!" << std::endl;
-                        failed = true;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
     if (failed)
     {
-        std::cerr << "NO ANY settings applied. "
-                "Error in parameters or some serious errors!" << std::endl;
+        std::cerr << "NO ANY settings applied. Error in parameters!" << std::endl;
         throw Error("Wrong parameters!");
     }
     // print what has been changed
     for (OVCParameter param: ovcParams)
         if (param.type==OVCParamType::FAN_SPEED)
-        {
-            std::cout << "Setting fanspeed to ";
-            if (param.useDefault)
-                std::cout << "default";
-            else
-                std::cout << param.value << "%";
-            std::cout << " for adapter " <<
-                    param.adapterIndex << " at thermal controller " <<
-                    param.partId << std::endl;
-        }
+            for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum);
+                        ait; ++ait)
+            {
+                std::cout << "Setting fanspeed to ";
+                if (param.useDefault)
+                    std::cout << "default";
+                else
+                    std::cout << param.value << "%";
+                std::cout << " for adapter " <<
+                        *ait << " at thermal controller " <<
+                        param.partId << std::endl;
+            }
     for (OVCParameter param: ovcParams)
         if (param.type!=OVCParamType::FAN_SPEED)
-        {
-            int i = param.adapterIndex;
-            int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
-                    odParams[i].iNumberOfPerformanceLevels-1;
-            if (partId >= odParams[i].iNumberOfPerformanceLevels || partId < 0)
-                throw Error("Some other parameters have wrong performance levels");
-            switch(param.type)
+            for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum);
+                        ait; ++ait)
             {
-                case OVCParamType::CORE_CLOCK:
-                    std::cout << "Setting core clock to ";
-                    if (param.useDefault)
-                        std::cout << "default";
-                    else
-                        std::cout << param.value << " MHz";
-                    std::cout << " for adapter " << param.adapterIndex <<
-                            " at performance level " << partId << std::endl;
-                    break;
-                case OVCParamType::MEMORY_CLOCK:
-                    std::cout << "Setting memory clock to ";
-                    if (param.useDefault)
-                        std::cout << "default";
-                    else
-                        std::cout << param.value << " MHz";
-                    std::cout << " for adapter " << param.adapterIndex <<
-                            " at performance level " << partId << std::endl;
-                    break;
-                case OVCParamType::VDDC_VOLTAGE:
-                    std::cout << "Setting Vddc voltage to ";
-                    if (param.useDefault)
-                        std::cout << "default";
-                    else
-                        std::cout << param.value << " V";
-                    std::cout << " for adapter " << param.adapterIndex <<
-                            " at performance level " << partId << std::endl;
-                    break;
-                default:
-                    break;
+                int i = *ait;
+                int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
+                        odParams[i].iNumberOfPerformanceLevels-1;
+                switch(param.type)
+                {
+                    case OVCParamType::CORE_CLOCK:
+                        std::cout << "Setting core clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
+                    case OVCParamType::MEMORY_CLOCK:
+                        std::cout << "Setting memory clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
+                    case OVCParamType::VDDC_VOLTAGE:
+                        std::cout << "Setting Vddc voltage to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " V";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
+                    default:
+                        break;
+                }
             }
-        }
+    
     std::vector<FanSpeedSetup> fanSpeedSetups(realAdaptersNum);
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(),
               FanSpeedSetup{ 0.0, false, false });
     for (OVCParameter param: ovcParams)
         if (param.type==OVCParamType::FAN_SPEED)
-        {
-            fanSpeedSetups[param.adapterIndex].value = param.value;
-            fanSpeedSetups[param.adapterIndex].useDefault = param.useDefault;
-            fanSpeedSetups[param.adapterIndex].isSet = true;
-        }
+            for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum);
+                        ait; ++ait)
+            {
+                fanSpeedSetups[*ait].value = param.value;
+                fanSpeedSetups[*ait].useDefault = param.useDefault;
+                fanSpeedSetups[*ait].isSet = true;
+            }
     
     for (OVCParameter param: ovcParams)
         if (param.type!=OVCParamType::FAN_SPEED)
-        {
-            int i = param.adapterIndex;
-            int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
-                    odParams[i].iNumberOfPerformanceLevels-1;
-            ADLODPerformanceLevel& perfLevel = perfLevels[i][partId];
-            const ADLODPerformanceLevel& defaultPerfLevel = defaultPerfLevels[i][partId];
-            switch(param.type)
+            for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum);
+                        ait; ++ait)
             {
-                case OVCParamType::CORE_CLOCK:
-                    if (param.useDefault)
-                        perfLevel.iEngineClock = defaultPerfLevel.iEngineClock;
-                    else
-                        perfLevel.iEngineClock = int(round(param.value*100.0));
-                    break;
-                case OVCParamType::MEMORY_CLOCK:
-                    if (param.useDefault)
-                        perfLevel.iMemoryClock = defaultPerfLevel.iMemoryClock;
-                    else
-                        perfLevel.iMemoryClock = int(round(param.value*100.0));
-                    break;
-                case OVCParamType::VDDC_VOLTAGE:
-                    if (param.useDefault)
-                        perfLevel.iVddc = defaultPerfLevel.iVddc;
-                    else if (perfLevel.iVddc==0)
-                        std::cout << "Voltage for adapter " << i <<
-                                    " is not set!" << std::endl;
-                    else
-                        perfLevel.iVddc = int(round(param.value*1000.0));
-                    break;
-                default:
-                    break;
+                int i = *ait;
+                int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:
+                        odParams[i].iNumberOfPerformanceLevels-1;
+                ADLODPerformanceLevel& perfLevel = perfLevels[i][partId];
+                const ADLODPerformanceLevel& defaultPerfLevel = defaultPerfLevels[i][partId];
+                switch(param.type)
+                {
+                    case OVCParamType::CORE_CLOCK:
+                        if (param.useDefault)
+                            perfLevel.iEngineClock = defaultPerfLevel.iEngineClock;
+                        else
+                            perfLevel.iEngineClock = int(round(param.value*100.0));
+                        break;
+                    case OVCParamType::MEMORY_CLOCK:
+                        if (param.useDefault)
+                            perfLevel.iMemoryClock = defaultPerfLevel.iMemoryClock;
+                        else
+                            perfLevel.iMemoryClock = int(round(param.value*100.0));
+                        break;
+                    case OVCParamType::VDDC_VOLTAGE:
+                        if (param.useDefault)
+                            perfLevel.iVddc = defaultPerfLevel.iVddc;
+                        else if (perfLevel.iVddc==0)
+                            std::cout << "Voltage for adapter " << i <<
+                                        " is not set!" << std::endl;
+                        else
+                            perfLevel.iVddc = int(round(param.value*1000.0));
+                        break;
+                    default:
+                        break;
+                }
+                changedDevices[i] = true;
             }
-            changedDevices[i] = true;
-        }
 
     /// set fan speeds
     for (int i = 0; i < realAdaptersNum; i++)
@@ -1196,15 +1257,15 @@ static const char* helpAndUsageString =
 "Set AMD Overdrive parameters (clocks, fanspeeds,...) if any parameter given.\n"
 "\n"
 "List of parameters:\n"
-"  coreclk[:[ADAPTER][:LEVEL]]=CLOCK     set core clock in MHz\n"
-"  memclk[:[ADAPTER][:LEVEL]]=CLOCK      set memory clock in MHz\n"
-"  vcore[:[ADAPTER][:LEVEL]]=VOLTAGE     set Vddc voltage in Volts\n"
-"  icoreclk[:ADAPTER]=CLOCK              set core clock in MHz for idle level\n"
-"  imemclk[:ADAPTER]=CLOCK               set memory clock in MHz for idle level\n"
-"  ivcore[:ADAPTER]=VOLTAGE              set Vddc voltage  in Volts for idle level\n"
+"  coreclk[:[ADAPTERS][:LEVEL]]=CLOCK    set core clock in MHz\n"
+"  memclk[:[ADAPTERS][:LEVEL]]=CLOCK     set memory clock in MHz\n"
+"  vcore[:[ADAPTERS][:LEVEL]]=VOLTAGE    set Vddc voltage in Volts\n"
+"  icoreclk[:ADAPTERS]=CLOCK             set core clock in MHz for idle level\n"
+"  imemclk[:ADAPTERS]=CLOCK              set memory clock in MHz for idle level\n"
+"  ivcore[:ADAPTERS]=VOLTAGE             set Vddc voltage  in Volts for idle level\n"
 "  fanspeed[:[ADAPTER][:THID]]=PERCENT   set fanspeed in percents\n"
 "Extra specifiers in parameters:\n"
-"  ADAPTER                   adapter (device) index (default is 0)\n"
+"  ADAPTERS                  adapter (devices) index list (default is 0)\n"
 "  LEVEL                     performance level (typically 0 or 1, default is last)\n"
 "  THID                      thermal controller index (must be 0)\n"
 "You can use 'default' in value place to set default value.\n"
@@ -1212,16 +1273,18 @@ static const char* helpAndUsageString =
 "\n"
 "List of options:\n"
 "  -a, --adapters=LIST       print informations only for these adapters\n"
-"                            List is comma-separated with ranges 'first-last' or 'all'\n"
 "  -v, --verbose             print verbose informations\n"
 "      --version             print version\n"
 "  -?, --help                print help\n"
 "\n"
+"Adapter list specified in parameters and '--adapter' option is comma-separated list\n"
+"with ranges 'first-last' or 'all'. Examples: 'all', '0-2', '0,1,3-5'\n"
+"\n"
 "Sample usage:\n"
 "amdcovc\n"
 "    print short informations about state of the all adapters\n"
-"amdcovc -a 1,2\n"
-"    print short informations about adapter 1 and 2\n"
+"amdcovc -a 1,2,4-6\n"
+"    print short informations about adapter 1, 2 and 4 to 6\n"
 "amdcovc coreclk:1=900 coreclk=1000\n"
 "    set core clock to 900 for adapter 1, set core clock to 1000 for adapter 0\n"
 "amdcovc coreclk:1:0=900 coreclk:0:1=1000\n"

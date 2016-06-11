@@ -106,17 +106,17 @@ The verbose informations contains:
 
 List of parameters that can be set:
 
-* coreclk[:[ADAPTER][:LEVEL]]=CLOCK - set core clock in MHz
-* memclk[:[ADAPTER][:LEVEL]]=CLOCK - set memory clock in MHz
-* vcore[:[ADAPTER][:LEVEL]]=VOLTAGE - set Vddc voltage in Volts
-* icoreclk[:ADAPTER]=CLOCK - set core clock in MHz for idle level
-* imemclk[:ADAPTER]=CLOCK - set memory clock in MHz for idle level
-* ivcore[:ADAPTER]=VOLTAGE - set Vddc voltage  in Volts for idle level
-* fanspeed[:[ADAPTER][:THID]]=PERCENT -  set fanspeed in percents
+* coreclk[:[ADAPTERS][:LEVEL]]=CLOCK - set core clock in MHz
+* memclk[:[ADAPTERS][:LEVEL]]=CLOCK - set memory clock in MHz
+* vcore[:[ADAPTERS][:LEVEL]]=VOLTAGE - set Vddc voltage in Volts
+* icoreclk[:ADAPTERS]=CLOCK - set core clock in MHz for idle level
+* imemclk[:ADAPTERS]=CLOCK - set memory clock in MHz for idle level
+* ivcore[:ADAPTERS]=VOLTAGE - set Vddc voltage  in Volts for idle level
+* fanspeed[:[ADAPTERS][:THID]]=PERCENT -  set fanspeed in percents
 
 Extra specifiers in parameters:
 
-* ADAPTER - adapter (device) index (default is 0)
+* ADAPTERS - adapter (device) index list (default is 0)
 * LEVEL - performance level (typically 0 or 1, default is last)
 * THID - thermal controller index (must be 0)
 
