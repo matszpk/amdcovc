@@ -44,7 +44,7 @@ extern "C" {
 #endif
 #include "../include/adl_sdk.h"
 
-#define AMDCOVC_VERSION "0.2"
+#define AMDCOVC_VERSION "0.2.1"
 
 // Memory allocation function
 void* __stdcall ADL_Main_Memory_Alloc (int iSize)
@@ -941,6 +941,11 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
             if (errno!=0 || afterName==next)
             {
                 std::cerr << "Can't parse value in '" << string << "'!" << std::endl;
+                return false;
+            }
+            if (isinf(param.value) || isnan(param.value))
+            {
+                std::cerr << "Value of '" << string << "' is not finite!" << std::endl;
                 return false;
             }
             afterName = next;
