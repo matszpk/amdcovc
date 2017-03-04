@@ -20,6 +20,7 @@
 #define _BSD_SOURCE
 #include <iostream>
 #include <exception>
+#include <vector>
 #include <dlfcn.h>
 #include <fstream>
 #include <algorithm>
