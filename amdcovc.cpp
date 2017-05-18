@@ -30,9 +30,11 @@
 #include <cstring>
 #include <string>
 #include <memory>
-#include <cstdarg>
 #include <cmath>
+#include <cstdarg>
+#include <stdint.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <CL/cl.h>
@@ -135,6 +137,7 @@ private:
     
 public:
     ATIADLHandle();
+    bool open();
     ~ATIADLHandle();
     
     void Main_Control_Create(ADL_MAIN_MALLOC_CALLBACK callback,
@@ -163,7 +166,7 @@ public:
 };
 
 ATIADLHandle::ATIADLHandle() 
-try : handle(nullptr),
+    : handle(nullptr),
     pADL_Main_Control_Create(nullptr), pADL_Main_Control_Destroy(nullptr),
     pADL_ConsoleMode_FileDescriptor_Set(nullptr),
     pADL_Adapter_NumberOfAdapters_Get(nullptr), pADL_Adapter_Active_Get(nullptr),
@@ -174,11 +177,15 @@ try : handle(nullptr),
     pADL_Overdrive5_FanSpeed_Set(nullptr),
     pADL_Overdrive5_FanSpeedToDefault_Set(nullptr),
     pADL_Overdrive5_ODPerformanceLevels_Set(nullptr)
+{ }
+
+bool ATIADLHandle::open()
+try
 {
     dlerror(); // clear old errors
     handle = dlopen("libatiadlxx.so", RTLD_LAZY|RTLD_GLOBAL);
     if (handle == nullptr)
-        throw Error(dlerror());
+        return false;
     
     pADL_Main_Control_Create = (ADL_Main_Control_Create_T)
                 getSym("ADL_Main_Control_Create");
@@ -210,6 +217,7 @@ try : handle(nullptr),
                 getSym("ADL_Overdrive5_FanSpeedToDefault_Set");
     pADL_Overdrive5_ODPerformanceLevels_Set = (ADL_Overdrive5_ODPerformanceLevels_Set_T)
                 getSym("ADL_Overdrive5_ODPerformanceLevels_Set");
+    return true;
 }
 catch(...)
 {
@@ -217,7 +225,11 @@ catch(...)
     {
         dlerror(); // clear old errors
         if (dlclose(handle)) // if closing failed
+        {
+            handle = nullptr;
             throw Error(dlerror());
+        }
+        handle = nullptr;
     }
     throw;
 }
@@ -228,7 +240,11 @@ ATIADLHandle::~ATIADLHandle()
     {
         dlerror();
         if (dlclose(handle))
+        {
+            handle = nullptr;
             throw Error(dlerror());
+        }
+        handle = nullptr;
     }
 }
 
@@ -537,6 +553,35 @@ void ADLMainControl::setODPerformanceLevels(int adapterIndex, int perfLevelsNum,
     handle.Overdrive5_ODPerformanceLevels_Set(adapterIndex, odPLevels);
 }
 
+/*
+ * AMD-GPU infos
+ */
+
+struct AMDGPUAdapterInfo
+{
+    uint32_t busNo;
+    uint32_t deviceNo;
+    uint32_t funcNo;
+    uint32_t vendorId;
+    uint32_t deviceId;
+    std::string name;
+    std::vector<uint32_t> memoryClocks;
+    std::vector<uint32_t> coreClocks;
+    uint32_t minFanSpeed;
+    uint32_t maxFanSpeed;
+    bool defaultFanSpeed;
+    uint32_t fanSpeed;
+    uint32_t coreClock;
+    uint32_t memoryClock;
+    uint32_t coreOD;
+    uint32_t memoryOD;
+    uint32_t temperature;
+    uint32_t tempCritical;
+    uint32_t busLanes;
+    uint32_t busSpeed;
+    uint32_t gpuLoad;
+};
+
 static pci_access* pciAccess = nullptr;
 static pci_filter pciFilter;
 
@@ -607,6 +652,420 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
             break;
         }
 }
+
+/* AMDGPU code */
+
+static void getFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
+{
+    if (pciAccess==nullptr)
+        initializePCIAccess();
+    unsigned int busNum, devNum, funcNum;
+    size_t rlinkLen = strlen(rlink);
+    if (rlinkLen < 18 || ::strncmp(rlink, "../../../", 9)!=0)
+        throw Error("Wrong PCI Bus string");
+    char* pciStrPtr = (char*)rlink+9;
+    char* pciStrPtrNew;
+    while (isdigit(*pciStrPtr)) pciStrPtr++;
+    if (*pciStrPtr!=':')
+        throw Error(errno, "Can't parse PCI location");
+    pciStrPtr++;
+    errno  = 0;
+    busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
+    if (errno!=0 || pciStrPtr==pciStrPtrNew)
+        throw Error(errno, "Can't parse BusID");
+    pciStrPtr = pciStrPtrNew+1;
+    errno  = 0;
+    devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+    if (errno!=0 || pciStrPtr==pciStrPtrNew)
+        throw Error(errno, "Can't parse DevID");
+    pciStrPtr = pciStrPtrNew+1;
+    errno  = 0;
+    funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+    if (errno!=0 || pciStrPtr==pciStrPtrNew)
+        throw Error(errno, "Can't parse FuncID");
+    pci_dev* dev = pciAccess->devices;
+    for (; dev!=nullptr; dev=dev->next)
+        if (dev->bus==busNum && dev->dev==devNum && dev->func==funcNum)
+        {
+            char deviceBuf[128];
+            deviceBuf[0] = 0;
+            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE,
+                    dev->vendor_id, dev->device_id);
+            adapterInfo.busNo = busNum;
+            adapterInfo.deviceNo  = devNum;
+            adapterInfo.funcNo = funcNum;
+            adapterInfo.vendorId = dev->vendor_id;
+            adapterInfo.deviceId = dev->device_id;
+            adapterInfo.name = deviceBuf;
+            break;
+        }
+}
+
+
+class AMDGPUAdapterHandle
+{
+private:
+    uint32_t totDeviceCount;
+    std::vector<uint32_t> amdDevices;
+public:
+    AMDGPUAdapterHandle();
+    uint32_t getAdaptersNum() const
+    { return amdDevices.size(); }
+    AMDGPUAdapterInfo parseAdapterInfo(uint32_t index);
+    
+    void setFanSpeed(int index, int hwIndex, int fanSpeed) const;
+    void setFanSpeedToDefault(int adapterIndex, int hwIndex) const;
+    void setOverclockParams(int adapterIndex, uint32_t coreClock, uint32_t memoryClock) const;
+};
+
+bool getFileContentValue(const char* filename, uint32_t& value)
+{
+    value = 0;
+    std::ifstream ifs(filename, std::ios::binary);
+    ifs.exceptions(std::ios::failbit);
+    std::string line;
+    std::getline(ifs, line);
+    char* p = (char*)line.c_str();
+    char* p2;
+    errno = 0;
+    value = strtoul(p, &p2, 0);
+    if (errno != 0)
+        throw Error("Can't parse value from file");
+    return (p != p2);
+}
+
+AMDGPUAdapterHandle::AMDGPUAdapterHandle()
+        : totDeviceCount(0)
+{
+    errno = 0;
+    DIR* dirp = opendir("/sys/class/drm");
+    if (dirp == nullptr)
+        throw Error(errno, "Can't open 'sys/class/drm' directory");
+    errno = 0;
+    struct dirent* dire;
+    while ((dire = readdir(dirp)) != nullptr)
+    {
+        if (::strncmp(dire->d_name, "card", 4) != 0)
+            continue; // is not card directory
+        const char* p;
+        for (p = dire->d_name + 4; ::isdigit(*p); p++);
+        if (*p != 0)
+            continue; // is not card directory
+        errno = 0;
+        uint32_t v = ::strtoul(dire->d_name + 4, nullptr, 10);
+        totDeviceCount = std::max(totDeviceCount, v+1);
+    }
+    if (errno != 0)
+    {
+        closedir(dirp);
+        throw Error(errno, "Can't read 'sys/class/drm' directory");
+    }
+    closedir(dirp);
+    
+    // filter AMD GPU cards
+    char dbuf[120];
+    for (uint32_t i = 0; i < totDeviceCount; i++)
+    {
+        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/vendor", i);
+        uint32_t vendorId = 0;
+        if (!getFileContentValue(dbuf, vendorId))
+            continue;
+        if (vendorId != 4098) // if not AMD
+            continue;
+        amdDevices.push_back(i);
+    }
+}
+
+static std::vector<uint32_t> parseDPMFile(const char* filename, uint32_t& choosen)
+{
+    std::vector<uint32_t> out;
+    std::ifstream ifs(filename, std::ios::binary);
+    choosen = UINT32_MAX;
+    while (ifs)
+    {
+        std::string line;
+        std::getline(ifs, line);
+        if (line.empty())
+            break;
+        char* p = (char*)line.c_str();
+        char* p2 = (char*)line.c_str();
+        errno = 0;
+        uint32_t index = strtoul(p, &p2, 10);
+        if (errno!=0 || p==p2)
+            throw Error(errno, "Can't parse index");
+        p = p2;
+        if (*p!=':' || p[1]!=' ')
+            throw Error(errno, "Can't parse next part of line");
+        p += 2;
+        uint32_t clock = strtoul(p, &p2, 10);
+        if (errno!=0 || p==p2)
+            throw Error(errno, "Can't parse clock");
+        p = p2;
+        if (::strncmp(p, "Mhz", 3) != 0)
+            throw Error(errno, "Can't parse next part of line");
+        p += 3;
+        if (*p==' ' && p[1]=='*')
+            choosen = index;
+        out.resize(index+1);
+        out[index] = clock;
+    }
+    return out;
+}
+
+static void parseDPMPCIEFile(const char* filename, uint32_t& pcieMB, uint32_t& lanes)
+{
+    std::vector<uint32_t> out;
+    std::ifstream ifs(filename, std::ios::binary);
+    uint32_t ilanes = 0, ipcieMB = 0;
+    while (ifs)
+    {
+        std::string line;
+        std::getline(ifs, line);
+        if (line.empty())
+            break;
+        char* p = (char*)line.c_str();
+        char* p2 = (char*)line.c_str();
+        errno = 0;
+        strtoul(p, &p2, 10);
+        if (errno!=0 || p==p2)
+            throw Error(errno, "Can't parse index");
+        p = p2;
+        if (*p!=':' || p[1]!=' ')
+            throw Error(errno, "Can't parse next part of line");
+        p += 2;
+        double bandwidth = strtod(p, &p2);
+        if (errno!=0 || p==p2)
+            throw Error(errno, "Can't parse bandwidth");
+        p = p2;
+        if (*p=='G' && p2[1]=='B')
+            ipcieMB = bandwidth*1000;
+        else if (*p=='M' && p2[1]=='B')
+            ipcieMB = bandwidth;
+        else if (*p=='M' && p2[1]=='B')
+            ipcieMB = bandwidth/1000;
+        else 
+            throw Error(errno, "Wrong bandwidth specifier");
+        p += 2;
+        if (::strncmp(p, ", x", 3)!=0)
+            throw Error(errno, "Can't parse next part of line");
+        errno = 0;
+        ilanes = strtoul(p, &p2, 10);
+        if (errno!=0 || p==p2)
+            throw Error(errno, "Can't parse lanes");
+        if (*p==' ' && p[1]=='*')
+        {
+            lanes = ilanes;
+            pcieMB = ipcieMB;
+            break;
+        }
+    }
+}
+
+
+AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(uint32_t index)
+{
+    AMDGPUAdapterInfo adapterInfo;
+    uint32_t cardIndex = amdDevices[index];
+    char dbuf[120];
+    char rlink[120];
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device", cardIndex);
+    ::readlink(dbuf, rlink, 120);
+    rlink[119] = 0;
+    getFromPCI_AMDGPU(rlink, adapterInfo);
+    // parse pp_dpm_sclk
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
+    uint32_t activeCoreClockIndex;
+    adapterInfo.coreClocks = parseDPMFile(dbuf, activeCoreClockIndex);
+    if (activeCoreClockIndex!=UINT_MAX)
+      adapterInfo.coreClock = adapterInfo.coreClocks[activeCoreClockIndex];
+    else
+      adapterInfo.coreClock = 0;
+    // parse pp_dpm_mclk
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_mclk", cardIndex);
+    uint32_t activeMemoryClockIndex;
+    adapterInfo.memoryClocks = parseDPMFile(dbuf, activeMemoryClockIndex);
+    if (activeMemoryClockIndex!=UINT_MAX)
+      adapterInfo.memoryClock = adapterInfo.memoryClocks[activeMemoryClockIndex];
+    else
+      adapterInfo.memoryClock = 0;
+    // search hwmon
+    errno = 0;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon", cardIndex);
+    DIR* dirp = opendir(dbuf);
+    if (dirp == nullptr)
+        throw Error(errno, "Can't open 'sys/class/drm/card?/device/hwmon' directory");
+    errno = 0;
+    struct dirent* dire;
+    uint32_t hwmonIndex = UINT_MAX;
+    while ((dire = readdir(dirp)) != nullptr)
+    {
+        if (::strncmp(dire->d_name, "hwmon", 5) != 0)
+            continue; // is not hwmon directory
+        const char* p;
+        for (p = dire->d_name + 5; ::isdigit(*p); p++);
+        if (*p != 0)
+            continue; // is not hwmon directory
+        errno = 0;
+        uint32_t v = ::strtoul(dire->d_name + 5, nullptr, 10);
+        hwmonIndex = std::min(hwmonIndex, v);
+    }
+    if (errno != 0)
+    {
+        closedir(dirp);
+        throw Error(errno, "Can't open 'sys/class/drm/card?/hwmon' directory");
+    }
+    closedir(dirp);
+    if (hwmonIndex == UINT_MAX)
+        throw Error("Can't find hwmon? directory");
+    
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_sclk_od", cardIndex);
+    getFileContentValue(dbuf, adapterInfo.coreOD);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_mclk_od", cardIndex);
+    getFileContentValue(dbuf, adapterInfo.memoryOD);
+    // get fanspeed
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_min",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.minFanSpeed);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_max",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.maxFanSpeed);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.fanSpeed);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable",
+             cardIndex, hwmonIndex);
+    uint32_t pwmEnable = 0;
+    getFileContentValue(dbuf, pwmEnable);
+    adapterInfo.defaultFanSpeed = pwmEnable==2;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_input",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.temperature);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_crit",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.tempCritical);
+    // parse GPU load
+    snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
+    {
+        adapterInfo.gpuLoad = 0;
+        std::ifstream ifs(dbuf, std::ios::binary);
+        while (ifs)
+        {
+            std::string line;
+            std::getline(ifs, line);
+            if (line.compare(0, 10, "GPU load: ")==0)
+            {
+                errno = 0;
+                char* endp;
+                adapterInfo.gpuLoad = strtoul(line.c_str()+10, &endp, 10);
+                if (errno != 0 || endp == line.c_str()+10)
+                    throw Error("Can't parse GPU load");
+                break;
+            }
+        }
+    }
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/pp_dpm_pcie", cardIndex);
+    parseDPMPCIEFile(dbuf, adapterInfo.busLanes, adapterInfo.busSpeed);
+    return adapterInfo;
+}
+
+void AMDGPUAdapterHandle::setFanSpeed(int index, int hwIndex, int fanSpeed) const
+{
+}
+
+void AMDGPUAdapterHandle::setFanSpeedToDefault(int adapterIndex, int hwIndex) const
+{
+}
+
+void AMDGPUAdapterHandle::setOverclockParams(int adapterIndex,
+            uint32_t coreClock, uint32_t memoryClock) const
+{
+}
+
+static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
+            const std::vector<int>& choosenAdapters, bool useChoosen)
+{
+    int adaptersNum = handle.getAdaptersNum();
+    auto choosenIter = choosenAdapters.begin();
+    for (int i = 0; i < adaptersNum; i++)
+    {
+        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
+        { i++; continue; }
+        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(i);
+        
+        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
+                "  Core: " << adapterInfo.coreClock << " MHz, "
+                "Mem: " << adapterInfo.memoryClock << " MHz, "
+                "Load: " << adapterInfo.gpuLoad << "%, "
+                "Temp: " << adapterInfo.temperature/1000.0 << " C, "
+                "Fan: " << double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
+                        double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0 <<
+                        "%" << std::endl;
+        if (!adapterInfo.coreClocks.empty())
+        {
+            std::cout << "  Core clocks:";
+            for (uint32_t v: adapterInfo.coreClocks)
+                std::cout << " " << v;
+            std::cout << std::endl;
+        }
+        if (!adapterInfo.memoryClocks.empty())
+        {
+            std::cout << "  Memory Clocks:";
+            for (uint32_t v: adapterInfo.memoryClocks)
+                std::cout << " " << v;
+            std::cout << std::endl;
+        }
+    }
+}
+
+static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
+            const std::vector<int>& choosenAdapters, bool useChoosen)
+{
+    int adaptersNum = handle.getAdaptersNum();
+    auto choosenIter = choosenAdapters.begin();
+    for (int i = 0; i < adaptersNum; i++)
+    {
+        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
+        { i++; continue; }
+        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(i);
+        
+        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
+                "  Device Topology: " << adapterInfo.busNo << ':' <<
+                adapterInfo.deviceNo << ":" <<
+                adapterInfo.funcNo << "\n"
+                "  Vendor ID: " << adapterInfo.vendorId << "\n"
+                "  Device ID: " << adapterInfo.deviceId << "\n"
+                "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
+                "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
+                "  Core OverDrive value: " << adapterInfo.coreOD << "\n"
+                "  Memory OverDrive value: " << adapterInfo.memoryOD << "\n"
+                "  GPU Load: " << adapterInfo.gpuLoad << "%\n"
+                "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
+                "  Current BusLanes: " << adapterInfo.busLanes << "\n"
+                "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n"
+                "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
+                "  FanSpeed Min (Value): " << adapterInfo.minFanSpeed << "\n"
+                "  FanSpeed Max (Value): " << adapterInfo.maxFanSpeed << "\n"
+                "  Current FanSpeed: " << (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
+                        double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0) << "%\n"
+                "  Controlled FanSpeed: " <<
+                    (adapterInfo.defaultFanSpeed?"yes":"no") << "\n";
+            // print available core clocks
+        if (!adapterInfo.coreClocks.empty())
+        {
+            std::cout << "  Core clocks:\n";
+            for (uint32_t v: adapterInfo.coreClocks)
+                std::cout << "    " << v << "MHz\n";
+        }
+        if (!adapterInfo.memoryClocks.empty())
+        {
+            std::cout << "  Memory Clocks:\n";
+            for (uint32_t v: adapterInfo.memoryClocks)
+                std::cout << "    " << v << "MHz\n";
+        }
+    }
+}
+
+/* AMDGPU code */
 
 static void getActiveAdaptersIndices(ADLMainControl& mainControl, int adaptersNum,
                     std::vector<int>& activeAdapters)
@@ -944,7 +1403,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
                 std::cerr << "Can't parse value in '" << string << "'!" << std::endl;
                 return false;
             }
-            if (isinf(param.value) || isnan(param.value))
+            if (std::isinf(param.value) || std::isnan(param.value))
             {
                 std::cerr << "Value of '" << string << "' is not finite!" << std::endl;
                 return false;
@@ -1378,28 +1837,47 @@ try
         throw Error("Can't parse parameters");
     
     ATIADLHandle handle;
-    ADLMainControl mainControl(handle, 0);
-    int adaptersNum = mainControl.getAdaptersNum();
-    /* list for converting user indices to input indices to ADL interface */
-    std::vector<int> activeAdapters;
-    getActiveAdaptersIndices(mainControl, adaptersNum, activeAdapters);
-    
-    if (useAdaptersList)
-        // sort and check adapter list
-        for (int adapterIndex: choosenAdapters)
-            if (adapterIndex>=int(activeAdapters.size()) || adapterIndex<0)
-                throw Error("Some adapter indices out of range");
-    
-    if (!ovcParameters.empty())
-        setOVCParameters(mainControl, adaptersNum, activeAdapters, ovcParameters);
-    else
-    {
-        if (printVerbose)
-            printAdaptersInfoVerbose(mainControl, adaptersNum, activeAdapters,
-                        choosenAdapters, useAdaptersList && !chooseAllAdapters);
+    if (handle.open())
+    {   // AMD Catalyst/Crimson
+        ADLMainControl mainControl(handle, 0);
+        int adaptersNum = mainControl.getAdaptersNum();
+        /* list for converting user indices to input indices to ADL interface */
+        std::vector<int> activeAdapters;
+        getActiveAdaptersIndices(mainControl, adaptersNum, activeAdapters);
+        
+        if (useAdaptersList)
+            // sort and check adapter list
+            for (int adapterIndex: choosenAdapters)
+                if (adapterIndex>=int(activeAdapters.size()) || adapterIndex<0)
+                    throw Error("Some adapter indices out of range");
+        
+        if (!ovcParameters.empty())
+            setOVCParameters(mainControl, adaptersNum, activeAdapters, ovcParameters);
         else
-            printAdaptersInfo(mainControl, adaptersNum, activeAdapters,
-                        choosenAdapters, useAdaptersList && !chooseAllAdapters);
+        {
+            if (printVerbose)
+                printAdaptersInfoVerbose(mainControl, adaptersNum, activeAdapters,
+                            choosenAdapters, useAdaptersList && !chooseAllAdapters);
+            else
+                printAdaptersInfo(mainControl, adaptersNum, activeAdapters,
+                            choosenAdapters, useAdaptersList && !chooseAllAdapters);
+        }
+    }
+    else
+    {   // AMD GPU(-PRO)
+        AMDGPUAdapterHandle handle;
+        if (!ovcParameters.empty())
+            ;
+            //setOVCParameters(handle, adaptersNum, activeAdapters, ovcParameters);;
+        else
+        {
+            if (printVerbose)
+                printAdaptersInfoVerbose(handle, choosenAdapters,
+                            useAdaptersList && !chooseAllAdapters);
+            else
+                printAdaptersInfo(handle, choosenAdapters,
+                            useAdaptersList && !chooseAllAdapters);
+        }
     }
     if (pciAccess!=nullptr)
         pci_cleanup(pciAccess);
