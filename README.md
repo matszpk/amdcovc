@@ -108,6 +108,8 @@ List of parameters that can be set:
 
 * coreclk[:[ADAPTERS][:LEVEL]]=CLOCK - set core clock in MHz
 * memclk[:[ADAPTERS][:LEVEL]]=CLOCK - set memory clock in MHz
+* coreod[:[ADAPTERS][:LEVEL]]=PERCENT - set core clock in percents (AMDGPU)
+* memod[:[ADAPTERS][:LEVEL]]=PERCENT - set memory clock in perecents (AMDGPU)
 * vcore[:[ADAPTERS][:LEVEL]]=VOLTAGE - set Vddc voltage in Volts
 * icoreclk[:ADAPTERS]=CLOCK - set core clock in MHz for idle level
 * imemclk[:ADAPTERS]=CLOCK - set memory clock in MHz for idle level
@@ -122,6 +124,9 @@ Extra specifiers in parameters:
 
 You can use 'default' in value place to set default value.
 For fanspeed 'default' value force automatic speed setup.
+
+To overclock graphic card on AMD GPU(-PRO) driver, please use `coreod` and `memod`
+parameters.
 
 ### List of options
 
