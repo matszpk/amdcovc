@@ -47,7 +47,7 @@ extern "C" {
 #endif
 #include "../include/adl_sdk.h"
 
-#define AMDCOVC_VERSION "0.3.0pre1"
+#define AMDCOVC_VERSION "0.3.0pre2"
 
 // Memory allocation function
 void* __stdcall ADL_Main_Memory_Alloc (int iSize)
@@ -1361,7 +1361,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         param.type = OVCParamType::MEMORY_CLOCK;
         param.partId = LAST_PERFLEVEL;
     }
-    if (name=="coreod")
+    else if (name=="coreod")
     {
         param.type = OVCParamType::CORE_OD;
         param.partId = LAST_PERFLEVEL;
