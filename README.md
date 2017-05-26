@@ -125,8 +125,8 @@ Extra specifiers in parameters:
 You can use 'default' in value place to set default value.
 For fanspeed 'default' value force automatic speed setup.
 
-To overclock graphic card on AMD GPU(-PRO) driver, please use `coreod` and `memod`
-parameters.
+To overclock graphic card on AMD GPU(-PRO) driver, can you use `coreod` and `memod`
+parameters. Parameters coreclk and memclk is available in AMD GPU(-PRO) driver mode.
 
 ### List of options
 
