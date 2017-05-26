@@ -718,6 +718,8 @@ public:
     void setFanSpeedToDefault(int adapterIndex) const;
     void setOverdriveCoreParam(int adapterIndex, unsigned int coreOD) const;
     void setOverdriveMemoryParam(int adapterIndex, unsigned int memoryOD) const;
+    void getPerformanceClocks(int adapterIndex, unsigned int& coreClock,
+                    unsigned int& memoryClock) const;
 };
 
 static bool getFileContentValue(const char* filename, unsigned int& value)
@@ -903,6 +905,31 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
     }
 }
 
+void AMDGPUAdapterHandle::getPerformanceClocks(int adapterIndex, unsigned int& coreClock,
+                    unsigned int& memoryClock) const
+{
+    char dbuf[120];
+    unsigned int cardIndex = amdDevices[adapterIndex];
+    
+    unsigned int coreOD = 0;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_sclk_od", cardIndex);
+    getFileContentValue(dbuf, coreOD);
+    unsigned int memoryOD = 0;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_mclk_od", cardIndex);
+    getFileContentValue(dbuf, memoryOD);
+    
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
+    unsigned int activeClockIndex;
+    std::vector<unsigned int> clocks = parseDPMFile(dbuf, activeClockIndex);
+    coreClock = 0;
+    if (!clocks.empty())
+        coreClock = int(ceil(double(clocks.back()) / (1.0 + coreOD*0.01)));
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_mclk", cardIndex);
+    clocks = parseDPMFile(dbuf, activeClockIndex);
+    memoryClock = 0;
+    if (!clocks.empty())
+        memoryClock = int(ceil(double(clocks.back()) / (1.0 + memoryOD*0.01)));
+}
 
 AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
 {
@@ -1779,8 +1806,15 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
 
 /* AMDGPU code */
 
+struct PerfClocks
+{
+    unsigned int coreClock;
+    unsigned int memoryClock;
+};
+
 static void setOVCParameters(AMDGPUAdapterHandle& handle,
-            const std::vector<OVCParameter>& ovcParams)
+            const std::vector<OVCParameter>& ovcParams,
+            const std::vector<PerfClocks>& perfClocks)
 {
     std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
     std::cout <<
@@ -1842,10 +1876,33 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                     continue;
                 }
                 
+                const PerfClocks& perfClks = perfClocks[i];
+                
                 switch(param.type)
                 {
+                    case OVCParamType::CORE_CLOCK:
+                        if (!param.useDefault &&
+                            (param.value < perfClks.coreClock ||
+                             param.value > perfClks.coreClock*1.20))
+                        {
+                            std::cerr << "Core clock out of range in '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    case OVCParamType::MEMORY_CLOCK:
+                        if (!param.useDefault &&
+                            (param.value < perfClks.memoryClock ||
+                             param.value > perfClks.memoryClock*1.20))
+                        {
+                            std::cerr << "Memory clock out of range in '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
                     case OVCParamType::CORE_OD:
-                        if (param.value < 0.0 || param.value > 20.0)
+                        if (!param.useDefault &&
+                            (param.value < 0.0 || param.value > 20.0))
                         {
                             std::cerr << "Core Overdrive out of range in '" <<
                                     param.argText << "'!" << std::endl;
@@ -1853,7 +1910,8 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                         }
                         break;
                     case OVCParamType::MEMORY_OD:
-                        if (param.value < 0.0 || param.value > 20.0)
+                        if (!param.useDefault &&
+                            (param.value < 0.0 || param.value > 20.0))
                         {
                             std::cerr << "Memory Overdrive out of range in '" <<
                                     param.argText << "'!" << std::endl;
@@ -1895,6 +1953,24 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                 int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:0;
                 switch(param.type)
                 {
+                    case OVCParamType::CORE_CLOCK:
+                        std::cout << "Setting core clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
+                    case OVCParamType::MEMORY_CLOCK:
+                        std::cout << "Setting memory clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
                     case OVCParamType::CORE_OD:
                         std::cout << "Setting core overdrive to ";
                         if (param.useDefault)
@@ -1937,8 +2013,26 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                         ait; ++ait)
             {
                 int i = *ait;
+                const PerfClocks& perfClks = perfClocks[i];
+                
                 switch(param.type)
                 {
+                    case OVCParamType::CORE_CLOCK:
+                        if (param.useDefault)
+                            handle.setOverdriveCoreParam(i, 0);
+                        else
+                            handle.setOverdriveCoreParam(i,
+                                int(round((double(param.value - perfClks.coreClock) /
+                                        perfClks.coreClock)*100.0)));
+                        break;
+                    case OVCParamType::MEMORY_CLOCK:
+                        if (param.useDefault)
+                            handle.setOverdriveMemoryParam(i, 0);
+                        else
+                            handle.setOverdriveMemoryParam(i,
+                                int(round((double(param.value - perfClks.memoryClock) /
+                                        perfClks.memoryClock)*100.0)));
+                        break;
                     case OVCParamType::CORE_OD:
                         if (param.useDefault)
                             handle.setOverdriveCoreParam(i, 0);
@@ -2127,7 +2221,17 @@ try
     {   // AMD GPU(-PRO)
         AMDGPUAdapterHandle handle;
         if (!ovcParameters.empty())
-            setOVCParameters(handle, ovcParameters);
+        {
+            std::vector<PerfClocks> perfClocks;
+            for (unsigned int i = 0; i < handle.getAdaptersNum(); i++)
+            {
+                unsigned int coreClock, memoryClock;
+                handle.getPerformanceClocks(i, coreClock, memoryClock);
+                //std::cout << "PerfClocks: " << coreClock << ", " << memoryClock << std::endl;
+                perfClocks.push_back(PerfClocks{ coreClock, memoryClock });
+            }
+            setOVCParameters(handle, ovcParameters, perfClocks);
+        }
         else
         {
             if (printVerbose)
