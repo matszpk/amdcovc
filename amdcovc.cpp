@@ -1065,11 +1065,12 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
 {
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
-    for (int i = 0; i < adaptersNum; i++)
+    int i = 0;
+    for (int ai = 0; ai < adaptersNum; ai++)
     {
         if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
         { i++; continue; }
-        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(i);
+        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
         
         std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
                 "  Core: " << adapterInfo.coreClock << " MHz, "
@@ -1095,6 +1096,9 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 std::cout << " " << v;
             std::cout << std::endl;
         }
+        if (useChoosen)
+            ++choosenIter;
+        i++;
     }
 }
 
@@ -1103,11 +1107,12 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
 {
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
-    for (int i = 0; i < adaptersNum; i++)
+    int i = 0;
+    for (int ai = 0; ai < adaptersNum; ai++)
     {
         if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
         { i++; continue; }
-        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(i);
+        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
         
         std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
                 "  Device Topology: " << adapterInfo.busNo << ':' <<
@@ -1143,6 +1148,9 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
             for (uint32_t v: adapterInfo.memoryClocks)
                 std::cout << "    " << v << "MHz\n";
         }
+        if (useChoosen)
+            ++choosenIter;
+        i++;
     }
 }
 
@@ -2234,6 +2242,12 @@ try
         }
         else
         {
+            if (useAdaptersList)
+                // sort and check adapter list
+                for (int adapterIndex: choosenAdapters)
+                    if (adapterIndex>=int(handle.getAdaptersNum()) || adapterIndex<0)
+                        throw Error("Some adapter indices out of range");
+                    
             if (printVerbose)
                 printAdaptersInfoVerbose(handle, choosenAdapters,
                             useAdaptersList && !chooseAllAdapters);
