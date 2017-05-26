@@ -967,7 +967,8 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
         {
             std::string line;
             std::getline(ifs, line);
-            if (line.compare(0, 10, "GPU load: ")==0)
+            if (line.compare(0, 10, "GPU load: ")==0 ||
+                line.compare(0, 10, "GPU Load: ")==0)
             {
                 errno = 0;
                 char* endp;

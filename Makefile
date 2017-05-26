@@ -8,7 +8,11 @@ CXX = g++
 CXXFLAGS = -Wall -O3 -std=c++11
 LDFLAGS = -Wall -O3 -std=c++11
 INCDIRS = -I$(ADLSDKDIR)/include
-LIBDIRS = 
+# for AMDGPU-PRO SLES/OpenSUSE
+#LIBDIRS = -L/opt/amdgpu-pro/lib64
+# for AMDGPU-PRO Ubuntu
+#LIBDIRS = -L/opt/amdgpu-pro/lib/x86_64-linux-gnu
+LIBDIRS =
 LIBS = -ldl -lpci -lm -lOpenCL -pthread
 
 .PHONY: all clean
