@@ -579,7 +579,7 @@ struct AMDGPUAdapterInfo
     unsigned int tempCritical;
     unsigned int busLanes;
     unsigned int busSpeed;
-    unsigned int gpuLoad;
+    int gpuLoad;
 };
 
 static pci_access* pciAccess = nullptr;
@@ -741,7 +741,15 @@ static bool getFileContentValue(const char* filename, unsigned int& value)
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
     std::ofstream ofs(filename, std::ios::binary);
-    ofs << value << std::endl;
+    try
+    {
+        ofs.exceptions(std::ios::failbit);
+        ofs << value << std::endl;
+    }
+    catch(const std::exception& ex)
+    {
+        throw Error((std::string("Can't write file '")+filename+"'").c_str());
+    }
 }
 
 AMDGPUAdapterHandle::AMDGPUAdapterHandle()
@@ -988,7 +996,7 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     // parse GPU load
     snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
     {
-        adapterInfo.gpuLoad = 0;
+        adapterInfo.gpuLoad = -1;
         std::ifstream ifs(dbuf, std::ios::binary);
         while (ifs)
         {
@@ -1076,9 +1084,10 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 "  Core: " << adapterInfo.coreClock << " MHz, "
                 "Mem: " << adapterInfo.memoryClock << " MHz, "
                 "CoreOD: " << adapterInfo.coreOD << ", "
-                "MemOD: " << adapterInfo.memoryOD << ", "
-                "Load: " << adapterInfo.gpuLoad << "%, "
-                "Temp: " << adapterInfo.temperature/1000.0 << " C, "
+                "MemOD: " << adapterInfo.memoryOD << ", ";
+        if (adapterInfo.gpuLoad>=0)
+            std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
+        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, "
                 "Fan: " << double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
                         double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0 <<
                         "%" << std::endl;
@@ -1123,9 +1132,10 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
                 "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
                 "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
                 "  Core Overdrive: " << adapterInfo.coreOD << "\n"
-                "  Memory Overdrive: " << adapterInfo.memoryOD << "\n"
-                "  GPU Load: " << adapterInfo.gpuLoad << "%\n"
-                "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
+                "  Memory Overdrive: " << adapterInfo.memoryOD << "\n";
+        if (adapterInfo.gpuLoad>=0)
+            std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
+        std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
                 "  Current BusLanes: " << adapterInfo.busLanes << "\n"
                 "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n"
                 "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
