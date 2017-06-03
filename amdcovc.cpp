@@ -47,7 +47,7 @@ extern "C" {
 #endif
 #include "../include/adl_sdk.h"
 
-#define AMDCOVC_VERSION "0.3.0pre4"
+#define AMDCOVC_VERSION "0.3.0pre5"
 
 // Memory allocation function
 void* __stdcall ADL_Main_Memory_Alloc (int iSize)
