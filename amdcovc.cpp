@@ -1739,6 +1739,14 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
                         std::cout << " for adapter " << i <<
                                 " at performance level " << partId << std::endl;
                         break;
+                    case OVCParamType::CORE_OD:
+                        std::cout << "Core OD available only for "
+                                "AMDGPU-(PRO) drivers." << std::endl;
+                        break;
+                    case OVCParamType::MEMORY_OD:
+                        std::cout << "Memory OD available only for "
+                                "AMDGPU-(PRO) drivers." << std::endl;
+                        break;
                     case OVCParamType::VDDC_VOLTAGE:
                         std::cout << "Setting Vddc voltage to ";
                         if (param.useDefault)
@@ -2006,6 +2014,10 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                             std::cout << param.value;
                         std::cout << " for adapter " << i <<
                                 " at performance level " << partId << std::endl;
+                        break;
+                    case OVCParamType::VDDC_VOLTAGE:
+                        std::cout << "VDDC voltage available only for "
+                                "AMD Catalyst/Crimson drivers." << std::endl;
                         break;
                     default:
                         break;
