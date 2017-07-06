@@ -25,7 +25,7 @@ Program to work requires following things:
 * C++ environment compliant with C++11 standard (libraries)
 * OpenCL environment (to force initializing of devices)
 * libadlxx.so library (AMD ADL library)
-* pciutils library
+* pciutils library (libpci).
 
 To build program you need:
 
