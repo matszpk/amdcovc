@@ -17,7 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #include <iostream>
 #include <exception>
 #include <vector>
