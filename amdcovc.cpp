@@ -1,5 +1,5 @@
 /*
- *  AMDCOVC - AMD Console OVerdrive control utility
+ *  AMDCOVC - AMD Console OVerdrive Control utility
  *  Copyright (C) 2016 Mateusz Szpakowski
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -68,11 +68,18 @@ void __stdcall ADL_Main_Memory_Free (void** lpBuffer)
 
 class Error: public std::exception
 {
+
 private:
+
     std::string description;
+
 public:
+
     explicit Error(const char* _description) : description(_description)
-    { }
+    { 
+
+    }
+
     Error(int error, const char* _description)
     {
         char errorBuf[32];
@@ -80,15 +87,24 @@ public:
         description = errorBuf;
         description += _description;
     }
+
     virtual ~Error() noexcept
-    { }
+    { 
+
+    }
+
     const char* what() const noexcept
-    { return description.c_str(); }
+    { 
+        return description.c_str(); 
+    }
+
 };
 
 class ATIADLHandle
 {
+
 private:
+
     typedef int (*ADL_ConsoleMode_FileDescriptor_Set_T)(int fileDescriptor);
     typedef int (*ADL_Main_Control_Create_T)(ADL_MAIN_MALLOC_CALLBACK, int);
     typedef int (*ADL_Main_Control_Destroy_T)();
@@ -96,25 +112,16 @@ private:
     typedef int (*ADL_Adapter_Active_Get_T)(int adapterIndex, int *status);
     typedef int (*ADL_Adapter_AdapterInfo_Get_T)(LPAdapterInfo info, int inputSize);
     
-    typedef int (*ADL_Overdrive5_CurrentActivity_Get_T)(int adapterIndex,
-                ADLPMActivity* activity);
-    typedef int (*ADL_Overdrive5_Temperature_Get_T)(int adapterIndex, int thermalCtrlIndex,
-                ADLTemperature *temperature);
-    typedef int (*ADL_Overdrive5_FanSpeedInfo_Get_T)(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedInfo* fanSpeedInfo);
-    typedef int (*ADL_Overdrive5_FanSpeed_Get_T)(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedValue* fanSpeedValue);
-    typedef int (*ADL_Overdrive5_ODParameters_Get_T)(int adapterIndex,
-                ADLODParameters* odParameters);
-    typedef int (*ADL_Overdrive5_ODPerformanceLevels_Get_T)(int adapterIndex, int idefault,
-                ADLODPerformanceLevels* odPerformanceLevels);
+    typedef int (*ADL_Overdrive5_CurrentActivity_Get_T)(int adapterIndex, ADLPMActivity* activity);
+    typedef int (*ADL_Overdrive5_Temperature_Get_T)(int adapterIndex, int thermalCtrlIndex, ADLTemperature *temperature);
+    typedef int (*ADL_Overdrive5_FanSpeedInfo_Get_T)(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedInfo* fanSpeedInfo);
+    typedef int (*ADL_Overdrive5_FanSpeed_Get_T)(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedValue* fanSpeedValue);
+    typedef int (*ADL_Overdrive5_ODParameters_Get_T)(int adapterIndex, ADLODParameters* odParameters);
+    typedef int (*ADL_Overdrive5_ODPerformanceLevels_Get_T)(int adapterIndex, int idefault, ADLODPerformanceLevels* odPerformanceLevels);
     
-    typedef int (*ADL_Overdrive5_FanSpeed_Set_T)(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedValue* fanSpeedValue);
-    typedef int (*ADL_Overdrive5_FanSpeedToDefault_Set_T)(int adapterIndex,
-                int thermalCtrlIndex);
-    typedef int (*ADL_Overdrive5_ODPerformanceLevels_Set_T)(int adapterIndex,
-                ADLODPerformanceLevels* odPerformanceLevels);
+    typedef int (*ADL_Overdrive5_FanSpeed_Set_T)(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedValue* fanSpeedValue);
+    typedef int (*ADL_Overdrive5_FanSpeedToDefault_Set_T)(int adapterIndex, int thermalCtrlIndex);
+    typedef int (*ADL_Overdrive5_ODPerformanceLevels_Set_T)(int adapterIndex, ADLODPerformanceLevels* odPerformanceLevels);
     
     void* handle;
     void* getSym(const char* name);
@@ -136,6 +143,7 @@ private:
     ADL_Overdrive5_ODPerformanceLevels_Set_T pADL_Overdrive5_ODPerformanceLevels_Set;
     
 public:
+
     ATIADLHandle();
     bool open();
     ~ATIADLHandle();
