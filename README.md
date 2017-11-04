@@ -40,12 +40,16 @@ To build program you need:
 
 ## Installing prerequisites (Ubuntu)
 
+```
 apt-get install g++
 apt-get install ocl-icd-opencl-dev
 apt-get install opencl
 apt-get install libpci-dev
-install the adl sdk from here: http://developer.amd.com/display-library-adl-sdk/
-clone this repo into the base path of the adl-sdk
+```
+
+* install the adl sdk from here: `http://developer.amd.com/display-library-adl-sdk/`
+
+* clone this repo into the base path of the adl-sdk
 
 ### Building program
 
