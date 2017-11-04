@@ -18,6 +18,7 @@
  */
 
 #define _DEFAULT_SOURCE
+
 #include <iostream>
 #include <exception>
 #include <vector>
@@ -38,6 +39,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <CL/cl.h>
+
 extern "C" {
 #include <pci/pci.h>
 }
@@ -148,8 +150,7 @@ public:
     bool open();
     ~ATIADLHandle();
     
-    void Main_Control_Create(ADL_MAIN_MALLOC_CALLBACK callback,
-                             int iEnumConnectedAdapters) const;
+    void Main_Control_Create(ADL_MAIN_MALLOC_CALLBACK callback, int iEnumConnectedAdapters) const;
     
     void Main_Control_Destroy() const;
     void ConsoleMode_FileDescriptor_Set(int fileDescriptor) const;
@@ -157,20 +158,15 @@ public:
     void Adapter_Active_Get(int adapterIndex, int* status) const;
     void Adapter_Info_Get(LPAdapterInfo info, int inputSize) const;
     void Overdrive5_CurrentActivity_Get(int adapterIndex, ADLPMActivity* activity) const;
-    void Overdrive5_Temperature_Get(int adapterIndex, int thermalCtrlIndex,
-                ADLTemperature* temperature) const;
-    void Overdrive5_FanSpeedInfo_Get(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedInfo* fanSpeedInfo) const;
-    void Overdrive5_FanSpeed_Get(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedValue* fanSpeedValue) const;
+    void Overdrive5_Temperature_Get(int adapterIndex, int thermalCtrlIndex, ADLTemperature* temperature) const;
+    void Overdrive5_FanSpeedInfo_Get(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedInfo* fanSpeedInfo) const;
+    void Overdrive5_FanSpeed_Get(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedValue* fanSpeedValue) const;
     void Overdrive5_ODParameters_Get(int adapterIndex, ADLODParameters* odParameters) const;
-    void Overdrive5_ODPerformanceLevels_Get(int adapterIndex, int idefault,
-                ADLODPerformanceLevels* odPerformanceLevels) const;
-    void Overdrive5_FanSpeed_Set(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedValue* fanSpeedValue) const;
+    void Overdrive5_ODPerformanceLevels_Get(int adapterIndex, int idefault, ADLODPerformanceLevels* odPerformanceLevels) const;
+    void Overdrive5_FanSpeed_Set(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedValue* fanSpeedValue) const;
     void Overdrive5_FanSpeedToDefault_Set(int adapterIndex, int thermalCtrlIndex) const;
-    void Overdrive5_ODPerformanceLevels_Set(int adapterIndex,
-                ADLODPerformanceLevels* odPerformanceLevels) const;
+    void Overdrive5_ODPerformanceLevels_Set(int adapterIndex, ADLODPerformanceLevels* odPerformanceLevels) const;
+
 };
 
 ATIADLHandle::ATIADLHandle() 
