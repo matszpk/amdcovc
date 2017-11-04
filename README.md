@@ -50,6 +50,13 @@ apt-get install unzip
 
 * download and unzip the adl sdk from here: `http://developer.amd.com/display-library-adl-sdk/`
 
+or
+
+```
+git clone https://github.com/elitak/amd-adl-sdk
+```
+
+
 * clone this repo into the base path of the adl-sdk
 
 ### Building program
