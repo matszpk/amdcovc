@@ -1,22 +1,24 @@
 ## AMDCOVC
 
-This is program to control AMD Overdrive settings that is working if graphics cards
-are in console-mode. This program has been written to replace `amdconfig` utility
-and allow to overclock Radeon GPU's if no running X11 server. An `amdconfig`
-utility requires a running X11 server and X11 kept configuration to be working
-correctly. Thus, this program ease overclocking of Radeon GPU's under console environment
-(in SSH or Linux console). Nevertheless, this program can works under X11 environment.
+This program is for controlling AMD Overdrive settings for graphics cards in Linux console-mode. 
+This program has been written to replace the `amdconfig` utility and allow to overclocking of AMD
+Radeon GPUs when not running the X11 server. 
+
+The `amdconfig` utility requires a running X11 server and X11 configuration to be working correctly.
+Thus, this program eases the overclocking of AMD Radeon GPUs in the console environment (in SSH or 
+the Linux console).
+However, this program also works under the X11 environment.
 
 ### WARNING
 
-This program changes graphics card's clocks and voltages. This program can easily
-DAMAGE your hardware if it will be used CARELESSLY.
+This program changes graphics card clock and voltage values.
+This program can easily damage your hardware if used without care.
 
-Before any setting of AMD Overdrive parameters (clocks, voltages, fan speeds),
-please STOP ANY the GPU computations and the GPU renderings.
+Before setting any of the AMD Overdrive parameters (clocks, voltages, fan speeds), please make sure 
+any GPU computations and rendering processes have been stopped.
 
-YOU USE THIS PROGRAM AT YOUR OWN RISK! WE DO NOT GIVE ANY WARRANTY THAT PROGRAM
-WILL BE WORKING CORRECTLY IN ANY CASE! Read license before using this program.
+It goes without saying, but use this program at your own risk. There is no warranty expressly given
+or implied in the use of this program. Please read the license before using this program.
 
 ### Preliminary requirements
 
@@ -27,12 +29,18 @@ Program to work requires following things:
 * libadlxx.so library (AMD ADL library)
 * pciutils library (libpci).
 
+## Building:
+
 To build program you need:
 
-* compiler compliant with C++11 standard
-* OpenCL headers
-* AMD ADL SDK (in developer.amd.com site)
-* pciutils developer package (includes)
+* A compiler compliant with the C++11 standard
+* The OpenCL headers
+* The AMD ADL SDK (in developer.amd.com site)
+* The pciutils developer package (includes)
+
+## Installing prerequisites (Ubuntu)
+
+
 
 ### Building program
 
