@@ -151,12 +151,13 @@ public:
     ~ATIADLHandle();
     
     void Main_Control_Create(ADL_MAIN_MALLOC_CALLBACK callback, int iEnumConnectedAdapters) const;
-    
     void Main_Control_Destroy() const;
+    
     void ConsoleMode_FileDescriptor_Set(int fileDescriptor) const;
     void Adapter_NumberOfAdapters_Get(int* number) const;
     void Adapter_Active_Get(int adapterIndex, int* status) const;
     void Adapter_Info_Get(LPAdapterInfo info, int inputSize) const;
+    
     void Overdrive5_CurrentActivity_Get(int adapterIndex, ADLPMActivity* activity) const;
     void Overdrive5_Temperature_Get(int adapterIndex, int thermalCtrlIndex, ADLTemperature* temperature) const;
     void Overdrive5_FanSpeedInfo_Get(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedInfo* fanSpeedInfo) const;
@@ -181,46 +182,37 @@ ATIADLHandle::ATIADLHandle()
     pADL_Overdrive5_FanSpeed_Set(nullptr),
     pADL_Overdrive5_FanSpeedToDefault_Set(nullptr),
     pADL_Overdrive5_ODPerformanceLevels_Set(nullptr)
-{ }
+{ 
+
+}
 
 bool ATIADLHandle::open()
 try
 {
     dlerror(); // clear old errors
     handle = dlopen("libatiadlxx.so", RTLD_LAZY|RTLD_GLOBAL);
+
     if (handle == nullptr)
+    {
         return false;
+    }
     
-    pADL_Main_Control_Create = (ADL_Main_Control_Create_T)
-                getSym("ADL_Main_Control_Create");
-    pADL_Main_Control_Destroy = (ADL_Main_Control_Destroy_T)
-                getSym("ADL_Main_Control_Destroy");
-    pADL_ConsoleMode_FileDescriptor_Set = (ADL_ConsoleMode_FileDescriptor_Set_T)
-                getSym("ADL_ConsoleMode_FileDescriptor_Set");
-    pADL_Adapter_NumberOfAdapters_Get = (ADL_Adapter_NumberOfAdapters_Get_T)
-                getSym("ADL_Adapter_NumberOfAdapters_Get");
-    pADL_Adapter_Active_Get = (ADL_Adapter_Active_Get_T)
-                getSym("ADL_Adapter_Active_Get");
-    pADL_Adapter_AdapterInfo_Get = (ADL_Adapter_AdapterInfo_Get_T)
-                getSym("ADL_Adapter_AdapterInfo_Get");
-    pADL_Overdrive5_CurrentActivity_Get = (ADL_Overdrive5_CurrentActivity_Get_T)
-                getSym("ADL_Overdrive5_CurrentActivity_Get");
-    pADL_Overdrive5_Temperature_Get = (ADL_Overdrive5_Temperature_Get_T)
-                getSym("ADL_Overdrive5_Temperature_Get");
-    pADL_Overdrive5_FanSpeedInfo_Get = (ADL_Overdrive5_FanSpeedInfo_Get_T)
-                getSym("ADL_Overdrive5_FanSpeedInfo_Get");
-    pADL_Overdrive5_FanSpeed_Get = (ADL_Overdrive5_FanSpeed_Get_T)
-                getSym("ADL_Overdrive5_FanSpeed_Get");
-    pADL_Overdrive5_ODParameters_Get = (ADL_Overdrive5_ODParameters_Get_T)
-                getSym("ADL_Overdrive5_ODParameters_Get");
-    pADL_Overdrive5_ODPerformanceLevels_Get = (ADL_Overdrive5_ODPerformanceLevels_Get_T)
-                getSym("ADL_Overdrive5_ODPerformanceLevels_Get");
-    pADL_Overdrive5_FanSpeed_Set = (ADL_Overdrive5_FanSpeed_Set_T)
-                getSym("ADL_Overdrive5_FanSpeed_Set");
-    pADL_Overdrive5_FanSpeedToDefault_Set = (ADL_Overdrive5_FanSpeedToDefault_Set_T)
-                getSym("ADL_Overdrive5_FanSpeedToDefault_Set");
-    pADL_Overdrive5_ODPerformanceLevels_Set = (ADL_Overdrive5_ODPerformanceLevels_Set_T)
-                getSym("ADL_Overdrive5_ODPerformanceLevels_Set");
+    pADL_Main_Control_Create = (ADL_Main_Control_Create_T) getSym("ADL_Main_Control_Create");
+    pADL_Main_Control_Destroy = (ADL_Main_Control_Destroy_T) getSym("ADL_Main_Control_Destroy");
+    pADL_ConsoleMode_FileDescriptor_Set = (ADL_ConsoleMode_FileDescriptor_Set_T) getSym("ADL_ConsoleMode_FileDescriptor_Set");
+    pADL_Adapter_NumberOfAdapters_Get = (ADL_Adapter_NumberOfAdapters_Get_T) getSym("ADL_Adapter_NumberOfAdapters_Get");
+    pADL_Adapter_Active_Get = (ADL_Adapter_Active_Get_T) getSym("ADL_Adapter_Active_Get");
+    pADL_Adapter_AdapterInfo_Get = (ADL_Adapter_AdapterInfo_Get_T) getSym("ADL_Adapter_AdapterInfo_Get");
+    pADL_Overdrive5_CurrentActivity_Get = (ADL_Overdrive5_CurrentActivity_Get_T) getSym("ADL_Overdrive5_CurrentActivity_Get");
+    pADL_Overdrive5_Temperature_Get = (ADL_Overdrive5_Temperature_Get_T) getSym("ADL_Overdrive5_Temperature_Get");
+    pADL_Overdrive5_FanSpeedInfo_Get = (ADL_Overdrive5_FanSpeedInfo_Get_T) getSym("ADL_Overdrive5_FanSpeedInfo_Get");
+    pADL_Overdrive5_FanSpeed_Get = (ADL_Overdrive5_FanSpeed_Get_T) getSym("ADL_Overdrive5_FanSpeed_Get");
+    pADL_Overdrive5_ODParameters_Get = (ADL_Overdrive5_ODParameters_Get_T) getSym("ADL_Overdrive5_ODParameters_Get");
+    pADL_Overdrive5_ODPerformanceLevels_Get = (ADL_Overdrive5_ODPerformanceLevels_Get_T) getSym("ADL_Overdrive5_ODPerformanceLevels_Get");
+    pADL_Overdrive5_FanSpeed_Set = (ADL_Overdrive5_FanSpeed_Set_T) getSym("ADL_Overdrive5_FanSpeed_Set");
+    pADL_Overdrive5_FanSpeedToDefault_Set = (ADL_Overdrive5_FanSpeedToDefault_Set_T) getSym("ADL_Overdrive5_FanSpeedToDefault_Set");
+    pADL_Overdrive5_ODPerformanceLevels_Set = (ADL_Overdrive5_ODPerformanceLevels_Set_T) getSym("ADL_Overdrive5_ODPerformanceLevels_Set");
+
     return true;
 }
 catch(...)
