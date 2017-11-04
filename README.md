@@ -45,9 +45,10 @@ apt-get install g++
 apt-get install ocl-icd-opencl-dev
 apt-get install opencl
 apt-get install libpci-dev
+apt-get install unzip
 ```
 
-* install the adl sdk from here: `http://developer.amd.com/display-library-adl-sdk/`
+* download and unzip the adl sdk from here: `http://developer.amd.com/display-library-adl-sdk/`
 
 * clone this repo into the base path of the adl-sdk
 
