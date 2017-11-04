@@ -40,7 +40,12 @@ To build program you need:
 
 ## Installing prerequisites (Ubuntu)
 
-
+apt-get install g++
+apt-get install ocl-icd-opencl-dev
+apt-get install opencl
+apt-get install libpci-dev
+install the adl sdk from here: http://developer.amd.com/display-library-adl-sdk/
+clone this repo into the base path of the adl-sdk
 
 ### Building program
 
@@ -52,21 +57,19 @@ make
 
 ### Invoking program
 
-NOTE: If no X11 server is running, then this program requires root privileges.
+NOTE: If no X11 server is running, this program requires root privileges.
 
-To run program, just type:
+To run the program and get the current GPU settings, type:
 
 ```
 ./amdcovc
 ```
 
-This command prints current status of all adapters (graphics cards).
+To print more information about the current GPU adapters, type:
 
 ```
 ./amdcovc -v
 ```
-
-Prints more informations about graphics cards.
 
 To print help, type:
 
@@ -74,17 +77,16 @@ To print help, type:
 ./amdcovc -?
 ```
 
-To set core clock and memory clock for first adapter, just type:
+To set the core clock and memory clock for first adapter (0) to 1000MHz with a 
+memory clock of 1200MHz, type:
 
 ```
 ./amdcovc coreclk:0=1000 memclk:0=1200
 ```
 
-Sets core clock to 1000 MHz and memory clock to 1200 MHz.
-
 ### Understanding info printed by program
 
-The AMDCOVC by default prints following informations about graphics card:
+The AMDCOVC by default prints following information about a graphics card:
 
 ```
 Adapter 1: Pitcairn PRO [Radeon HD 7850 / R7 265 / R9 270 1024SP]
@@ -93,20 +95,20 @@ Adapter 1: Pitcairn PRO [Radeon HD 7850 / R7 265 / R9 270 1024SP]
   PerfLevels: Core: 300 - 1010 MHz, Mem: 150 - 1235 MHz, Vddc: 0.825 - 1.21 V
 ```
 
-The first line below adapter is current state of graphics card (core clock,
+The first line below the adapter is the current state of the graphics card (core clock,
 memory clock, voltage, load, temperature and fan speed).
 
-The `PerfLevels` is current performance level settings from lowest to highest.
-Ofcourse, the highest performance levels is used while some computations/rendering.
-First level will be used in idle mode (if no work).
+The `PerfLevels` are the current performance level settings from lowest to highest.
+The highest performance levels are used when there are computations/renderings occurring.
+The first level will be used in idle mode (when there is no work).
 
-The `Max Ranges` is minimal and maximal possible settings for graphics card.
+The `Max Ranges` are minimal and maximal possible settings for graphics card.
 
-The verbose informations contains:
+The verbose information contains:
 
-* current state of graphics (Current CoreClock,...)
-* minimal and maximal fan speed settings
-* minimal and maximal clocks and voltages
+* current state of the graphics adapter (Current CoreClock, MemoreClock, etc. )
+* minimum and maximum fan speed settings
+* minimum and maximum clock and voltage settings
 * current performance level settings
 * default performance level settings
 
@@ -130,17 +132,20 @@ Extra specifiers in parameters:
 * LEVEL - performance level (typically 0 or 1, default is last)
 * THID - thermal controller index (must be 0)
 
-You can use 'default' in value place to set default value.
-For fanspeed 'default' value force automatic speed setup.
+You can use the 'default' value in plce of a value to set the default value.
+For fanspeed the 'default' value forces an automatic speed setting.
 
-To overclock graphic card on AMD GPU(-PRO) driver, can you use `coreod` and `memod`
-parameters. Parameters coreclk and memclk is available in AMD GPU(-PRO) driver mode.
+To overclock a graphics card on an AMD GPU(-PRO) driver, use the `coreod` and `memod`
+parameters. 
+
+Parameters `coreclk` and `memclk` are available in AMD GPU(-PRO) driver mode.
 
 ### List of options
 
 List of options:
 
-* -a, --adapters=LIST - print informations only for these adapters
-* -v, --verbose - print verbose informations
-* --version - print version
-* -?, --help - print help
+* -a, --adapters=LIST - print information all adapters present.
+* -v, --verbose - print verbose information about current adapters.
+* --version - print version of this application.
+* -?, --help - print the help options.
+
