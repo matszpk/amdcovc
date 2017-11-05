@@ -47,11 +47,11 @@ private:
 
 public:
 
-    void PciAccessError(char* msg, ...)
+    void PciAccessError(char* msg, ...);
 
     void InitializePCIAccess();
 
-    void GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
+    void GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo);
 
 }
 
