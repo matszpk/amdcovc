@@ -40,6 +40,16 @@ extern "C" {
 #include "adlmaincontrol.h"
 #include "amdgpuadapterinfo.h"
 
+enum class OVCParamType
+{
+    CORE_CLOCK,
+    MEMORY_CLOCK,
+    VDDC_VOLTAGE,
+    FAN_SPEED,
+    CORE_OD,
+    MEMORY_OD
+};
+
 struct OVCParameter
 {
     OVCParamType type;

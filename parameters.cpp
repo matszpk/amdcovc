@@ -1,15 +1,5 @@
 # include "parameters.h"
 
-enum class OVCParamType
-{
-    CORE_CLOCK,
-    MEMORY_CLOCK,
-    VDDC_VOLTAGE,
-    FAN_SPEED,
-    CORE_OD,
-    MEMORY_OD
-};
-
 enum: int
 {
     LAST_PERFLEVEL = -1
