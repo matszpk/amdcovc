@@ -4,7 +4,7 @@ extern pci_access* pciAccess = nullptr;
 
 extern pci_filter pciFilter;
 
-void PCIAccess::pciAccessError(char* msg, ...)
+void PCIAccess::PciAccessError(char* msg, ...)
 {
     va_list ap;
 
@@ -15,7 +15,7 @@ void PCIAccess::pciAccessError(char* msg, ...)
     exit(-1);
 }
 
-void PCIAccess::initializePCIAccess()
+void PCIAccess::InitializePCIAccess()
 {
     pciAccess = pci_alloc();
 
@@ -31,7 +31,7 @@ void PCIAccess::initializePCIAccess()
     pci_scan_bus(pciAccess);
 }
 
-void PCIAccess::getFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
+void PCIAccess::GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
 {
     if (pciAccess==nullptr)
     {
