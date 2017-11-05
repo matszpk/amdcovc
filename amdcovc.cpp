@@ -55,23 +55,6 @@ extern "C" {
 
 #define AMDCOVC_VERSION "0.4.0"
 
-// Memory allocation function
-void* __stdcall ADL_Main_Memory_Alloc (int iSize)
-{
-    void* lpBuffer = malloc (iSize);
-    return lpBuffer;
-}
-
-// Optional Memory de-allocation function
-void __stdcall ADL_Main_Memory_Free (void** lpBuffer)
-{
-    if (nullptr != *lpBuffer)
-    {
-        free (*lpBuffer);
-        *lpBuffer = nullptr;
-    }
-}
-
 /*
  * AMD-GPU information
  */

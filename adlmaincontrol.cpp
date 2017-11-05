@@ -1,5 +1,22 @@
 #include "adlmaincontrol.h"
 
+// Memory allocation function
+void* __stdcall ADL_Main_Memory_Alloc (int iSize)
+{
+    void* lpBuffer = malloc (iSize);
+    return lpBuffer;
+}
+
+// Optional Memory de-allocation function
+void __stdcall ADL_Main_Memory_Free (void** lpBuffer)
+{
+    if (nullptr != *lpBuffer)
+    {
+        free (*lpBuffer);
+        *lpBuffer = nullptr;
+    }
+}
+
 ADLMainControl::ADLMainControl(const ATIADLHandle& _handle, int devId)
 
 try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
@@ -128,7 +145,7 @@ int ADLMainControl::getFanSpeed(int adapterIndex, int thermalCtrlIndex) const
     fanSpeedValue.iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_PERCENT;
     fanSpeedValue.iFlags = 0;
     fanSpeedValue.iSize = sizeof(ADLFanSpeedValue);
-    
+
     handle.Overdrive5_FanSpeed_Get(adapterIndex, thermalCtrlIndex, &fanSpeedValue);
 
     return fanSpeedValue.iFanSpeed;
