@@ -1,10 +1,10 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include <string>
+
 class Error: public std::exception
 {
-
-private:
 
     std::string description;
 
