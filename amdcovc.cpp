@@ -53,37 +53,9 @@ extern "C" {
 #include "atiadlhandle.h"
 #include "adlmaincontrol.h"
 #include "amdgpuadapterhandle.h"
+#include "amdgpuadapterinfo.h"
 
 #define AMDCOVC_VERSION "0.4.0"
-
-/*
- * AMD-GPU information
- */
-
-struct AMDGPUAdapterInfo
-{
-    unsigned int busNo;
-    unsigned int deviceNo;
-    unsigned int funcNo;
-    unsigned int vendorId;
-    unsigned int deviceId;
-    std::string name;
-    std::vector<unsigned int> memoryClocks;
-    std::vector<unsigned int> coreClocks;
-    unsigned int minFanSpeed;
-    unsigned int maxFanSpeed;
-    bool defaultFanSpeed;
-    unsigned int fanSpeed;
-    unsigned int coreClock;
-    unsigned int memoryClock;
-    unsigned int coreOD;
-    unsigned int memoryOD;
-    unsigned int temperature;
-    unsigned int tempCritical;
-    unsigned int busLanes;
-    unsigned int busSpeed;
-    int gpuLoad;
-};
 
 static pci_access* pciAccess = nullptr;
 static pci_filter pciFilter;
