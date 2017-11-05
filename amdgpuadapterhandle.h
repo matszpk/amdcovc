@@ -38,6 +38,7 @@ extern "C" {
 #include "error.h"
 #include "atiadlhandle.h"
 #include "adlmaincontrol.h"
+#include "amdgpuadapterinfo.h"
 
 class AMDGPUAdapterHandle
 {
