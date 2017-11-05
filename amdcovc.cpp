@@ -245,32 +245,6 @@ static void getFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
     }
 }
 
-static bool getFileContentValue(const char* filename, unsigned int& value)
-{
-    value = 0;
-
-    std::ifstream ifs(filename, std::ios::binary);
-
-    ifs.exceptions(std::ios::failbit);
-
-    std::string line;
-    std::getline(ifs, line);
-
-    char* p = (char*)line.c_str();
-    char* p2;
-
-    errno = 0;
-
-    value = strtoul(p, &p2, 0);
-
-    if (errno != 0)
-    {
-        throw Error("Unable to parse value from file");
-    }
-
-    return (p != p2);
-}
-
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
 

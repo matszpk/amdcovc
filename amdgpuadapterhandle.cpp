@@ -1,43 +1,5 @@
 #include "amdgpuadapterhandle.h"
 
-#ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE
-#endif
-
-#include <iostream>
-#include <exception>
-#include <vector>
-#include <dlfcn.h>
-#include <fstream>
-#include <algorithm>
-#include <cstdio>
-#include <cerrno>
-#include <cstdlib>
-#include <cstring>
-#include <string>
-#include <memory>
-#include <cmath>
-#include <cstdarg>
-#include <stdint.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <CL/cl.h>
-
-extern "C" {
-#include <pci/pci.h>
-}
-
-#ifdef __linux__
-#define LINUX 1
-#endif
-#include "./dependencies/ADL_SDK_V10.2/include/adl_sdk.h"
-
-#include "error.h"
-#include "atiadlhandle.h"
-#include "adlmaincontrol.h"
-
 AMDGPUAdapterHandle::AMDGPUAdapterHandle() : totDeviceCount(0)
 {
     errno = 0;
@@ -519,4 +481,30 @@ void AMDGPUAdapterHandle::setOverdriveMemoryParam(int index, unsigned int memory
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_mclk_od", cardIndex);
 
     writeFileContentValue(dbuf, memoryOD);
+}
+
+static bool getFileContentValue(const char* filename, unsigned int& value)
+{
+    value = 0;
+
+    std::ifstream ifs(filename, std::ios::binary);
+
+    ifs.exceptions(std::ios::failbit);
+
+    std::string line;
+    std::getline(ifs, line);
+
+    char* p = (char*)line.c_str();
+    char* p2;
+
+    errno = 0;
+
+    value = strtoul(p, &p2, 0);
+
+    if (errno != 0)
+    {
+        throw Error("Unable to parse value from file");
+    }
+
+    return (p != p2);
 }
