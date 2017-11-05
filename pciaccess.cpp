@@ -1,10 +1,10 @@
 #include "pciaccess.h"
 
-extern pci_access* pciAccess = nullptr;
+extern pci_access* pciAccess;
 
 extern pci_filter pciFilter;
 
-void PCIAccess::PciAccessError(char* msg, ...)
+void PciAccessError(char* msg, ...)
 {
     va_list ap;
 
@@ -24,7 +24,7 @@ void PCIAccess::InitializePCIAccess()
         throw Error("Unable to allocate memory for PCIAccess");
     }
 
-    pciAccess->error = pciAccessError;
+    pciAccess->error = PciAccessError;
 
     pci_filter_init(pciAccess, &pciFilter);
     pci_init(pciAccess);
@@ -35,7 +35,7 @@ void PCIAccess::GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterI
 {
     if (pciAccess==nullptr)
     {
-        initializePCIAccess();
+        InitializePCIAccess();
     }
 
     unsigned int busNum, devNum, funcNum;

@@ -58,7 +58,7 @@ extern "C" {
 
 #define AMDCOVC_VERSION "0.4.0"
 
-pci_access* pciAccess;
+pci_access* pciAccess = nullptr;
 
 pci_filter pciFilter;
 
@@ -66,7 +66,7 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
 {
     if (pciAccess==nullptr)
     {
-        initializePCIAccess();
+        PCIAccess::InitializePCIAccess();
     }
 
     char fnameBuf[64];

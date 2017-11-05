@@ -47,9 +47,9 @@ private:
 
 public:
 
-    void PciAccessError(char* msg, ...);
+//    void PciAccessError(char* msg, ...);
 
-    void InitializePCIAccess();
+    static void InitializePCIAccess();
 
     void GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo);
 
