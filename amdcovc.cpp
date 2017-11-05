@@ -1427,7 +1427,7 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle, const std::vector<int
 
         if (!adapterInfo.memoryClocks.empty())
         {
-            std::cout << "  Memory Clocks:";
+            std::cout << "  Memory Clocks: ";
 
             for (uint32_t v: adapterInfo.memoryClocks)
             {
@@ -1451,85 +1451,118 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle, const std::vec
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
     int i = 0;
+
     for (int ai = 0; ai < adaptersNum; ai++)
     {
-        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
-        { i++; continue; }
+        if (useChoosen && (choosenIter == choosenAdapters.end() || *choosenIter != i ) )
+        {
+            i++;
+            continue;
+        }
+
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
 
         std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
-                "  Device Topology: " << adapterInfo.busNo << ':' <<
-                adapterInfo.deviceNo << ":" <<
-                adapterInfo.funcNo << "\n"
-                "  Vendor ID: " << adapterInfo.vendorId << "\n"
-                "  Device ID: " << adapterInfo.deviceId << "\n"
-                "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
-                "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
-                "  Core Overdrive: " << adapterInfo.coreOD << "\n"
-                "  Memory Overdrive: " << adapterInfo.memoryOD << "\n";
+            "  Device Topology: " << adapterInfo.busNo << ':' << adapterInfo.deviceNo << ":" << adapterInfo.funcNo << "\n"
+            "  Vendor ID: " << adapterInfo.vendorId << "\n"
+            "  Device ID: " << adapterInfo.deviceId << "\n"
+            "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
+            "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
+            "  Core Overdrive: " << adapterInfo.coreOD << "\n"
+            "  Memory Overdrive: " << adapterInfo.memoryOD << "\n";
+
         if (adapterInfo.gpuLoad>=0)
+        {
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
+        }
+
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
-                "  Current BusLanes: " << adapterInfo.busLanes << "\n"
-                "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n"
-                "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
-                "  FanSpeed Min (Value): " << adapterInfo.minFanSpeed << "\n"
-                "  FanSpeed Max (Value): " << adapterInfo.maxFanSpeed << "\n"
-                "  Current FanSpeed: " << (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
-                        double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0) << "%\n"
-                "  Controlled FanSpeed: " <<
-                    (adapterInfo.defaultFanSpeed?"yes":"no") << "\n";
-            // print available core clocks
+            "  Current BusLanes: " << adapterInfo.busLanes << "\n"
+            "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n"
+            "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
+            "  FanSpeed Min (Value): " << adapterInfo.minFanSpeed << "\n"
+            "  FanSpeed Max (Value): " << adapterInfo.maxFanSpeed << "\n"
+            "  Current FanSpeed: " <<
+                (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/ double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0) << "%\n"
+            "  Controlled FanSpeed: " << ( adapterInfo.defaultFanSpeed ? "yes" : "no" ) << "\n";
+
+        // print available core clocks
         if (!adapterInfo.coreClocks.empty())
         {
             std::cout << "  Core clocks:\n";
+
             for (uint32_t v: adapterInfo.coreClocks)
+            {
                 std::cout << "    " << v << "MHz\n";
+            }
         }
+
         if (!adapterInfo.memoryClocks.empty())
         {
             std::cout << "  Memory Clocks:\n";
+
             for (uint32_t v: adapterInfo.memoryClocks)
+            {
                 std::cout << "    " << v << "MHz\n";
+            }
         }
+
         if (useChoosen)
+        {
             ++choosenIter;
+        }
+
         i++;
+        std::cout << std::endl;
     }
 }
 
 /* AMDGPU code */
 
-static void getActiveAdaptersIndices(ADLMainControl& mainControl, int adaptersNum,
-                    std::vector<int>& activeAdapters)
+static void getActiveAdaptersIndices(ADLMainControl& mainControl, int adaptersNum, std::vector<int>& activeAdapters)
 {
     activeAdapters.clear();
+
     for (int i = 0; i < adaptersNum; i++)
+    {
         if (mainControl.isAdapterActive(i))
+        {
             activeAdapters.push_back(i);
+        }
+    }
 }
 
-static void printAdaptersInfo(ADLMainControl& mainControl, int adaptersNum,
-            const std::vector<int>& activeAdapters,
-            const std::vector<int>& choosenAdapters, bool useChoosen)
+static void printAdaptersInfo(ADLMainControl& mainControl, int adaptersNum, const std::vector<int>& activeAdapters, const std::vector<int>& choosenAdapters,
+                              bool useChoosen)
 {
     std::unique_ptr<AdapterInfo[]> adapterInfos(new AdapterInfo[adaptersNum]);
     ::memset(adapterInfos.get(), 0, sizeof(AdapterInfo)*adaptersNum);
     mainControl.getAdapterInfo(adapterInfos.get());
+
     int i = 0;
     auto choosenIter = choosenAdapters.begin();
+
     for (int ai = 0; ai < adaptersNum; ai++)
     {
         if (!mainControl.isAdapterActive(ai))
+        {
             continue;
-        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
-        { i++; continue; }
+        }
 
-        if (adapterInfos[ai].strAdapterName[0]==0)
+        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
+        {
+            i++;
+            continue;
+        }
+
+        if (adapterInfos[ai].strAdapterName[0] == 0)
+        {
             getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
+        }
 
         ADLPMActivity activity;
         mainControl.getCurrentActivity(ai, activity);
+
         std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
                 "  Core: " << activity.iEngineClock/100.0 << " MHz, "
                 "Mem: " << activity.iMemoryClock/100.0 << " MHz, "
@@ -1537,150 +1570,215 @@ static void printAdaptersInfo(ADLMainControl& mainControl, int adaptersNum,
                 "Load: " << activity.iActivityPercent << "%, "
                 "Temp: " << mainControl.getTemperature(ai, 0)/1000.0 << " C, "
                 "Fan: " << mainControl.getFanSpeed(ai, 0) << "%" << std::endl;
+
         ADLODParameters odParams;
         mainControl.getODParameters(ai, odParams);
-        std::cout << "  Max Ranges: Core: " << odParams.sEngineClock.iMin/100.0 << " - " <<
-            odParams.sEngineClock.iMax/100.0 << " MHz, "
-            "Mem: " << odParams.sMemoryClock.iMin/100.0 << " - " <<
-                odParams.sMemoryClock.iMax/100.0 << " MHz, " <<
-            "Vddc: " <<  odParams.sVddc.iMin/1000.0 << " - " <<
-                odParams.sVddc.iMax/1000.0 << " V\n";
+
+        std::cout << "  Max Ranges: Core: " << odParams.sEngineClock.iMin/100.0 << " - " << odParams.sEngineClock.iMax/100.0 << " MHz, "
+            "Mem: " << odParams.sMemoryClock.iMin/100.0 << " - " << odParams.sMemoryClock.iMax/100.0 << " MHz, " <<
+            "Vddc: " <<  odParams.sVddc.iMin/1000.0 << " - " << odParams.sVddc.iMax/1000.0 << " V\n";
+
         int levelsNum = odParams.iNumberOfPerformanceLevels;
-        std::unique_ptr<ADLODPerformanceLevel[]> odPLevels(
-                new ADLODPerformanceLevel[levelsNum]);
+
+        std::unique_ptr<ADLODPerformanceLevel[]> odPLevels(new ADLODPerformanceLevel[levelsNum]);
+
         mainControl.getODPerformanceLevels(ai, false, levelsNum, odPLevels.get());
-        std::cout << "  PerfLevels: Core: " << odPLevels[0].iEngineClock/100.0 << " - " <<
-            odPLevels[levelsNum-1].iEngineClock/100.0 << " MHz, "
-            "Mem: " << odPLevels[0].iMemoryClock/100.0 << " - " <<
-            odPLevels[levelsNum-1].iMemoryClock/100.0 << " MHz, "
-            "Vddc: " << odPLevels[0].iVddc/1000.0 << " - " <<
-            odPLevels[levelsNum-1].iVddc/1000.0 << " V\n";
+
+        std::cout << "  PerfLevels: Core: " << odPLevels[0].iEngineClock/100.0 << " - " << odPLevels[levelsNum-1].iEngineClock/100.0 << " MHz, "
+            "Mem: " << odPLevels[0].iMemoryClock/100.0 << " - " << odPLevels[levelsNum-1].iMemoryClock/100.0 << " MHz, "
+            "Vddc: " << odPLevels[0].iVddc/1000.0 << " - " << odPLevels[levelsNum-1].iVddc/1000.0 << " V\n";
+
         if (useChoosen)
+        {
             ++choosenIter;
+        }
+
         i++;
+        std::cout << std::endl;
     }
 }
 
-static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNum,
-            const std::vector<int>& activeAdapters,
-            const std::vector<int>& choosenAdapters, bool useChoosen)
+static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNum, const std::vector<int>& activeAdapters, const std::vector<int>& choosenAdapters,
+                                     bool useChoosen)
 {
     std::unique_ptr<AdapterInfo[]> adapterInfos(new AdapterInfo[adaptersNum]);
     ::memset(adapterInfos.get(), 0, sizeof(AdapterInfo)*adaptersNum);
+
     mainControl.getAdapterInfo(adapterInfos.get());
+
     int i = 0;
     auto choosenIter = choosenAdapters.begin();
+
     for (int ai = 0; ai < adaptersNum; ai++)
     {
         if (!mainControl.isAdapterActive(ai))
+        {
             continue;
+        }
+
         if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
-        { i++; continue; }
-        if (adapterInfos[ai].strAdapterName[0]==0)
+        {
+            i++;
+            continue;
+        }
+
+        if (adapterInfos[ai].strAdapterName[0] == 0)
+        {
             getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
-        std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
-                "  Device Topology: " << adapterInfos[ai].iBusNumber << ':' <<
-                adapterInfos[ai].iDeviceNumber << ":" <<
-                adapterInfos[ai].iFunctionNumber << "\n"
-                "  Vendor ID: " << adapterInfos[ai].iVendorID << std::endl;
+        }
+
+        std::cout <<
+            "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
+            "  Device Topology: " << adapterInfos[ai].iBusNumber << ':' << adapterInfos[ai].iDeviceNumber << ":" << adapterInfos[ai].iFunctionNumber << "\n"
+            "  Vendor ID: " << adapterInfos[ai].iVendorID << std::endl;
+
         ADLFanSpeedInfo fsInfo;
         ADLPMActivity activity;
+
         mainControl.getCurrentActivity(ai, activity);
-        std::cout << "  Current CoreClock: " << activity.iEngineClock/100.0 << " MHz\n"
-                "  Current MemoryClock: " << activity.iMemoryClock/100.0 << " MHz\n"
-                "  Current Voltage: " << activity.iVddc/1000.0 << " V\n"
-                "  GPU Load: " << activity.iActivityPercent << "%\n"
-                "  Current PerfLevel: " << activity.iCurrentPerformanceLevel << "\n"
-                "  Current BusSpeed: " << activity.iCurrentBusSpeed << "\n"
-                "  Current BusLanes: " << activity.iCurrentBusLanes<< "\n";
+
+        std::cout << "  Current CoreClock: " << activity.iEngineClock / 100.0 << " MHz\n"
+            "  Current MemoryClock: " << activity.iMemoryClock / 100.0 << " MHz\n"
+            "  Current Voltage: " << activity.iVddc / 1000.0 << " V\n"
+            "  GPU Load: " << activity.iActivityPercent << "%\n"
+            "  Current PerfLevel: " << activity.iCurrentPerformanceLevel << "\n"
+            "  Current BusSpeed: " << activity.iCurrentBusSpeed << "\n"
+            "  Current BusLanes: " << activity.iCurrentBusLanes<< "\n";
 
         int temperature = mainControl.getTemperature(ai, 0);
+
         std::cout << "  Temperature: " << temperature/1000.0 << " C\n";
+
         mainControl.getFanSpeedInfo(ai, 0, fsInfo);
+
         std::cout << "  FanSpeed Min: " << fsInfo.iMinPercent << "%\n"
-                "  FanSpeed Max: " << fsInfo.iMaxPercent << "%\n"
-                "  FanSpeed MinRPM: " << fsInfo.iMinRPM << " RPM\n"
-                "  FanSpeed MaxRPM: " << fsInfo.iMaxRPM << " RPM" << "\n";
+            "  FanSpeed Max: " << fsInfo.iMaxPercent << "%\n"
+            "  FanSpeed MinRPM: " << fsInfo.iMinRPM << " RPM\n"
+            "  FanSpeed MaxRPM: " << fsInfo.iMaxRPM << " RPM" << "\n";
+
         std::cout << "  Current FanSpeed: " << mainControl.getFanSpeed(ai, 0) << "%\n";
+
         ADLODParameters odParams;
         mainControl.getODParameters(ai, odParams);
-        std::cout << "  CoreClock: " << odParams.sEngineClock.iMin/100.0 << " - " <<
-                odParams.sEngineClock.iMax/100.0 << " MHz, step: " <<
-                odParams.sEngineClock.iStep/100.0 << " MHz\n"
-                "  MemClock: " << odParams.sMemoryClock.iMin/100.0 << " - " <<
-                odParams.sMemoryClock.iMax/100.0 << " MHz, step: " <<
-                odParams.sMemoryClock.iStep/100.0 << " MHz\n"
-                "  Voltage: " << odParams.sVddc.iMin/1000.0 << " - " <<
-                odParams.sVddc.iMax/1000.0 << " V, step: " <<
-                odParams.sVddc.iStep/1000.0 << " V\n";
-        std::unique_ptr<ADLODPerformanceLevel[]> odPLevels(
-                new ADLODPerformanceLevel[odParams.iNumberOfPerformanceLevels]);
-        mainControl.getODPerformanceLevels(ai, false, odParams.iNumberOfPerformanceLevels,
-                                odPLevels.get());
+
+        std::cout <<
+            "  CoreClock: " << odParams.sEngineClock.iMin / 100.0 << " - " << odParams.sEngineClock.iMax / 100.0 <<
+            " MHz, step: " << odParams.sEngineClock.iStep / 100.0 << " MHz\n"
+            "  MemClock: " << odParams.sMemoryClock.iMin / 100.0 << " - " << odParams.sMemoryClock.iMax / 100.0 <<
+            " MHz, step: " << odParams.sMemoryClock.iStep / 100.0 << " MHz\n"
+            "  Voltage: " << odParams.sVddc.iMin / 1000.0 << " - " << odParams.sVddc.iMax / 1000.0 <<
+            " V, step: " << odParams.sVddc.iStep / 1000.0 << " V\n";
+
+        std::unique_ptr<ADLODPerformanceLevel[]> odPLevels(new ADLODPerformanceLevel[odParams.iNumberOfPerformanceLevels]);
+
+        mainControl.getODPerformanceLevels(ai, false, odParams.iNumberOfPerformanceLevels, odPLevels.get());
+
         std::cout << "  Performance levels: " << odParams.iNumberOfPerformanceLevels << "\n";
+
         for (int j = 0; j < odParams.iNumberOfPerformanceLevels; j++)
-            std::cout << "    Performance Level: " << j << "\n"
-                "      CoreClock: " << odPLevels[j].iEngineClock/100.0 << " MHz\n"
-                "      MemClock: " << odPLevels[j].iMemoryClock/100.0 << " MHz\n"
-                "      Voltage: " << odPLevels[j].iVddc/1000.0 << " V\n";
-        mainControl.getODPerformanceLevels(ai, true, odParams.iNumberOfPerformanceLevels,
-                                odPLevels.get());
-        std::cout << "  Default Performance levels: " <<
-                        odParams.iNumberOfPerformanceLevels << "\n";
+        {
+            std::cout <<
+                "    Performance Level: " << j << "\n"
+                "      CoreClock: " << odPLevels[j].iEngineClock / 100.0 << " MHz\n"
+                "      MemClock: " << odPLevels[j].iMemoryClock / 100.0 << " MHz\n"
+                "      Voltage: " << odPLevels[j].iVddc / 1000.0 << " V\n";
+        }
+
+        mainControl.getODPerformanceLevels(ai, true, odParams.iNumberOfPerformanceLevels, odPLevels.get());
+
+        std::cout << "  Default Performance levels: " << odParams.iNumberOfPerformanceLevels << "\n";
+
         for (int j = 0; j < odParams.iNumberOfPerformanceLevels; j++)
-            std::cout << "    Performance Level: " << j << "\n"
-                "      CoreClock: " << odPLevels[j].iEngineClock/100.0 << " MHz\n"
-                "      MemClock: " << odPLevels[j].iMemoryClock/100.0 << " MHz\n"
-                "      Voltage: " << odPLevels[j].iVddc/1000.0 << " V\n";
+        {
+            std::cout <<
+                "    Performance Level: " << j << "\n"
+                "      CoreClock: " << odPLevels[j].iEngineClock / 100.0 << " MHz\n"
+                "      MemClock: " << odPLevels[j].iMemoryClock / 100.0 << " MHz\n"
+                "      Voltage: " << odPLevels[j].iVddc / 1000.0 << " V\n";
+        }
+
         std::cout.flush();
+
         if (useChoosen)
+        {
             ++choosenIter;
+        }
+
         i++;
+        std::cout << std::endl;
     }
 }
 
-static void parseAdaptersList(const char* string, std::vector<int>& adapters,
-                              bool& allAdapters)
+static void parseAdaptersList(const char* string, std::vector<int>& adapters, bool& allAdapters)
 {
     adapters.clear();
     allAdapters = false;
-    if (::strcmp(string, "all")==0)
+
+    if (::strcmp(string, "all") == 0)
     {
         allAdapters = true;
         return;
     }
+
     while (true)
     {
         char* endptr;
         errno = 0;
         int adapterIndex = strtol(string, &endptr, 10);
+
         if (errno!=0 || endptr==string)
+        {
             throw Error("Unable to parse adapter index");
+        }
 
         string = endptr;
+
         if (*string == '-')
-        {   // if range
+        {
+            // if range
             string++;
             errno = 0;
             int adapterIndexEnd = strtol(string, &endptr, 10);
+
             if (errno!=0 || endptr==string)
+            {
                 throw Error("Unable to parse adapter index");
+            }
+
             string = endptr;
+
             if (adapterIndex>adapterIndexEnd)
+            {
                 throw Error("Wrong range of adapter indices in adapter list");
+            }
+
             for (int i = adapterIndex; i <= adapterIndexEnd; i++)
+            {
                 adapters.push_back(i);
+            }
         }
         else
+        {
             adapters.push_back(adapterIndex);
-        if (*string==0)
+        }
+
+        if (*string == 0)
+        {
             break;
+        }
+
         if (*string==',')
+        {
             string++;
+        }
         else
-            throw Error("Garbages at adapter list");
+        {
+            throw Error("Invalid data in adapter list");
+        }
     }
+
     std::sort(adapters.begin(), adapters.end());
+
     adapters.resize(std::unique(adapters.begin(), adapters.end()) - adapters.begin());
 }
 
@@ -1694,7 +1792,8 @@ enum class OVCParamType
     MEMORY_OD
 };
 
-enum: int {
+enum: int
+{
     LAST_PERFLEVEL = -1
 };
 
@@ -1712,15 +1811,19 @@ struct OVCParameter
 static bool parseOVCParameter(const char* string, OVCParameter& param)
 {
     const char* afterName = strchr(string, ':');
+
     if (afterName==nullptr)
     {
         afterName = strchr(string, '=');
+
         if (afterName==nullptr)
         {
             std::cerr << "This is not parameter: '" << string << "'!" << std::endl;
+
             return false;
         }
     }
+
     std::string name(string, afterName);
     param.argText = string;
     param.adapters.clear();
@@ -1729,6 +1832,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     param.partId = 0;
     param.useDefault = false;
     bool partIdSet = false;
+
     if (name=="coreclk")
     {
         param.type = OVCParamType::CORE_CLOCK;
@@ -1781,16 +1885,26 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     }
 
     char* next;
-    if (*afterName==':')
-    {   // if is
+
+    if (*afterName == ':')
+    {
+        // if is
         afterName++;
+
         try
         {
             const char* afterList = ::strchr(afterName, ':');
+
             if (afterList==nullptr)
+            {
                 afterList = ::strchr(afterName, '=');
+            }
+
             if (afterList==nullptr)
+            {
                 afterList += strlen(afterName); // to end
+            }
+
             if (afterList!=afterName)
             {
                 std::string listString(afterName, afterList);
@@ -1800,14 +1914,15 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         }
         catch(const Error& error)
         {
-            std::cerr << "Unable to parse adapter list for '" << string << "': " <<
-                        error.what() << std::endl;
+            std::cerr << "Unable to parse adapter list for '" << string << "': " << error.what() << std::endl;
+
             return false;
         }
     }
     else if (*afterName==0)
     {
         std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+
         return false;
     }
 
@@ -1816,13 +1931,18 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         afterName++;
         errno = 0;
         int value = strtol(afterName, &next, 10);
+
         if (errno!=0)
         {
             std::cerr << "Unable to parse partId in '" << string << "'!" << std::endl;
             return false;
         }
+
         if (afterName != next)
+        {
             param.partId = value;
+        }
+
         afterName = next;
     }
     else if (*afterName==0)
@@ -1835,7 +1955,8 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     {
         afterName++;
         errno = 0;
-        if (::strcmp(afterName, "default")==0)
+
+        if (::strcmp(afterName, "default") == 0)
         {
             param.useDefault = true;
             afterName += 7;
@@ -1843,14 +1964,17 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         else
         {
             param.value = strtod(afterName, &next);
+
             if (errno!=0 || afterName==next)
             {
                 std::cerr << "Unable to parse value in '" << string << "'!" << std::endl;
+
                 return false;
             }
             if (std::isinf(param.value) || std::isnan(param.value))
             {
                 std::cerr << "Value of '" << string << "' is not finite!" << std::endl;
+
                 return false;
             }
             afterName = next;
@@ -1858,16 +1982,17 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         if (*afterName!=0)
         {
             std::cerr << "Garbage in '" << string << "'!" << std::endl;
+
             return false;
         }
     }
     else
     {
         std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+
         return false;
     }
-    /*std::cout << "param: " << int(param.type) << ", dev: " << param.adapterIndex <<
-            ", pid: " << param.partId << ", value=" << param.value << std::endl;*/
+
     return true;
 }
 
@@ -1885,10 +2010,11 @@ struct AdapterIterator
     int allAdaptersNum;
     int position;
 
-    AdapterIterator(const std::vector<int>& _adapters, bool _allAdapters,
-            int _allAdaptersNum) : adapters(_adapters), allAdapters(_allAdapters),
+    AdapterIterator(const std::vector<int>& _adapters, bool _allAdapters, int _allAdaptersNum) : adapters(_adapters), allAdapters(_allAdapters),
             allAdaptersNum(_allAdaptersNum), position(0)
-    { }
+    {
+
+    }
 
     AdapterIterator& operator++()
     {
@@ -1898,30 +2024,29 @@ struct AdapterIterator
 
     operator bool() const
     {
-        return (!allAdapters && position < int(adapters.size())) ||
-                (allAdapters && position < allAdaptersNum);
+        return (!allAdapters && position < int(adapters.size())) || (allAdapters && position < allAdaptersNum);
     }
     bool operator!() const
     {
-        return !((!allAdapters && position < int(adapters.size())) ||
-                (allAdapters && position < allAdaptersNum));
+        return !((!allAdapters && position < int(adapters.size())) || (allAdapters && position < allAdaptersNum));
     }
     int operator*() const
-    { return allAdapters ? position : adapters[position]; }
+    {
+        return allAdapters ? position : adapters[position];
+    }
 };
 
-static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
-            const std::vector<int>& activeAdapters,
-            const std::vector<OVCParameter>& ovcParams)
+static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum, const std::vector<int>& activeAdapters, const std::vector<OVCParameter>& ovcParams)
 {
-    std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
+    std::cout << "WARNING: Setting AMD Overdrive parameters!" << std::endl;
     std::cout <<
         "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
-        "please STOP ANY GPU computations and GPU renderings.\n"
-        "Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n"
+        "please stop all GPU computations and GPU renderings.\n"
+        "Please use this utility carefully, as it can damage your hardware.\n"
         << std::endl;
 
     const int realAdaptersNum = activeAdapters.size();
+
     std::vector<ADLODParameters> odParams(realAdaptersNum);
     std::vector<std::vector<ADLODPerformanceLevel> > perfLevels(realAdaptersNum);
     std::vector<std::vector<ADLODPerformanceLevel> > defaultPerfLevels(realAdaptersNum);
@@ -1929,36 +2054,41 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
     std::fill(changedDevices.begin(), changedDevices.end(), false);
 
     bool failed = false;
+
     for (OVCParameter param: ovcParams)
+    {
         if (!param.allAdapters)
         {
             bool listFailed = false;
+
             for (int adapterIndex: param.adapters)
-                if (!listFailed && (adapterIndex>=realAdaptersNum || adapterIndex<0))
+            {
+                if (!listFailed && (adapterIndex>=realAdaptersNum || adapterIndex <0 ))
                 {
-                    std::cerr << "Some adapter indices out of range in '" <<
-                                    param.argText << "'!" << std::endl;
+                    std::cerr << "Some adapter indices are out of range in '" << param.argText << "'!" << std::endl;
                     listFailed = failed = true;
                 }
+            }
         }
+    }
 
     // check fanspeed
     for (OVCParameter param: ovcParams)
-        if (param.type==OVCParamType::FAN_SPEED)
+    {
+        if (param.type == OVCParamType::FAN_SPEED)
         {
-            if(param.partId!=0)
+            if(param.partId != 0)
             {
-                std::cerr << "Thermal Control Index is not 0 in '" <<
-                        param.argText << "'!" << std::endl;
+                std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
                 failed = true;
             }
-            if(!param.useDefault && (param.value<0.0 || param.value>100.0))
+            if(!param.useDefault && (param.value < 0.0 || param.value > 100.0))
             {
-                std::cerr << "FanSpeed value out of range in '" <<
-                        param.argText << "'!" << std::endl;
+                std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
                 failed = true;
             }
         }
+    }
 
     for (int ai = 0; ai < realAdaptersNum; ai++)
     {
@@ -1966,10 +2096,8 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
         mainControl.getODParameters(i, odParams[ai]);
         perfLevels[ai].resize(odParams[ai].iNumberOfPerformanceLevels);
         defaultPerfLevels[ai].resize(odParams[ai].iNumberOfPerformanceLevels);
-        mainControl.getODPerformanceLevels(i, 0, odParams[ai].iNumberOfPerformanceLevels,
-                    perfLevels[ai].data());
-        mainControl.getODPerformanceLevels(i, 1, odParams[ai].iNumberOfPerformanceLevels,
-                    defaultPerfLevels[ai].data());
+        mainControl.getODPerformanceLevels(i, 0, odParams[ai].iNumberOfPerformanceLevels, perfLevels[ai].data());
+        mainControl.getODPerformanceLevels(i, 1, odParams[ai].iNumberOfPerformanceLevels, defaultPerfLevels[ai].data());
     }
 
     // check other params
