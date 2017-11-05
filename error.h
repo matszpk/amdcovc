@@ -10,7 +10,7 @@ private:
 
 public:
 
-    explicit Error(const char* _description) : description(_description);
+    explicit Error(const char* _description);
 
     Error(int error, const char* _description);
 
