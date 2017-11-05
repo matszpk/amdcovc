@@ -53,7 +53,7 @@ public:
 
     void GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo);
 
-}
+};
 
 
 
