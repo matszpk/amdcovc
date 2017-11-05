@@ -131,7 +131,7 @@ static const char* versionString =
     "amdcovc " AMDCOVC_VERSION
     " by Mateusz Szpakowski (matszpk@interia.pl)\n"
     "Program is distributed under terms of the GPLv2.\n"
-    "Program available at https://github.com/matszpk/amdcovc.\n"
+    "Program available at https://github.com/matszpk/amdcovc.\n";
 
 int main(int argc, const char** argv)
 try
