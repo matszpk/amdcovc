@@ -109,3 +109,80 @@ void PCIAccess::GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterI
         }
     }
 }
+
+void PCIAccess::GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
+{
+    if (pciAccess==nullptr)
+    {
+        PCIAccess::InitializePCIAccess();
+    }
+
+    char fnameBuf[64];
+
+    snprintf(fnameBuf, 64, "/proc/ati/%u/name", deviceIndex);
+
+    std::string tmp, pciBusStr;
+    {
+        std::ifstream procNameIs(fnameBuf);
+        procNameIs.exceptions(std::ios::badbit|std::ios::failbit);
+        procNameIs >> tmp >> tmp >> pciBusStr;
+    }
+
+    unsigned int busNum, devNum, funcNum;
+
+    if (pciBusStr.size() < 9)
+    {
+        throw Error("Invalid PCI Bus string");
+    }
+
+    char* pciStrPtr = (char*)pciBusStr.data() + 4;
+    char* pciStrPtrNew;
+
+    errno  = 0;
+    busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
+
+    if (errno != 0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse BusID");
+    }
+
+    pciStrPtr = pciStrPtrNew+1;
+    errno  = 0;
+    devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+
+    if (errno!=0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse DevID");
+    }
+
+    pciStrPtr = pciStrPtrNew+1;
+    errno  = 0;
+    funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+
+    if (errno != 0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse FuncID");
+    }
+
+    pci_dev* dev = pciAccess->devices;
+
+    for (; dev != nullptr; dev = dev->next)
+    {
+        if (dev->bus == busNum && dev->dev == devNum && dev->func == funcNum)
+        {
+            char deviceBuf[128];
+            deviceBuf[0] = 0;
+
+            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE, dev->vendor_id, dev->device_id);
+
+            adapterInfo.iBusNumber = busNum;
+            adapterInfo.iDeviceNumber = devNum;
+            adapterInfo.iFunctionNumber = funcNum;
+            adapterInfo.iVendorID = dev->vendor_id;
+
+            strcpy(adapterInfo.strAdapterName, deviceBuf);
+
+            break;
+        }
+    }
+}

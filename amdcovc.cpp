@@ -62,83 +62,6 @@ pci_access* pciAccess = nullptr;
 
 pci_filter pciFilter;
 
-static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
-{
-    if (pciAccess==nullptr)
-    {
-        PCIAccess::InitializePCIAccess();
-    }
-
-    char fnameBuf[64];
-
-    snprintf(fnameBuf, 64, "/proc/ati/%u/name", deviceIndex);
-
-    std::string tmp, pciBusStr;
-    {
-        std::ifstream procNameIs(fnameBuf);
-        procNameIs.exceptions(std::ios::badbit|std::ios::failbit);
-        procNameIs >> tmp >> tmp >> pciBusStr;
-    }
-
-    unsigned int busNum, devNum, funcNum;
-
-    if (pciBusStr.size() < 9)
-    {
-        throw Error("Invalid PCI Bus string");
-    }
-
-    char* pciStrPtr = (char*)pciBusStr.data() + 4;
-    char* pciStrPtrNew;
-
-    errno  = 0;
-    busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
-
-    if (errno != 0 || pciStrPtr == pciStrPtrNew)
-    {
-        throw Error(errno, "Unable to parse BusID");
-    }
-
-    pciStrPtr = pciStrPtrNew+1;
-    errno  = 0;
-    devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
-
-    if (errno!=0 || pciStrPtr == pciStrPtrNew)
-    {
-        throw Error(errno, "Unable to parse DevID");
-    }
-
-    pciStrPtr = pciStrPtrNew+1;
-    errno  = 0;
-    funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
-
-    if (errno != 0 || pciStrPtr == pciStrPtrNew)
-    {
-        throw Error(errno, "Unable to parse FuncID");
-    }
-
-    pci_dev* dev = pciAccess->devices;
-
-    for (; dev != nullptr; dev = dev->next)
-    {
-        if (dev->bus == busNum && dev->dev == devNum && dev->func == funcNum)
-        {
-            char deviceBuf[128];
-            deviceBuf[0] = 0;
-
-            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE, dev->vendor_id, dev->device_id);
-
-            adapterInfo.iBusNumber = busNum;
-            adapterInfo.iDeviceNumber = devNum;
-            adapterInfo.iFunctionNumber = funcNum;
-            adapterInfo.iVendorID = dev->vendor_id;
-
-            strcpy(adapterInfo.strAdapterName, deviceBuf);
-
-            break;
-        }
-    }
-}
-
 static void printAdaptersInfo(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen)
 {
     int adaptersNum = handle.getAdaptersNum();
@@ -311,7 +234,7 @@ static void printAdaptersInfo(ADLMainControl& mainControl, int adaptersNum, cons
 
         if (adapterInfos[ai].strAdapterName[0] == 0)
         {
-            getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
+            PCIAccess::GetFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
         }
 
         ADLPMActivity activity;
@@ -378,7 +301,7 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
 
         if (adapterInfos[ai].strAdapterName[0] == 0)
         {
-            getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
+            PCIAccess::GetFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
         }
 
         std::cout <<
@@ -937,7 +860,9 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum, const
     }
 
     for (OVCParameter param: ovcParams)
+    {
         if (param.type!=OVCParamType::FAN_SPEED)
+        {
             for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum); ait; ++ait)
             {
                 int i = *ait;
@@ -1008,6 +933,8 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum, const
                         break;
                 }
             }
+        }
+    }
 
     std::vector<FanSpeedSetup> fanSpeedSetups(realAdaptersNum);
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
@@ -1152,14 +1079,14 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle, const std::vector<OVCP
     // check fanspeed
     for (OVCParameter param: ovcParams)
     {
-        if (param.type==OVCParamType::FAN_SPEED)
+        if (param.type == OVCParamType::FAN_SPEED)
         {
-            if(param.partId!=0)
+            if(param.partId != 0)
             {
                 std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
                 failed = true;
             }
-            if(!param.useDefault && (param.value<0.0 || param.value>100.0))
+            if(!param.useDefault && (param.value < 0.0 || param.value>100.0))
             {
                 std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
                 failed = true;
@@ -1169,6 +1096,7 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle, const std::vector<OVCP
 
     // check other params
     for (OVCParameter param: ovcParams)
+    {
         if (param.type!=OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
@@ -1234,6 +1162,7 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle, const std::vector<OVCP
                 }
             }
         }
+    }
 
     if (failed)
     {
@@ -1607,6 +1536,7 @@ try
     }
 
     ATIADLHandle handle;
+
     if (handle.open())
     {
         // AMD Catalyst/Crimson
