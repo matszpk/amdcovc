@@ -49,6 +49,8 @@ extern "C" {
 #endif
 #include "../include/adl_sdk.h"
 
+#include "error.h"
+
 #define AMDCOVC_VERSION "0.4.0"
 
 // Memory allocation function
@@ -68,39 +70,39 @@ void __stdcall ADL_Main_Memory_Free (void** lpBuffer)
     }
 }
 
-class Error: public std::exception
-{
-
-private:
-
-    std::string description;
-
-public:
-
-    explicit Error(const char* _description) : description(_description)
-    {
-
-    }
-
-    Error(int error, const char* _description)
-    {
-        char errorBuf[32];
-        snprintf(errorBuf, 32, "code %d: ", error);
-        description = errorBuf;
-        description += _description;
-    }
-
-    virtual ~Error() noexcept
-    {
-
-    }
-
-    const char* what() const noexcept
-    {
-        return description.c_str();
-    }
-
-};
+// class Error: public std::exception
+// {
+//
+// private:
+//
+//     std::string description;
+//
+// public:
+//
+//     explicit Error(const char* _description) : description(_description)
+//     {
+//
+//     }
+//
+//     Error(int error, const char* _description)
+//     {
+//         char errorBuf[32];
+//         snprintf(errorBuf, 32, "code %d: ", error);
+//         description = errorBuf;
+//         description += _description;
+//     }
+//
+//     virtual ~Error() noexcept
+//     {
+//
+//     }
+//
+//     const char* what() const noexcept
+//     {
+//         return description.c_str();
+//     }
+//
+// };
 
 class ATIADLHandle
 {
