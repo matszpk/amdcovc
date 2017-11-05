@@ -1,0 +1,10 @@
+makefile is for building in Linux environment.
+Run “make” to create executable file adlutil
+Run “make clean” to remove adlutil ( equivalent with “rm adlutil”)
+
+
+Without the makefile, the easiest way to build this is to run the following command:
+
+gcc main.c –o adlutil –DLINUX –ldl –I ../include/ 
+
+-ldl (all lower cases), -I (capital i)
