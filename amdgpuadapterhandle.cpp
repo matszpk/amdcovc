@@ -363,8 +363,7 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     ::readlink(dbuf, rlink, 120);
     rlink[119] = 0;
 
-    PCIAccess* pciAccessObj = new PCIAccess();
-    pciAccessObj->GetFromPCI_AMDGPU(rlink, adapterInfo);
+    PCIAccess::GetFromPCI_AMDGPU(rlink, adapterInfo);
 
     // parse pp_dpm_sclk
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
