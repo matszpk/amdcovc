@@ -1028,35 +1028,63 @@ static std::vector<unsigned int> parseDPMFile(const char* filename, uint32_t& ch
 {
     std::vector<uint32_t> out;
     std::ifstream ifs(filename, std::ios::binary);
+
     choosen = UINT32_MAX;
+
     while (ifs)
     {
         std::string line;
         std::getline(ifs, line);
+
         if (line.empty())
+        {
             break;
+        }
+
         char* p = (char*)line.c_str();
         char* p2 = (char*)line.c_str();
         errno = 0;
         unsigned int index = strtoul(p, &p2, 10);
-        if (errno!=0 || p==p2)
+
+        if (errno !=0 || p == p2)
+        {
             throw Error(errno, "Can't parse index");
+        }
+
         p = p2;
-        if (*p!=':' || p[1]!=' ')
+
+        if (*p != ':' || p[1] != ' ')
+        {
             throw Error(errno, "Can't parse next part of line");
+        }
+
         p += 2;
+
         unsigned int clock = strtoul(p, &p2, 10);
-        if (errno!=0 || p==p2)
+
+        if (errno != 0 || p == p2)
+        {
             throw Error(errno, "Can't parse clock");
+        }
+
         p = p2;
+
         if (::strncmp(p, "Mhz", 3) != 0)
+        {
             throw Error(errno, "Can't parse next part of line");
+        }
+
         p += 3;
-        if (*p==' ' && p[1]=='*')
+
+        if (*p == ' ' && p[1] == '*')
+        {
             choosen = index;
-        out.resize(index+1);
+        }
+
+        out.resize(index + 1);
         out[index] = clock;
     }
+
     return out;
 }
 
