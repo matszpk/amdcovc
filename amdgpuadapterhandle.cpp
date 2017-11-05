@@ -2,6 +2,19 @@
 
 static pci_access* pciAccess = nullptr;
 
+static pci_filter pciFilter;
+
+static void pciAccessError(char* msg, ...)
+{
+    va_list ap;
+
+    va_start(ap, msg);
+    vprintf(msg, ap);
+    va_end(ap);
+
+    exit(-1);
+}
+
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
     std::ofstream ofs(filename, std::ios::binary);
