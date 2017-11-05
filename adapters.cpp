@@ -21,11 +21,11 @@ struct AdapterIterator
 
     operator bool() const
     {
-        return (!allAdapters && position < int(adapters.size())) || (allAdapters && position < allAdaptersNum);
+        return ( !allAdapters && position < int(adapters.size())) || (allAdapters && position < allAdaptersNum );
     }
     bool operator!() const
     {
-        return !((!allAdapters && position < int(adapters.size())) || (allAdapters && position < allAdaptersNum));
+        return ! ( ( !allAdapters && position < int(adapters.size()) ) || (allAdapters && position < allAdaptersNum) );
     }
     int operator*() const
     {

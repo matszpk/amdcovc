@@ -64,4 +64,9 @@ public:
 
 };
 
+struct AdapterIterator
+{
+    AdapterIterator(const std::vector<int>& _adapters, bool _allAdapters, int _allAdaptersNum);
+};
+
 #endif /* ADAPTERS_H */
