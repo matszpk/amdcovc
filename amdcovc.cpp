@@ -327,7 +327,9 @@ void ATIADLHandle::Overdrive5_CurrentActivity_Get(int adapterIndex, ADLPMActivit
     int error = pADL_Overdrive5_CurrentActivity_Get(adapterIndex, activity);
 
     if (error != ADL_OK)
+    {
         throw Error(error, "ADL_Overdrive5_CurrentActivity_Get error");
+    }
 }
 
 void ATIADLHandle::Overdrive5_Temperature_Get(int adapterIndex, int thermalCtrlIndex, ADLTemperature *temperature) const
@@ -754,89 +756,142 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
 static void getFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
 {
     if (pciAccess==nullptr)
+    {
         initializePCIAccess();
+    }
+
     unsigned int busNum, devNum, funcNum;
     size_t rlinkLen = strlen(rlink);
-    if (rlinkLen < 18 || ::strncmp(rlink, "../../../", 9)!=0)
-        throw Error("Wrong PCI Bus string");
+
+    if (rlinkLen < 18 || ::strncmp(rlink, "../../../", 9) != 0)
+    {
+        throw Error("Invalid PCI Bus string");
+    }
+
     char* pciStrPtr = (char*)rlink+9;
     char* pciStrPtrNew;
-    while (isdigit(*pciStrPtr)) pciStrPtr++;
-    if (*pciStrPtr!=':')
-        throw Error(errno, "Can't parse PCI location");
+
+    while (isdigit(*pciStrPtr))
+    {
+        pciStrPtr++;
+    }
+
+    if (*pciStrPtr != ':')
+    {
+        throw Error(errno, "Unable to parse PCI location");
+    }
+
     pciStrPtr++;
     errno  = 0;
+
     busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
-    if (errno!=0 || pciStrPtr==pciStrPtrNew)
-        throw Error(errno, "Can't parse BusID");
+
+    if (errno != 0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse BusID");
+    }
+
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
     devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
-    if (errno!=0 || pciStrPtr==pciStrPtrNew)
-        throw Error(errno, "Can't parse DevID");
-    pciStrPtr = pciStrPtrNew+1;
+
+    if (errno !=0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse DevID");
+    }
+
+    pciStrPtr = pciStrPtrNew + 1;
     errno  = 0;
+
     funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
-    if (errno!=0 || pciStrPtr==pciStrPtrNew)
-        throw Error(errno, "Can't parse FuncID");
+
+    if (errno != 0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse FuncID");
+    }
+
     pci_dev* dev = pciAccess->devices;
-    for (; dev!=nullptr; dev=dev->next)
-        if (dev->bus==busNum && dev->dev==devNum && dev->func==funcNum)
+
+    for (; dev != nullptr; dev = dev->next)
+    {
+        if (dev->bus == busNum && dev->dev == devNum && dev->func == funcNum)
         {
             char deviceBuf[128];
             deviceBuf[0] = 0;
-            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE,
-                    dev->vendor_id, dev->device_id);
+
+            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE, dev->vendor_id, dev->device_id);
             adapterInfo.busNo = busNum;
             adapterInfo.deviceNo  = devNum;
             adapterInfo.funcNo = funcNum;
             adapterInfo.vendorId = dev->vendor_id;
             adapterInfo.deviceId = dev->device_id;
             adapterInfo.name = deviceBuf;
+
             break;
         }
+    }
 }
 
 
 class AMDGPUAdapterHandle
 {
+
 private:
+
     unsigned int totDeviceCount;
+
     std::vector<uint32_t> amdDevices;
     std::vector<uint32_t> hwmonIndices;
+
 public:
+
     AMDGPUAdapterHandle();
+
     unsigned int getAdaptersNum() const
-    { return amdDevices.size(); }
+    { 
+        return amdDevices.size(); 
+    }
+
     AMDGPUAdapterInfo parseAdapterInfo(int index);
     
     void setFanSpeed(int index, int fanSpeed) const;
     void setFanSpeedToDefault(int adapterIndex) const;
     void setOverdriveCoreParam(int adapterIndex, unsigned int coreOD) const;
     void setOverdriveMemoryParam(int adapterIndex, unsigned int memoryOD) const;
-    void getPerformanceClocks(int adapterIndex, unsigned int& coreClock,
-                    unsigned int& memoryClock) const;
+    void getPerformanceClocks(int adapterIndex, unsigned int& coreClock, unsigned int& memoryClock) const;
 };
 
 static bool getFileContentValue(const char* filename, unsigned int& value)
 {
     value = 0;
+    
     std::ifstream ifs(filename, std::ios::binary);
+    
     ifs.exceptions(std::ios::failbit);
+    
     std::string line;
     std::getline(ifs, line);
+    
     char* p = (char*)line.c_str();
     char* p2;
+    
     errno = 0;
+    
     value = strtoul(p, &p2, 0);
+
     if (errno != 0)
+    {
         throw Error("Can't parse value from file");
+    }
+
     return (p != p2);
 }
 
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
+
     std::ofstream ofs(filename, std::ios::binary);
+
     try
     {
         ofs.exceptions(std::ios::failbit);
@@ -844,7 +899,7 @@ static void writeFileContentValue(const char* filename, unsigned int value)
     }
     catch(const std::exception& ex)
     {
-        throw Error((std::string("Can't write file '")+filename+"'").c_str());
+        throw Error( (std::string("Can't write file '") + filename + "'").c_str() );
     }
 }
 
