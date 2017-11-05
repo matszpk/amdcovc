@@ -40,6 +40,12 @@ extern "C" {
 #include "adlmaincontrol.h"
 #include "amdgpuadapterinfo.h"
 
+struct PerfClocks
+{
+    unsigned int coreClock;
+    unsigned int memoryClock;
+};
+
 enum class OVCParamType
 {
     CORE_CLOCK,

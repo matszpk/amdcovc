@@ -12,12 +12,6 @@ struct FanSpeedSetup
     bool isSet;
 };
 
-struct PerfClocks
-{
-    unsigned int coreClock;
-    unsigned int memoryClock;
-};
-
 bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 {
     const char* afterName = strchr(string, ':');
