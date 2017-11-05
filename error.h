@@ -6,6 +6,8 @@
 class Error: public std::exception
 {
 
+private:
+
     std::string description;
 
 public:
