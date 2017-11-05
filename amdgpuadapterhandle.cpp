@@ -1,5 +1,38 @@
 #include "amdgpuadapterhandle.h"
 
+static pci_access* pciAccess = nullptr;
+
+static void writeFileContentValue(const char* filename, unsigned int value)
+{
+    std::ofstream ofs(filename, std::ios::binary);
+
+    try
+    {
+        ofs.exceptions(std::ios::failbit);
+        ofs << value << std::endl;
+    }
+    catch(const std::exception& ex)
+    {
+        throw Error( (std::string("Unable to  write to file '") + filename + "'").c_str() );
+    }
+}
+
+static void initializePCIAccess()
+{
+    pciAccess = pci_alloc();
+
+    if (pciAccess == nullptr)
+    {
+        throw Error("Unable to allocate memory for PCIAccess");
+    }
+
+    pciAccess->error = pciAccessError;
+
+    pci_filter_init(pciAccess, &pciFilter);
+    pci_init(pciAccess);
+    pci_scan_bus(pciAccess);
+}
+
 static bool getFileContentValue(const char* filename, unsigned int& value)
 {
     value = 0;
