@@ -42,6 +42,18 @@ extern "C" {
 #include "amdgpuadapterhandle.h"
 #include "adapters.h"
 
+enum: int
+{
+    LAST_PERFLEVEL = -1
+};
+
+struct FanSpeedSetup
+{
+    double value;
+    bool useDefault;
+    bool isSet;
+};
+
 struct PerfClocks
 {
     unsigned int coreClock;

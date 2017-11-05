@@ -1,17 +1,5 @@
 # include "parameters.h"
 
-enum: int
-{
-    LAST_PERFLEVEL = -1
-};
-
-struct FanSpeedSetup
-{
-    double value;
-    bool useDefault;
-    bool isSet;
-};
-
 bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 {
     const char* afterName = strchr(string, ':');
