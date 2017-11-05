@@ -716,7 +716,7 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
 
     if (errno!=0 || pciStrPtr == pciStrPtrNew)
     {
-        throw Error(errno, "Can't parse DevID");
+        throw Error(errno, "Unable to parse DevID");
     }
 
     pciStrPtr = pciStrPtrNew+1;
@@ -725,7 +725,7 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
 
     if (errno != 0 || pciStrPtr == pciStrPtrNew)
     {
-        throw Error(errno, "Can't parse FuncID");
+        throw Error(errno, "Unable to parse FuncID");
     }
 
     pci_dev* dev = pciAccess->devices;
@@ -1048,14 +1048,14 @@ static std::vector<unsigned int> parseDPMFile(const char* filename, uint32_t& ch
 
         if (errno !=0 || p == p2)
         {
-            throw Error(errno, "Can't parse index");
+            throw Error(errno, "Unable to parse index");
         }
 
         p = p2;
 
         if (*p != ':' || p[1] != ' ')
         {
-            throw Error(errno, "Can't parse next part of line");
+            throw Error(errno, "Unable to parse next part of line");
         }
 
         p += 2;
@@ -1064,14 +1064,14 @@ static std::vector<unsigned int> parseDPMFile(const char* filename, uint32_t& ch
 
         if (errno != 0 || p == p2)
         {
-            throw Error(errno, "Can't parse clock");
+            throw Error(errno, "Unable to parse clock");
         }
 
         p = p2;
 
         if (::strncmp(p, "Mhz", 3) != 0)
         {
-            throw Error(errno, "Can't parse next part of line");
+            throw Error(errno, "Unable to parse next part of line");
         }
 
         p += 3;
@@ -1113,35 +1113,35 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
 
         if (errno!=0 || p==p2)
         {
-            throw Error(errno, "Can't parse index");
+            throw Error(errno, "Unable to parse index");
         }
 
         p = p2;
 
         if (*p != ':' || p[1] != ' ')
         {
-            throw Error(errno, "Can't parse next part of line");
+            throw Error(errno, "Unable to parse next part of line");
         }
 
         p += 2;
         double bandwidth = strtod(p, &p2);
 
-        if (errno!=0 || p==p2)
+        if (errno != 0 || p == p2)
         {
-            throw Error(errno, "Can't parse bandwidth");
+            throw Error(errno, "Unable to parse bandwidth");
         }
 
         p = p2;
 
-        if (*p=='G' && p2[1]=='B')
+        if (*p == 'G' && p2[1] == 'B')
         {
             ipcieMB = bandwidth * 1000;
         }
-        else if (*p=='M' && p2[1]=='B')
+        else if (*p == 'M' && p2[1] == 'B')
         {
             ipcieMB = bandwidth;
         }
-        else if (*p=='M' && p2[1]=='B')
+        else if (*p == 'M' && p2[1] == 'B')
         {
             ipcieMB = bandwidth / 1000;
         }
@@ -1154,15 +1154,15 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
 
         if (::strncmp(p, ", x", 3) != 0)
         {
-            throw Error(errno, "Can't parse next part of line");
+            throw Error(errno, "Unable to parse next part of line");
         }
 
         errno = 0;
         ilanes = strtoul(p, &p2, 10);
 
-        if (errno!=0 || p==p2)
+        if (errno != 0 || p == p2)
         {
-            throw Error(errno, "Can't parse lanes");
+            throw Error(errno, "Unable to parse lanes");
         }
 
         if (*p == ' ' && p[1] == '*')
@@ -1175,30 +1175,40 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
     }
 }
 
-void AMDGPUAdapterHandle::getPerformanceClocks(int adapterIndex, unsigned int& coreClock,
-                    unsigned int& memoryClock) const
+void AMDGPUAdapterHandle::getPerformanceClocks(int adapterIndex, unsigned int& coreClock, unsigned int& memoryClock) const
 {
     char dbuf[120];
     unsigned int cardIndex = amdDevices[adapterIndex];
 
     unsigned int coreOD = 0;
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_sclk_od", cardIndex);
+
     getFileContentValue(dbuf, coreOD);
+
     unsigned int memoryOD = 0;
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_mclk_od", cardIndex);
+
     getFileContentValue(dbuf, memoryOD);
 
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
+
     unsigned int activeClockIndex;
     std::vector<unsigned int> clocks = parseDPMFile(dbuf, activeClockIndex);
     coreClock = 0;
+
     if (!clocks.empty())
-        coreClock = int(ceil(double(clocks.back()) / (1.0 + coreOD*0.01)));
+    {
+        coreClock = int(ceil(double(clocks.back()) / (1.0 + coreOD * 0.01)));
+    }
+
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_mclk", cardIndex);
     clocks = parseDPMFile(dbuf, activeClockIndex);
     memoryClock = 0;
+
     if (!clocks.empty())
-        memoryClock = int(ceil(double(clocks.back()) / (1.0 + memoryOD*0.01)));
+    {
+        memoryClock = int(ceil(double(clocks.back()) / (1.0 + memoryOD * 0.01)));
+    }
 }
 
 AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
@@ -1207,77 +1217,115 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     unsigned int cardIndex = amdDevices[index];
     char dbuf[120];
     char rlink[120];
+
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device", cardIndex);
+
     ::readlink(dbuf, rlink, 120);
     rlink[119] = 0;
+
     getFromPCI_AMDGPU(rlink, adapterInfo);
+
     // parse pp_dpm_sclk
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
+
     unsigned int activeCoreClockIndex;
     adapterInfo.coreClocks = parseDPMFile(dbuf, activeCoreClockIndex);
+
     if (activeCoreClockIndex!=UINT_MAX)
+    {
       adapterInfo.coreClock = adapterInfo.coreClocks[activeCoreClockIndex];
+    }
     else
+    {
       adapterInfo.coreClock = 0;
+    }
+
     // parse pp_dpm_mclk
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_mclk", cardIndex);
+
     unsigned int activeMemoryClockIndex;
     adapterInfo.memoryClocks = parseDPMFile(dbuf, activeMemoryClockIndex);
+
     if (activeMemoryClockIndex!=UINT_MAX)
+    {
       adapterInfo.memoryClock = adapterInfo.memoryClocks[activeMemoryClockIndex];
+    }
     else
+    {
       adapterInfo.memoryClock = 0;
+    }
 
     unsigned int hwmonIndex = hwmonIndices[index];
 
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_sclk_od", cardIndex);
+
     getFileContentValue(dbuf, adapterInfo.coreOD);
+
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_mclk_od", cardIndex);
+
     getFileContentValue(dbuf, adapterInfo.memoryOD);
+
     // get fanspeed
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_min",
-             cardIndex, hwmonIndex);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_min", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, adapterInfo.minFanSpeed);
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_max",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_max", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, adapterInfo.maxFanSpeed);
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, adapterInfo.fanSpeed);
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable", cardIndex, hwmonIndex);
+
     unsigned int pwmEnable = 0;
+
     getFileContentValue(dbuf, pwmEnable);
+
     adapterInfo.defaultFanSpeed = pwmEnable==2;
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_input",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_input", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, adapterInfo.temperature);
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_crit",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_crit", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, adapterInfo.tempCritical);
+
     // parse GPU load
     snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
     {
         adapterInfo.gpuLoad = -1;
+
         std::ifstream ifs(dbuf, std::ios::binary);
+
         while (ifs)
         {
             std::string line;
             std::getline(ifs, line);
-            if (line.compare(0, 10, "GPU load: ")==0 ||
-                line.compare(0, 10, "GPU Load: ")==0)
+
+            if (line.compare(0, 10, "GPU load: ") == 0 || line.compare(0, 10, "GPU Load: ") == 0)
             {
                 errno = 0;
                 char* endp;
                 adapterInfo.gpuLoad = strtoul(line.c_str()+10, &endp, 10);
+
                 if (errno != 0 || endp == line.c_str()+10)
-                    throw Error("Can't parse GPU load");
+                {
+                    throw Error("Unable to parse GPU load");
+                }
+
                 break;
             }
         }
     }
+
     snprintf(dbuf, 120, "/sys/class/drm/card%u/pp_dpm_pcie", cardIndex);
+
     parseDPMPCIEFile(dbuf, adapterInfo.busLanes, adapterInfo.busSpeed);
+
     return adapterInfo;
 }
 
@@ -1286,22 +1334,24 @@ void AMDGPUAdapterHandle::setFanSpeed(int index, int fanSpeed) const
     char dbuf[120];
     unsigned int cardIndex = amdDevices[index];
     unsigned int hwmonIndex = hwmonIndices[index];
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable", cardIndex, hwmonIndex);
+
     writeFileContentValue(dbuf, 1);
 
     unsigned int minFanSpeed, maxFanSpeed;
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_min",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_min", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, minFanSpeed);
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_max",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_max", cardIndex, hwmonIndex);
+
     getFileContentValue(dbuf, maxFanSpeed);
 
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1",
-             cardIndex, hwmonIndex);
-    writeFileContentValue(dbuf, int(round(
-            fanSpeed/100.0 * (maxFanSpeed-minFanSpeed) + minFanSpeed)));
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1", cardIndex, hwmonIndex);
+
+    writeFileContentValue(dbuf, int( round( fanSpeed/100.0 * (maxFanSpeed-minFanSpeed) + minFanSpeed) ) );
 }
 
 void AMDGPUAdapterHandle::setFanSpeedToDefault(int index) const
@@ -1309,8 +1359,9 @@ void AMDGPUAdapterHandle::setFanSpeedToDefault(int index) const
     char dbuf[120];
     unsigned int cardIndex = amdDevices[index];
     unsigned int hwmonIndex = hwmonIndices[index];
-    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable",
-             cardIndex, hwmonIndex);
+
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1_enable", cardIndex, hwmonIndex);
+
     writeFileContentValue(dbuf, 2);
 }
 
@@ -1318,7 +1369,9 @@ void AMDGPUAdapterHandle::setOverdriveCoreParam(int index, unsigned int coreOD) 
 {
     char dbuf[120];
     unsigned int cardIndex = amdDevices[index];
+
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_sclk_od", cardIndex);
+
     writeFileContentValue(dbuf, coreOD);
 }
 
@@ -1326,55 +1379,74 @@ void AMDGPUAdapterHandle::setOverdriveMemoryParam(int index, unsigned int memory
 {
     char dbuf[120];
     unsigned int cardIndex = amdDevices[index];
+
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_mclk_od", cardIndex);
+
     writeFileContentValue(dbuf, memoryOD);
 }
 
-static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
-            const std::vector<int>& choosenAdapters, bool useChoosen)
+static void printAdaptersInfo(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen)
 {
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
     int i = 0;
+
     for (int ai = 0; ai < adaptersNum; ai++)
     {
-        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
-        { i++; continue; }
+        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter != i ))
+        {
+            i++;
+            continue;
+        }
+
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
 
-        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
-                "  Core: " << adapterInfo.coreClock << " MHz, "
-                "Mem: " << adapterInfo.memoryClock << " MHz, "
-                "CoreOD: " << adapterInfo.coreOD << ", "
-                "MemOD: " << adapterInfo.memoryOD << ", ";
+        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n  Core: " << adapterInfo.coreClock << " MHz, Mem: " <<
+                adapterInfo.memoryClock << " MHz, CoreOD: " << adapterInfo.coreOD << ", MemOD: " << adapterInfo.memoryOD << ", ";
+
         if (adapterInfo.gpuLoad>=0)
+        {
             std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
-        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, "
-                "Fan: " << double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
-                        double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0 <<
-                        "%" << std::endl;
+        }
+
+        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, Fan: " <<
+                double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed) / double(adapterInfo.maxFanSpeed - adapterInfo.minFanSpeed) * 100.0 <<
+                "%" << std::endl;
+
         if (!adapterInfo.coreClocks.empty())
         {
             std::cout << "  Core clocks:";
+
             for (uint32_t v: adapterInfo.coreClocks)
+            {
                 std::cout << " " << v;
+            }
+
             std::cout << std::endl;
         }
+
         if (!adapterInfo.memoryClocks.empty())
         {
             std::cout << "  Memory Clocks:";
+
             for (uint32_t v: adapterInfo.memoryClocks)
+            {
                 std::cout << " " << v;
+            }
+
             std::cout << std::endl;
         }
+
         if (useChoosen)
+        {
             ++choosenIter;
+        }
+
         i++;
     }
 }
 
-static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
-            const std::vector<int>& choosenAdapters, bool useChoosen)
+static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen)
 {
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
@@ -1583,7 +1655,7 @@ static void parseAdaptersList(const char* string, std::vector<int>& adapters,
         errno = 0;
         int adapterIndex = strtol(string, &endptr, 10);
         if (errno!=0 || endptr==string)
-            throw Error("Can't parse adapter index");
+            throw Error("Unable to parse adapter index");
 
         string = endptr;
         if (*string == '-')
@@ -1592,7 +1664,7 @@ static void parseAdaptersList(const char* string, std::vector<int>& adapters,
             errno = 0;
             int adapterIndexEnd = strtol(string, &endptr, 10);
             if (errno!=0 || endptr==string)
-                throw Error("Can't parse adapter index");
+                throw Error("Unable to parse adapter index");
             string = endptr;
             if (adapterIndex>adapterIndexEnd)
                 throw Error("Wrong range of adapter indices in adapter list");
@@ -1728,7 +1800,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         }
         catch(const Error& error)
         {
-            std::cerr << "Can't parse adapter list for '" << string << "': " <<
+            std::cerr << "Unable to parse adapter list for '" << string << "': " <<
                         error.what() << std::endl;
             return false;
         }
@@ -1746,7 +1818,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         int value = strtol(afterName, &next, 10);
         if (errno!=0)
         {
-            std::cerr << "Can't parse partId in '" << string << "'!" << std::endl;
+            std::cerr << "Unable to parse partId in '" << string << "'!" << std::endl;
             return false;
         }
         if (afterName != next)
@@ -1773,7 +1845,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
             param.value = strtod(afterName, &next);
             if (errno!=0 || afterName==next)
             {
-                std::cerr << "Can't parse value in '" << string << "'!" << std::endl;
+                std::cerr << "Unable to parse value in '" << string << "'!" << std::endl;
                 return false;
             }
             if (std::isinf(param.value) || std::isnan(param.value))
@@ -1785,7 +1857,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         }
         if (*afterName!=0)
         {
-            std::cerr << "Garbages in '" << string << "'!" << std::endl;
+            std::cerr << "Garbage in '" << string << "'!" << std::endl;
             return false;
         }
     }
@@ -2100,66 +2172,68 @@ struct PerfClocks
     unsigned int memoryClock;
 };
 
-static void setOVCParameters(AMDGPUAdapterHandle& handle,
-            const std::vector<OVCParameter>& ovcParams,
-            const std::vector<PerfClocks>& perfClocks)
+static void setOVCParameters(AMDGPUAdapterHandle& handle, const std::vector<OVCParameter>& ovcParams, const std::vector<PerfClocks>& perfClocks)
 {
     std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
     std::cout <<
-        "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
-        "please STOP ANY GPU computations and GPU renderings.\n"
+        "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\nplease STOP ANY GPU computations and GPU renderings.\n"
         "Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n"
         << std::endl;
 
     bool failed = false;
     int adaptersNum = handle.getAdaptersNum();
+
     for (OVCParameter param: ovcParams)
+    {
         if (!param.allAdapters)
         {
             bool listFailed = false;
             for (int adapterIndex: param.adapters)
-                if (!listFailed && (adapterIndex>=adaptersNum || adapterIndex<0))
+            {
+                if (!listFailed && (adapterIndex>=adaptersNum || adapterIndex < 0))
                 {
-                    std::cerr << "Some adapter indices out of range in '" <<
-                                    param.argText << "'!" << std::endl;
+                    std::cerr << "Some adapter indices out of range in '" << param.argText << "'!" << std::endl;
                     listFailed = failed = true;
                 }
+            }
         }
+    }
 
     // check fanspeed
     for (OVCParameter param: ovcParams)
+    {
         if (param.type==OVCParamType::FAN_SPEED)
         {
             if(param.partId!=0)
             {
-                std::cerr << "Thermal Control Index is not 0 in '" <<
-                        param.argText << "'!" << std::endl;
+                std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
                 failed = true;
             }
             if(!param.useDefault && (param.value<0.0 || param.value>100.0))
             {
-                std::cerr << "FanSpeed value out of range in '" <<
-                        param.argText << "'!" << std::endl;
+                std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
                 failed = true;
             }
         }
+    }
 
     // check other params
     for (OVCParameter param: ovcParams)
         if (param.type!=OVCParamType::FAN_SPEED)
         {
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum);
-                        ait; ++ait)
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
                 int i = *ait;
                 if (i>=adaptersNum)
+                {
                     continue;
+                }
 
-                int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:0;
+                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : 0;
+
                 if (partId != 0)
                 {
-                    std::cerr << "Performance level out of range in '" <<
-                            param.argText << "'!" << std::endl;
+                    std::cerr << "Performance level out of range in '" << param.argText << "'!" << std::endl;
                     failed = true;
                     continue;
                 }
@@ -2169,43 +2243,41 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                 switch(param.type)
                 {
                     case OVCParamType::CORE_CLOCK:
-                        if (!param.useDefault &&
-                            (param.value < perfClks.coreClock ||
-                             param.value > perfClks.coreClock*1.20))
+
+                        if (!param.useDefault && (param.value < perfClks.coreClock || param.value > perfClks.coreClock * 1.20))
                         {
-                            std::cerr << "Core clock out of range in '" <<
-                                    param.argText << "'!" << std::endl;
+                            std::cerr << "Core clock out of range in '" << param.argText << "'!" << std::endl;
                             failed = true;
                         }
                         break;
+
                     case OVCParamType::MEMORY_CLOCK:
-                        if (!param.useDefault &&
-                            (param.value < perfClks.memoryClock ||
-                             param.value > perfClks.memoryClock*1.20))
+
+                        if (!param.useDefault && (param.value < perfClks.memoryClock || param.value > perfClks.memoryClock * 1.20))
                         {
-                            std::cerr << "Memory clock out of range in '" <<
-                                    param.argText << "'!" << std::endl;
+                            std::cerr << "Memory clock out of range in '" << param.argText << "'!" << std::endl;
                             failed = true;
                         }
                         break;
+
                     case OVCParamType::CORE_OD:
-                        if (!param.useDefault &&
-                            (param.value < 0.0 || param.value > 20.0))
+
+                        if (!param.useDefault && (param.value < 0.0 || param.value > 20.0))
                         {
-                            std::cerr << "Core Overdrive out of range in '" <<
-                                    param.argText << "'!" << std::endl;
+                            std::cerr << "Core Overdrive out of range in '" << param.argText << "'!" << std::endl;
                             failed = true;
                         }
                         break;
+
                     case OVCParamType::MEMORY_OD:
-                        if (!param.useDefault &&
-                            (param.value < 0.0 || param.value > 20.0))
+
+                        if (!param.useDefault && (param.value < 0.0 || param.value > 20.0))
                         {
-                            std::cerr << "Memory Overdrive out of range in '" <<
-                                    param.argText << "'!" << std::endl;
+                            std::cerr << "Memory Overdrive out of range in '" << param.argText << "'!" << std::endl;
                             failed = true;
                         }
                         break;
+
                     default:
                         break;
                 }
@@ -2214,143 +2286,206 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
 
     if (failed)
     {
-        std::cerr << "NO ANY settings applied. Error in parameters!" << std::endl;
-        throw Error("Wrong parameters!");
+        std::cerr << "Error in parameters. No settings have been applied." << std::endl;
+        throw Error("Invalid parameters.");
     }
 
     // print what has been changed
     for (OVCParameter param: ovcParams)
+    {
         if (param.type==OVCParamType::FAN_SPEED)
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum);
-                        ait; ++ait)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
-                std::cout << "Setting fanspeed to ";
+                std::cout << "Setting fan speed to ";
+
                 if (param.useDefault)
+                {
                     std::cout << "default";
+                }
                 else
+                {
                     std::cout << param.value << "%";
-                std::cout << " for adapter " << *ait << " at thermal controller " <<
-                        param.partId << std::endl;
+                }
+
+                std::cout << " for adapter " << *ait << " at thermal controller " << param.partId << std::endl;
             }
+        }
+    }
+
     for (OVCParameter param: ovcParams)
+    {
         if (param.type!=OVCParamType::FAN_SPEED)
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum);
-                        ait; ++ait)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
                 int i = *ait;
                 int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:0;
+
                 switch(param.type)
                 {
                     case OVCParamType::CORE_CLOCK:
+
                         std::cout << "Setting core clock to ";
                         if (param.useDefault)
+                        {
                             std::cout << "default";
+                        }
                         else
+                        {
                             std::cout << param.value << " MHz";
-                        std::cout << " for adapter " << i <<
-                                " at performance level " << partId << std::endl;
+                        }
+                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
                         break;
+
                     case OVCParamType::MEMORY_CLOCK:
+
                         std::cout << "Setting memory clock to ";
                         if (param.useDefault)
+                        {
                             std::cout << "default";
+                        }
                         else
+                        {
                             std::cout << param.value << " MHz";
-                        std::cout << " for adapter " << i <<
-                                " at performance level " << partId << std::endl;
+                        }
+                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
                         break;
+
                     case OVCParamType::CORE_OD:
+
                         std::cout << "Setting core overdrive to ";
+
                         if (param.useDefault)
+                        {
                             std::cout << "default";
+                        }
                         else
+                        {
                             std::cout << param.value;
-                        std::cout << " for adapter " << i <<
-                                " at performance level " << partId << std::endl;
+                        }
+
+                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
                         break;
+
                     case OVCParamType::MEMORY_OD:
+
                         std::cout << "Setting memory overdrive to ";
+
                         if (param.useDefault)
+                        {
                             std::cout << "default";
+                        }
                         else
+                        {
                             std::cout << param.value;
-                        std::cout << " for adapter " << i <<
-                                " at performance level " << partId << std::endl;
+                        }
+
+                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
                         break;
+
                     case OVCParamType::VDDC_VOLTAGE:
-                        std::cout << "VDDC voltage available only for "
-                                "AMD Catalyst/Crimson drivers." << std::endl;
+
+                        std::cout << "VDDC voltage available only for AMD Catalyst/Crimson drivers." << std::endl;
                         break;
+
                     default:
                         break;
                 }
             }
+        }
+    }
 
     std::vector<FanSpeedSetup> fanSpeedSetups(adaptersNum);
-    std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(),
-              FanSpeedSetup{ 0.0, false, false });
+    std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
+
     for (OVCParameter param: ovcParams)
+    {
         if (param.type==OVCParamType::FAN_SPEED)
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum);
-                        ait; ++ait)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
                 fanSpeedSetups[*ait].value = param.value;
                 fanSpeedSetups[*ait].useDefault = param.useDefault;
                 fanSpeedSetups[*ait].isSet = true;
             }
+        }
+    }
 
     for (OVCParameter param: ovcParams)
+    {
         if (param.type!=OVCParamType::FAN_SPEED)
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum);
-                        ait; ++ait)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
                 int i = *ait;
+
                 const PerfClocks& perfClks = perfClocks[i];
 
                 switch(param.type)
                 {
                     case OVCParamType::CORE_CLOCK:
                         if (param.useDefault)
+                        {
                             handle.setOverdriveCoreParam(i, 0);
+                        }
                         else
-                            handle.setOverdriveCoreParam(i,
-                                int(round((double(param.value - perfClks.coreClock) /
-                                        perfClks.coreClock)*100.0)));
+                        {
+                            handle.setOverdriveCoreParam(i, int(round((double(param.value - perfClks.coreClock) / perfClks.coreClock) * 100.0)));
+                        }
                         break;
                     case OVCParamType::MEMORY_CLOCK:
                         if (param.useDefault)
+                        {
                             handle.setOverdriveMemoryParam(i, 0);
+                        }
                         else
-                            handle.setOverdriveMemoryParam(i,
-                                int(round((double(param.value - perfClks.memoryClock) /
-                                        perfClks.memoryClock)*100.0)));
+                        {
+                            handle.setOverdriveMemoryParam(i, int(round((double(param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0)));
+                        }
                         break;
                     case OVCParamType::CORE_OD:
                         if (param.useDefault)
+                        {
                             handle.setOverdriveCoreParam(i, 0);
+                        }
                         else
+                        {
                             handle.setOverdriveCoreParam(i, int(round(param.value)));
+                        }
                         break;
                     case OVCParamType::MEMORY_OD:
                         if (param.useDefault)
+                        {
                             handle.setOverdriveMemoryParam(i, 0);
+                        }
                         else
+                        {
                             handle.setOverdriveMemoryParam(i, int(round(param.value)));
+                        }
                         break;
                     default:
                         break;
                 }
             }
+        }
+    }
 
     /// set fan speeds
     for (int i = 0; i < adaptersNum; i++)
+    {
         if (fanSpeedSetups[i].isSet)
         {
             if (!fanSpeedSetups[i].useDefault)
+            {
                 handle.setFanSpeed(i, int(round(fanSpeedSetups[i].value)));
+            }
             else
+            {
                 handle.setFanSpeedToDefault(i);
+            }
         }
+    }
 }
 
 /* AMDGPU code */
@@ -2504,7 +2639,7 @@ try
 
     if (failed)
     {
-        throw Error("Can't parse parameters");
+        throw Error("Unable to parse parameters");
     }
 
     ATIADLHandle handle;
