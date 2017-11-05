@@ -51,7 +51,7 @@ public:
 
     static void GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo);
 
-    static GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo);
+    static void GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo);
 
 };
 
