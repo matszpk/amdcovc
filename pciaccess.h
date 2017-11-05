@@ -38,15 +38,20 @@ extern "C" {
 #include "error.h"
 #include "atiadlhandle.h"
 #include "adlmaincontrol.h"
-
+#include "amdgpuadapterinfo.h"
 
 class PCIAccess
 {
+
 private:
 
 public:
 
-  
+    void PCIAccess::pciAccessError(char* msg, ...)
+
+    void initializePCIAccess();
+
+    void getFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
 
 }
 

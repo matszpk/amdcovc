@@ -1,6 +1,10 @@
 #include "amdgpuadapterhandle.h"
 #include "pciaccess.h"
 
+pci_access* pciAccess;
+
+pci_filter pciFilter;
+
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
     std::ofstream ofs(filename, std::ios::binary);
@@ -12,7 +16,7 @@ static void writeFileContentValue(const char* filename, unsigned int value)
     }
     catch(const std::exception& ex)
     {
-        throw Error( (std::string("Unable to  write to file '") + filename + "'").c_str() );
+        throw Error( (std::string("Unable to write to file '") + filename + "'").c_str() );
     }
 }
 
