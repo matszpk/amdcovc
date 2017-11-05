@@ -602,11 +602,9 @@ void ADLMainControl::setFanSpeedToDefault(int adapterIndex, int thermalCtrlIndex
     handle.Overdrive5_FanSpeedToDefault_Set(adapterIndex, thermalCtrlIndex);
 }
 
-void ADLMainControl::setODPerformanceLevels(int adapterIndex, int perfLevelsNum,
-            ADLODPerformanceLevel* perfLevels) const
+void ADLMainControl::setODPerformanceLevels(int adapterIndex, int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const
 {
-    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels)+
-                    sizeof(ADLODPerformanceLevel)*(perfLevelsNum-1);
+    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel)*(perfLevelsNum -1);
     std::unique_ptr<char[]> odPlBuf(new char[odPLBufSize]);
     ADLODPerformanceLevels* odPLevels = (ADLODPerformanceLevels*)odPlBuf.get();
     odPLevels->iSize = odPLBufSize;
@@ -616,7 +614,7 @@ void ADLMainControl::setODPerformanceLevels(int adapterIndex, int perfLevelsNum,
 }
 
 /*
- * AMD-GPU infos
+ * AMD-GPU information
  */
 
 struct AMDGPUAdapterInfo
@@ -650,18 +648,25 @@ static pci_filter pciFilter;
 static void pciAccessError(char* msg, ...)
 {
     va_list ap;
+
     va_start(ap, msg);
     vprintf(msg, ap);
     va_end(ap);
+
     exit(-1);
 }
 
 static void initializePCIAccess()
 {
     pciAccess = pci_alloc();
-    if (pciAccess==nullptr)
-        throw Error("Can't allocate PCIAccess");
+
+    if (pciAccess == nullptr)
+    {
+        throw Error("Unable to allocate memory for PCIAccess");
+    }
+
     pciAccess->error = pciAccessError;
+
     pci_filter_init(pciAccess, &pciFilter);
     pci_init(pciAccess);
     pci_scan_bus(pciAccess);
@@ -670,49 +675,78 @@ static void initializePCIAccess()
 static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
 {
     if (pciAccess==nullptr)
+    {
         initializePCIAccess();
+    }
+
     char fnameBuf[64];
+
     snprintf(fnameBuf, 64, "/proc/ati/%u/name", deviceIndex);
+
     std::string tmp, pciBusStr;
     {
         std::ifstream procNameIs(fnameBuf);
         procNameIs.exceptions(std::ios::badbit|std::ios::failbit);
         procNameIs >> tmp >> tmp >> pciBusStr;
     }
+
     unsigned int busNum, devNum, funcNum;
+
     if (pciBusStr.size() < 9)
-        throw Error("Wrong PCI Bus string");
-    char* pciStrPtr = (char*)pciBusStr.data()+4;
+    {
+        throw Error("Invalid PCI Bus string");
+    }
+
+    char* pciStrPtr = (char*)pciBusStr.data() + 4;
     char* pciStrPtrNew;
+
     errno  = 0;
     busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
-    if (errno!=0 || pciStrPtr==pciStrPtrNew)
-        throw Error(errno, "Can't parse BusID");
+
+    if (errno != 0 || pciStrPtr == pciStrPtrNew)
+    {
+        throw Error(errno, "Unable to parse BusID");
+    }
+
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
     devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
-    if (errno!=0 || pciStrPtr==pciStrPtrNew)
+
+    if (errno!=0 || pciStrPtr == pciStrPtrNew)
+    {
         throw Error(errno, "Can't parse DevID");
+    }
+
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
     funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
-    if (errno!=0 || pciStrPtr==pciStrPtrNew)
+
+    if (errno != 0 || pciStrPtr == pciStrPtrNew)
+    {
         throw Error(errno, "Can't parse FuncID");
+    }
+
     pci_dev* dev = pciAccess->devices;
-    for (; dev!=nullptr; dev=dev->next)
-        if (dev->bus==busNum && dev->dev==devNum && dev->func==funcNum)
+
+    for (; dev != nullptr; dev = dev->next)
+    {
+        if (dev->bus == busNum && dev->dev == devNum && dev->func == funcNum)
         {
             char deviceBuf[128];
             deviceBuf[0] = 0;
-            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE,
-                    dev->vendor_id, dev->device_id);
+
+            pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE, dev->vendor_id, dev->device_id);
+
             adapterInfo.iBusNumber = busNum;
             adapterInfo.iDeviceNumber = devNum;
             adapterInfo.iFunctionNumber = funcNum;
             adapterInfo.iVendorID = dev->vendor_id;
+
             strcpy(adapterInfo.strAdapterName, deviceBuf);
+
             break;
         }
+    }
 }
 
 /* AMDGPU code */
