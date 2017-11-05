@@ -124,7 +124,7 @@ void PCIAccess::GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
     std::string tmp, pciBusStr;
     {
         std::ifstream procNameIs(fnameBuf);
-        procNameIs.exceptions(std::ios::badbit|std::ios::failbit);
+        procNameIs.exceptions(std::ios::badbit | std::ios::failbit);
         procNameIs >> tmp >> tmp >> pciBusStr;
     }
 

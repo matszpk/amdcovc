@@ -80,6 +80,6 @@ public:
 
     static bool ParseOVCParameter(const char* string, OVCParameter& param);
 
-}
+};
 
 #endif /* PARAMETERS_H */
