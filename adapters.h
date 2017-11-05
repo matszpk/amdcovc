@@ -39,6 +39,7 @@ extern "C" {
 #include "atiadlhandle.h"
 #include "adlmaincontrol.h"
 #include "amdgpuadapterinfo.h"
+#include "amdgpuadapterhandle.h"
 
 class Adapters
 {
