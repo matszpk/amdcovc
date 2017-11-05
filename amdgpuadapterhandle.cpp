@@ -1,8 +1,8 @@
 #include "amdgpuadapterhandle.h"
 
-extern static pci_access* pciAccess = nullptr;
+extern pci_access* pciAccess = nullptr;
 
-extern static pci_filter pciFilter;
+extern pci_filter pciFilter;
 
 static void pciAccessError(char* msg, ...)
 {
