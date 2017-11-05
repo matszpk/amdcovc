@@ -80,7 +80,6 @@ bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 
     if (*afterName == ':')
     {
-        // if is
         afterName++;
 
         try
@@ -308,7 +307,7 @@ void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, 
 
     if (failed)
     {
-        std::cerr << "NO ANY settings applied. Error in parameters!" << std::endl;
+        std::cerr << "No settings applied. Error in parameters!" << std::endl;
         throw Error("Wrong parameters!");
     }
 
@@ -522,8 +521,8 @@ void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, 
 void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector<OVCParameter>& ovcParams, const std::vector<PerfClocks>& perfClocks)
 {
     std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
-    std::cout << "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\nplease STOP ANY GPU computations and GPU renderings.\n"
-        "Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n" << std::endl;
+    std::cout << "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\nplease STOP ANY GPU computations and renderings.\n"
+        "Please use this utility carefully as it can damage your hardware.\n" << std::endl;
 
     bool failed = false;
     int adaptersNum = handle.getAdaptersNum();
@@ -675,6 +674,7 @@ void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector
                     case OVCParamType::CORE_CLOCK:
 
                         std::cout << "Setting core clock to ";
+
                         if (param.useDefault)
                         {
                             std::cout << "default";
@@ -689,6 +689,7 @@ void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector
                     case OVCParamType::MEMORY_CLOCK:
 
                         std::cout << "Setting memory clock to ";
+
                         if (param.useDefault)
                         {
                             std::cout << "default";

@@ -138,7 +138,7 @@ void PCIAccess::GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
     char* pciStrPtr = (char*)pciBusStr.data() + 4;
     char* pciStrPtrNew;
 
-    errno  = 0;
+    errno = 0;
     busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
 
     if (errno != 0 || pciStrPtr == pciStrPtrNew)
@@ -147,7 +147,7 @@ void PCIAccess::GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
     }
 
     pciStrPtr = pciStrPtrNew+1;
-    errno  = 0;
+    errno = 0;
     devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
 
     if (errno!=0 || pciStrPtr == pciStrPtrNew)
@@ -156,7 +156,7 @@ void PCIAccess::GetFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
     }
 
     pciStrPtr = pciStrPtrNew+1;
-    errno  = 0;
+    errno = 0;
     funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
 
     if (errno != 0 || pciStrPtr == pciStrPtrNew)
