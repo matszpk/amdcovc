@@ -19,7 +19,7 @@ LIBS = -ldl -lpci -lm -lOpenCL -pthread
 
 all: amdcovc
 
-amdcovc: amdcovc.o error.o
+amdcovc: $(OBJ_FILES)
 	$(CXX) $(LDFLAGS) $(LIBDIRS) -o $@ $^ $(LIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp

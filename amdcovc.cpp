@@ -47,7 +47,7 @@ extern "C" {
 #ifdef __linux__
 #define LINUX 1
 #endif
-#include "../include/adl_sdk.h"
+#include "./dependencies/ADL_SDK_V10.2/include/adl_sdk.h"
 
 #include "error.h"
 
