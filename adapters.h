@@ -66,7 +66,35 @@ public:
 
 struct AdapterIterator
 {
-    AdapterIterator(const std::vector<int>& _adapters, bool _allAdapters, int _allAdaptersNum);
+    const std::vector<int>& adapters;
+    bool allAdapters;
+    int allAdaptersNum;
+    int position;
+
+    AdapterIterator(const std::vector<int>& _adapters, bool _allAdapters, int _allAdaptersNum) :
+        adapters(_adapters), allAdapters(_allAdapters), allAdaptersNum(_allAdaptersNum), position(0)
+    {
+
+    }
+
+    AdapterIterator& operator++()
+    {
+        position++;
+        return *this;
+    }
+
+    operator bool() const
+    {
+        return ( !allAdapters && position < int(adapters.size())) || (allAdapters && position < allAdaptersNum );
+    }
+    bool operator!() const
+    {
+        return ! ( ( !allAdapters && position < int(adapters.size()) ) || (allAdapters && position < allAdaptersNum) );
+    }
+    int operator*() const
+    {
+        return allAdapters ? position : adapters[position];
+    }
 };
 
 #endif /* ADAPTERS_H */
