@@ -1,10 +1,6 @@
 #include "amdgpuadapterhandle.h"
 #include "pciaccess.h"
 
-pci_access* pciAccess;
-
-pci_filter pciFilter;
-
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
     std::ofstream ofs(filename, std::ios::binary);
