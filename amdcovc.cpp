@@ -1091,48 +1091,87 @@ static std::vector<unsigned int> parseDPMFile(const char* filename, uint32_t& ch
 static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigned int& lanes)
 {
     std::ifstream ifs(filename, std::ios::binary);
+
     unsigned int ilanes = 0, ipcieMB = 0;
+
     while (ifs)
     {
         std::string line;
         std::getline(ifs, line);
+
         if (line.empty())
+        {
             break;
+        }
+
         char* p = (char*)line.c_str();
         char* p2 = (char*)line.c_str();
+
         errno = 0;
+
         strtoul(p, &p2, 10);
+
         if (errno!=0 || p==p2)
+        {
             throw Error(errno, "Can't parse index");
+        }
+
         p = p2;
-        if (*p!=':' || p[1]!=' ')
+
+        if (*p != ':' || p[1] != ' ')
+        {
             throw Error(errno, "Can't parse next part of line");
+        }
+
         p += 2;
         double bandwidth = strtod(p, &p2);
+
         if (errno!=0 || p==p2)
+        {
             throw Error(errno, "Can't parse bandwidth");
+        }
+
         p = p2;
+
         if (*p=='G' && p2[1]=='B')
-            ipcieMB = bandwidth*1000;
+        {
+            ipcieMB = bandwidth * 1000;
+        }
         else if (*p=='M' && p2[1]=='B')
+        {
             ipcieMB = bandwidth;
+        }
         else if (*p=='M' && p2[1]=='B')
-            ipcieMB = bandwidth/1000;
+        {
+            ipcieMB = bandwidth / 1000;
+        }
         else 
-            throw Error(errno, "Wrong bandwidth specifier");
+        {
+            throw Error(errno, "Invalid bandwidth specified");
+        }
+
         p += 2;
-        if (::strncmp(p, ", x", 3)!=0)
+
+        if (::strncmp(p, ", x", 3) != 0)
+        {
             throw Error(errno, "Can't parse next part of line");
+        }
+
         errno = 0;
         ilanes = strtoul(p, &p2, 10);
+
         if (errno!=0 || p==p2)
+        {
             throw Error(errno, "Can't parse lanes");
-        if (*p==' ' && p[1]=='*')
+        }
+
+        if (*p == ' ' && p[1] == '*')
         {
             lanes = ilanes;
             pcieMB = ipcieMB;
             break;
         }
+
     }
 }
 
