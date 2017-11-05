@@ -40,6 +40,7 @@ extern "C" {
 #include "adlmaincontrol.h"
 #include "amdgpuadapterinfo.h"
 #include "amdgpuadapterhandle.h"
+#include "pciaccess.h"
 
 class Adapters
 {
