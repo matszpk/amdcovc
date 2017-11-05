@@ -50,6 +50,8 @@ extern "C" {
 #include "./dependencies/ADL_SDK_V10.2/include/adl_sdk.h"
 
 #include "error.h"
+#include "atiadlhandle.h"
+
 
 #define AMDCOVC_VERSION "0.4.0"
 

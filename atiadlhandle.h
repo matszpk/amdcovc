@@ -1,6 +1,15 @@
 #ifndef ATIADLHANDLE_H
 #define ATIADLHANDLE_H
 
+#include <dlfcn.h>
+
+#ifdef __linux__
+#define LINUX 1
+#endif
+
+#include "./dependencies/ADL_SDK_V10.2/include/adl_sdk.h"
+#include "error.h"
+
 class ATIADLHandle
 {
 
