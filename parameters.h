@@ -40,6 +40,17 @@ extern "C" {
 #include "adlmaincontrol.h"
 #include "amdgpuadapterinfo.h"
 
+struct OVCParameter
+{
+    OVCParamType type;
+    std::vector<int> adapters;
+    bool allAdapters;
+    int partId;
+    double value;
+    bool useDefault;
+    std::string argText;
+};
+
 class Parameters
 {
 private:

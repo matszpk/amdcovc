@@ -15,17 +15,6 @@ enum: int
     LAST_PERFLEVEL = -1
 };
 
-struct OVCParameter
-{
-    OVCParamType type;
-    std::vector<int> adapters;
-    bool allAdapters;
-    int partId;
-    double value;
-    bool useDefault;
-    std::string argText;
-};
-
 struct FanSpeedSetup
 {
     double value;
