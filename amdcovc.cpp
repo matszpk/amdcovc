@@ -54,6 +54,7 @@ extern "C" {
 #include "adlmaincontrol.h"
 #include "amdgpuadapterhandle.h"
 #include "amdgpuadapterinfo.h"
+#include "pciaccess.h"
 
 #define AMDCOVC_VERSION "0.4.0"
 
