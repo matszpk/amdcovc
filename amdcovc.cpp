@@ -430,43 +430,52 @@ public:
     void getAdapterInfo(AdapterInfo* infos) const;
     void getCurrentActivity(int adapterIndex, ADLPMActivity& activity) const;
     int getTemperature(int adapterIndex, int thermalCtrlIndex) const;
-    void getFanSpeedInfo(int adapterIndex, int thermalCtrlIndex,
-            ADLFanSpeedInfo& info) const;
+    void getFanSpeedInfo(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedInfo& info) const;
     int getFanSpeed(int adapterIndex, int thermalCtrlIndex) const;
     void getODParameters(int adapterIndex, ADLODParameters& odParameters) const;
-    void getODPerformanceLevels(int adapterIndex, bool isDefault, int perfLevelsNum,
-            ADLODPerformanceLevel* perfLevels) const;
+    void getODPerformanceLevels(int adapterIndex, bool isDefault, int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const;
     void setFanSpeed(int adapterIndex, int thermalCtrlIndex, int fanSpeed) const;
     void setFanSpeedToDefault(int adapterIndex, int thermalCtrlIndex) const;
-    void setODPerformanceLevels(int adapterIndex, int perfLevelsNum,
-            ADLODPerformanceLevel* perfLevels) const;
+    void setODPerformanceLevels(int adapterIndex, int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const;
+
 };
 
 ADLMainControl::ADLMainControl(const ATIADLHandle& _handle, int devId)
+
 try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
 {
     try
-    { handle.Main_Control_Create(ADL_Main_Memory_Alloc, 0); }
+    { 
+        handle.Main_Control_Create(ADL_Main_Memory_Alloc, 0); 
+    }
     catch(const Error& error)
     {
-        if (getuid()!=0)
-            std::cout << "IMPORTANT: This program requires root privileges to be "
-                    "working correctly\nif no running X11 server." << std::endl;
-    
+        if (getuid() != 0)
+        {
+            std::cout << "This program requires root privileges to be working correctly if X11 server is not installed." << std::endl;
+        }
+
         withX = false;
         char devName[64];
+
         snprintf(devName, 64, "/dev/ati/card%u", devId);
+
         errno = 0;
         fd = open(devName, O_RDWR);
+
         if (fd==-1)
         {
             cl_uint platformsNum;
-            /// force initializing these stupid devices
+
+            /// force initialization of devices
             clGetPlatformIDs(0, nullptr, &platformsNum);
             errno = 0;
             fd = open(devName, O_RDWR);
+
             if (fd==-1)
-                throw Error(errno, "Can't open GPU device");
+            {
+                throw Error(errno, "Cannot open GPU device");
+            }
         }
         
         handle.ConsoleMode_FileDescriptor_Set(fd);
@@ -476,30 +485,46 @@ try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
 catch(...)
 {
     if (mainControlCreated)
+    {
         handle.Main_Control_Destroy();
+    }
+
     if (fd!=-1)
+    {
         close(fd);
+    }
+
     throw;
 }
 
 ADLMainControl::~ADLMainControl()
 {
     if (fd!=-1)
+    {
         close(fd);
+    }
 }
 
 int ADLMainControl::getAdaptersNum() const
 {
     int num = 0;
+
     handle.Adapter_NumberOfAdapters_Get(&num);
+
     return num;
 }
 
 bool ADLMainControl::isAdapterActive(int adapterIndex) const
 {
-    if (!withX) return true;
+    if (!withX)
+    { 
+        return true;
+    }
+
     int status = 0;
+
     handle.Adapter_Active_Get(adapterIndex, &status);
+
     return status == ADL_TRUE;
 }
 
@@ -507,8 +532,12 @@ void ADLMainControl::getAdapterInfo(AdapterInfo* infos) const
 {
     int num;
     handle.Adapter_NumberOfAdapters_Get(&num);
+
     for (int i = 0; i < num; i++)
+    {
         infos[i].iSize = sizeof(AdapterInfo);
+    }
+
     handle.Adapter_Info_Get(infos, num*sizeof(AdapterInfo));
 }
 
@@ -523,11 +552,11 @@ int ADLMainControl::getTemperature(int adapterIndex, int thermalCtrlIndex) const
     ADLTemperature temp;
     temp.iSize = sizeof(ADLTemperature);
     handle.Overdrive5_Temperature_Get(adapterIndex, thermalCtrlIndex, &temp);
+
     return temp.iTemperature;
 }
 
-void ADLMainControl::getFanSpeedInfo(int adapterIndex, int thermalCtrlIndex,
-                ADLFanSpeedInfo& info) const
+void ADLMainControl::getFanSpeedInfo(int adapterIndex, int thermalCtrlIndex, ADLFanSpeedInfo& info) const
 {
     info.iSize = sizeof(ADLFanSpeedInfo);
     handle.Overdrive5_FanSpeedInfo_Get(adapterIndex, thermalCtrlIndex, &info);
@@ -549,11 +578,9 @@ void ADLMainControl::getODParameters(int adapterIndex, ADLODParameters& odParame
     handle.Overdrive5_ODParameters_Get(adapterIndex, &odParameters);
 }
 
-void ADLMainControl::getODPerformanceLevels(int adapterIndex, bool isDefault,
-            int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const
+void ADLMainControl::getODPerformanceLevels(int adapterIndex, bool isDefault, int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const
 {
-    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels)+
-                    sizeof(ADLODPerformanceLevel)*(perfLevelsNum-1);
+    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel)*(perfLevelsNum -1);
     std::unique_ptr<char[]> odPlBuf(new char[odPLBufSize]);
     ADLODPerformanceLevels* odPLevels = (ADLODPerformanceLevels*)odPlBuf.get();
     odPLevels->iSize = odPLBufSize;
