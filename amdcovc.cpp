@@ -881,7 +881,7 @@ static bool getFileContentValue(const char* filename, unsigned int& value)
 
     if (errno != 0)
     {
-        throw Error("Can't parse value from file");
+        throw Error("Unable to parse value from file");
     }
 
     return (p != p2);
@@ -899,48 +899,73 @@ static void writeFileContentValue(const char* filename, unsigned int value)
     }
     catch(const std::exception& ex)
     {
-        throw Error( (std::string("Can't write file '") + filename + "'").c_str() );
+        throw Error( (std::string("Unable to  write to file '") + filename + "'").c_str() );
     }
 }
 
-AMDGPUAdapterHandle::AMDGPUAdapterHandle()
-        : totDeviceCount(0)
+AMDGPUAdapterHandle::AMDGPUAdapterHandle() : totDeviceCount(0)
 {
     errno = 0;
     DIR* dirp = opendir("/sys/class/drm");
+    
     if (dirp == nullptr)
-        throw Error(errno, "Can't open 'sys/class/drm' directory");
+    {
+        throw Error(errno, "Unable to open 'sys/class/drm'");
+    }
+    
     errno = 0;
     struct dirent* dire;
+    
     while ((dire = readdir(dirp)) != nullptr)
     {
         if (::strncmp(dire->d_name, "card", 4) != 0)
+        {
             continue; // is not card directory
+        }
+
         const char* p;
+
         for (p = dire->d_name + 4; ::isdigit(*p); p++);
+
         if (*p != 0)
+        {
             continue; // is not card directory
+        }
+
         errno = 0;
+
         unsigned int v = ::strtoul(dire->d_name + 4, nullptr, 10);
-        totDeviceCount = std::max(totDeviceCount, v+1);
+
+        totDeviceCount = std::max(totDeviceCount, v + 1);
     }
+
     if (errno != 0)
     {
         closedir(dirp);
-        throw Error(errno, "Can't read 'sys/class/drm' directory");
+        throw Error(errno, "Unable to read directory 'sys/class/drm'");
     }
+
     closedir(dirp);
     
     // filter AMD GPU cards
     char dbuf[120];
+
     for (unsigned int i = 0; i < totDeviceCount; i++)
     {
         snprintf(dbuf, 120, "/sys/class/drm/card%u/device/vendor", i);
+
         unsigned int vendorId = 0;
+
         if (!getFileContentValue(dbuf, vendorId))
+        {
             continue;
+        }
+
         if (vendorId != 4098) // if not AMD
+        {
             continue;
+        }
+
         amdDevices.push_back(i);
     }
     
@@ -949,33 +974,52 @@ AMDGPUAdapterHandle::AMDGPUAdapterHandle()
     {
         // search hwmon
         errno = 0;
+
         snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon", cardIndex);
         DIR* dirp = opendir(dbuf);
+
         if (dirp == nullptr)
-            throw Error(errno, "Can't open 'sys/class/drm/card?/device/hwmon' directory");
+        {
+            throw Error(errno, "Unable to open directory 'sys/class/drm/card?/device/hwmon'");
+        }
+
         errno = 0;
         struct dirent* dire;
         unsigned int hwmonIndex = UINT_MAX;
-        while ((dire = readdir(dirp)) != nullptr)
+
+        while ( (dire = readdir(dirp)) != nullptr)
         {
             if (::strncmp(dire->d_name, "hwmon", 5) != 0)
+            {
                 continue; // is not hwmon directory
+            }
+
             const char* p;
             for (p = dire->d_name + 5; ::isdigit(*p); p++);
+
             if (*p != 0)
+            {
                 continue; // is not hwmon directory
+            }
+
             errno = 0;
             unsigned int v = ::strtoul(dire->d_name + 5, nullptr, 10);
             hwmonIndex = std::min(hwmonIndex, v);
         }
+
         if (errno != 0)
         {
             closedir(dirp);
-            throw Error(errno, "Can't open 'sys/class/drm/card?/hwmon' directory");
+            throw Error(errno, "Unable to open directory 'sys/class/drm/card?/hwmon'");
         }
+
         closedir(dirp);
+
         if (hwmonIndex == UINT_MAX)
-            throw Error("Can't find hwmon? directory");
+        {
+            throw Error("Unable to find hwmon? directory");
+        }
+
         hwmonIndices.push_back(hwmonIndex);
     }
 }
