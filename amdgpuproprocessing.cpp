@@ -1,7 +1,7 @@
 #include "amdgpuproprocessing.h"
 
 void AmdGpuProProcessing::Process(std::vector<OVCParameter> OvcParameters, bool UseAdaptersList, std::vector<int> ChosenAdapters, bool ChooseAllAdapters,
-                                bool PrintVerbose)
+                                  bool PrintVerbose)
 {
     if (!OvcParameters.empty())
     {
