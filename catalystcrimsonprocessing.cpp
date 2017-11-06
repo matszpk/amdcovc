@@ -1,7 +1,7 @@
 #include "catalystcrimsonprocessing.h"
 
-void Process(ATIADLHandle Handle_, bool UseAdaptersList, std::vector<int> ChosenAdapters, std::vector<OVCParameter> OvcParameters, bool ChooseAllAdapters,
-             bool PrintVerbose, bool UseAdaptersList)
+void CatalystCrimsonProcessing::Process(ATIADLHandle Handle_, bool UseAdaptersList, std::vector<int> ChosenAdapters, std::vector<OVCParameter> OvcParameters, bool ChooseAllAdapters,
+             bool PrintVerbose)
 {
     ADLMainControl mainControl(Handle_, 0);
     int adaptersNum = mainControl.getAdaptersNum();
@@ -26,7 +26,7 @@ void Process(ATIADLHandle Handle_, bool UseAdaptersList, std::vector<int> Chosen
     Adapters::PrintAdaptersInfo(mainControl, adaptersNum, activeAdapters, ChosenAdapters, UseAdaptersList && !ChooseAllAdapters);
 }
 
-void checkAdapterList(bool useAdaptersList, std::vector<int> chosenAdapters, std::vector<int> activeAdapters)
+void CatalystCrimsonProcessing::checkAdapterList(bool useAdaptersList, std::vector<int> chosenAdapters, std::vector<int> activeAdapters)
 {
     if (useAdaptersList)
     {

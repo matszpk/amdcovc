@@ -1,23 +1,22 @@
 #include "amdgpuproprocessing.h"
 
-void Process(std::vector<OVCParameter> OvcParameters, bool UseAdaptersList, std::vector<int> ChosenAdapters, bool ChooseAllAdapters,
+void AmdGpuProProcessing::Process(std::vector<OVCParameter> OvcParameters, bool UseAdaptersList, std::vector<int> ChosenAdapters, bool ChooseAllAdapters,
                                 bool PrintVerbose)
 {
     if (!OvcParameters.empty())
     {
-        setOvcParametersAmdGpuPro(OvcParameters);
+        this->setOvcParameters(OvcParameters);
     }
     else
     {
-        validateAdapterListAmdGpuPro(UseAdaptersList, ChosenAdapters);
+        this->validateAdapterList(UseAdaptersList, ChosenAdapters);
 
-        printAdapterInfoAmdGpuPro(PrintVerbose, ChosenAdapters, UseAdaptersList, ChooseAllAdapters);
+        this->printAdapterInfo(PrintVerbose, ChosenAdapters, UseAdaptersList, ChooseAllAdapters);
     }
 }
 
-void setOvcParameters(std::vector<OVCParameter> ovcParameters)
+void AmdGpuProProcessing::setOvcParameters(std::vector<OVCParameter> ovcParameters)
 {
-    AMDGPUAdapterHandle handle;
     std::vector<PerfClocks> perfClocks;
 
     for (unsigned int i = 0; i < handle.getAdaptersNum(); i++)
@@ -30,7 +29,7 @@ void setOvcParameters(std::vector<OVCParameter> ovcParameters)
     Parameters::SetOVCParameters(handle, ovcParameters, perfClocks);
 }
 
-void printAdapterInfo(bool printVerbose, std::std::vector<int> chosenAdapters, bool useAdaptersList, bool chooseAllAdapters)
+void AmdGpuProProcessing::printAdapterInfo(bool printVerbose, std::vector<int> chosenAdapters, bool useAdaptersList, bool chooseAllAdapters)
 {
     if (printVerbose)
     {
@@ -42,7 +41,7 @@ void printAdapterInfo(bool printVerbose, std::std::vector<int> chosenAdapters, b
     }
 }
 
-void validateAdapterList(bool useAdaptersList, std::vector<int> chosenAdapters)
+void AmdGpuProProcessing::validateAdapterList(bool useAdaptersList, std::vector<int> chosenAdapters)
 {
     if (useAdaptersList)
     {

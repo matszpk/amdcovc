@@ -192,11 +192,15 @@ try
 
     if (handle.open())
     {
-        CatalystCrimsonProcessing::Process(handle, useAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, printVerbose, useAdaptersList);
+	CatalystCrimsonProcessing *processor = new CatalystCrimsonProcessing();
+        processor->Process(handle, useAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, printVerbose);
+        delete processor;
     }
     else
     {
-        AmdGpuProProcessing::Process(ovcParameters, useAdaptersList, chosenAdapters, chooseAllAdapters, printVerbose);
+        AmdGpuProProcessing *processor = new AmdGpuProProcessing();
+        processor->Process(ovcParameters, useAdaptersList, chosenAdapters, chooseAllAdapters, printVerbose);
+        delete processor;
     }
 
     if (pciAccess != nullptr)
