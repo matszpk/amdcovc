@@ -19,7 +19,7 @@ private:
 public:
 
     void Process(std::vector<OVCParameter> OvcParameters, bool UseAdaptersList, std::vector<int> ChosenAdapters, bool ChooseAllAdapters,
-                        bool printVerbose);
+                 bool printVerbose);
 
 };
 

@@ -1,4 +1,5 @@
-# include "parameters.h"
+#include "parameters.h"
+#include "conststrings.h"
 
 bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 {
@@ -168,7 +169,7 @@ bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
         }
         if (*afterName!=0)
         {
-            std::cerr << "Garbage in '" << string << "'!" << std::endl;
+            std::cerr << "Invalid data in '" << string << "'!" << std::endl;
             return false;
         }
     }
@@ -184,10 +185,7 @@ bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, const std::vector<int>& activeAdapters,
                                   const std::vector<OVCParameter>& ovcParams)
 {
-    std::cout << "WARNING: Setting AMD Overdrive parameters!" << std::endl;
-    std::cout <<
-        "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\nplease stop all GPU computations and GPU renderings.\n"
-        "Please use this utility carefully, as it can damage your hardware.\n" << std::endl;
+    std::cout << ConstStrings::OverdriveWarning << std::endl;
 
     const int realAdaptersNum = activeAdapters.size();
 
@@ -520,9 +518,7 @@ void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, 
 
 void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector<OVCParameter>& ovcParams, const std::vector<PerfClocks>& perfClocks)
 {
-    std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
-    std::cout << "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\nplease STOP ANY GPU computations and renderings.\n"
-        "Please use this utility carefully as it can damage your hardware.\n" << std::endl;
+    std::cout << ConstStrings::OverdriveWarning << std::endl;
 
     bool failed = false;
     int adaptersNum = handle.getAdaptersNum();
