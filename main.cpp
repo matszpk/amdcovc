@@ -38,17 +38,42 @@ std::vector<int> chosenAdapters;
 
 bool chooseAllAdapters = false;
 
+bool setPrintHelp(const char* argvi)
+{
+    if (::strcmp(argvi, "--help") == 0 || ::strcmp(argvi, "-?") == 0)
+    {
+        return true;
+    }
 
-bool checkPrintHelp(bool printHelp)
+    return false;
+}
+
+void checkPrintHelp(bool printHelp)
 {
     if (printHelp)
     {
         std::cout << ConstStrings::HelpAndUsage << "\n" << ConstStrings::OverdriveWarning;
         std::cout.flush();
+    }
+}
+
+bool setPrintVersion(const char* argvi)
+{
+    if (::strcmp(argvi, "--version") == 0)
+    {
         return true;
     }
 
     return false;
+}
+
+void checkPrintVersion(bool printVersion)
+{
+    if (printVersion)
+    {
+        std::cout << ConstStrings::Version;
+        std::cout.flush();
+    }
 }
 
 void checkFailed(bool failed)
@@ -85,15 +110,6 @@ void cleanupPciAccess()
     }
 }
 
-bool setPrintHelp(const char* argvi)
-{
-    if (::strcmp(argvi, "--help") == 0 || ::strcmp(argvi, "-?") == 0)
-    {
-        return true;
-    }
-
-    return false;
-}
 
 bool setPrintVerbose(const char* argvi)
 {
@@ -107,7 +123,7 @@ bool setPrintVerbose(const char* argvi)
 
 bool setUseAdaptersListEquals(const char* argvi)
 {
-    if (::strncmp(argv[i], "--adapters=", 11) == 0)
+    if (::strncmp(argvi, "--adapters=", 11) == 0)
     {
         Adapters::ParseAdaptersList(argvi + 11, chosenAdapters, chooseAllAdapters);
         return true;
@@ -151,7 +167,7 @@ bool parseParametersOrFail(const char* argvi)
 
 bool parseAdaptersList(const char** argv, int argc, int i)
 {
-    if (::strncmp(argv[i], "-a", 2)==0)
+    if (::strncmp(argv[i], "-a", 2) == 0)
     {
         if (argv[i][2] != 0)
         {
@@ -172,22 +188,12 @@ bool parseAdaptersList(const char** argv, int argc, int i)
     return false;
 }
 
-bool checkPrintVersion(const char** argv, int i)
-{
-    if (::strcmp(argv[i], "--version") == 0)
-    {
-        std::cout << ConstStrings::Version;
-        std::cout.flush();
-        return true;
-    }
-
-    return false;
-}
 
 int main(int argc, const char** argv)
 try
 {
     bool printHelp = false;
+    bool printVersion = false;
     bool printVerbose = false;
     bool useAdaptersList = false;
     bool failed = false;
@@ -195,35 +201,28 @@ try
     for (int i = 1; i < argc; i++)
     {
         printHelp |= setPrintHelp(argv[i]);
-
+        printVersion |= setPrintVersion(argv[i]);
         printVerbose |= setPrintVerbose(argv[i]);
-
         useAdaptersList |= setUseAdaptersListEquals(argv[i]);
-
         useAdaptersList |= setUseAdaptersList(argv, argc, i);
-
         useAdaptersList |= parseAdaptersList(argv, argc, i);
 
-        if( !(printHelp | printVerbose | useAdaptersList) )
+        if( !( printVersion | printHelp | printVerbose | useAdaptersList ) )
         {
             failed |= parseParametersOrFail(argv[i]);
         }
     }
 
     checkFailed(failed);
+    checkPrintVersion(printVersion);
+    checkPrintHelp(printHelp);
 
-    if(checkPrintVersion(argv[i]))
-    {
-        return 0;
-    }
-
-    if(checkPrintHelp(printHelp))
+    if( printVersion | printHelp )
     {
         return 0;
     }
 
     processParameters(useAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, printVerbose);
-
     cleanupPciAccess();
 
     return 0;
