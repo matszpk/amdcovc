@@ -209,7 +209,10 @@ try
             return 0;
         }
 
-        failed = parseParametersOrFail(argv, i);
+        if( !(printHelp | printVerbose | useAdaptersList) )
+        {
+            failed = parseParametersOrFail(argv, i);
+        }
     }
 
     if(checkPrintHelp(printHelp))

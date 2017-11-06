@@ -11,7 +11,7 @@ bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 
         if (afterName==nullptr)
         {
-            std::cerr << "This is not parameter: '" << string << "'!" << std::endl;
+            std::cerr << "This is not a parameter: '" << string << "'!" << std::endl;
 
             return false;
         }
