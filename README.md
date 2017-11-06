@@ -1,13 +1,12 @@
 ## AMDCOVC
 
 This program is for controlling AMD Overdrive settings for graphics cards in Linux console-mode. 
-This program has been written to replace the `amdconfig` utility and allow to overclocking of AMD
-Radeon GPUs when not running the X11 server. 
 
-The `amdconfig` utility requires a running X11 server and X11 configuration to be working correctly.
-Thus, this program eases the overclocking of AMD Radeon GPUs in the console environment (in SSH or 
-the Linux console).
-However, this program also works under the X11 environment.
+This program has been written to replace the `amdconfig` utility and allow for overclocking of AMD Radeon GPUs when not running the X11 server. 
+
+The `amdconfig` utility requires a running X11 server and X11 configuration to be working correctly. Therefore, this program eases the overclocking of AMD Radeon GPUs in the console environment (in SSH or the Linux console).
+
+This program also works under the X11 environment.
 
 ### WARNING
 
@@ -20,7 +19,7 @@ any GPU computations and rendering processes have been stopped.
 It goes without saying, but use this program at your own risk. There is no warranty expressly given
 or implied in the use of this program. Please read the license before using this program.
 
-### Preliminary requirements
+### Preliminary Requirements:
 
 Program to work requires following things:
 
@@ -35,7 +34,7 @@ To build program you need:
 
 * A compiler compliant with the C++11 standard
 * The OpenCL headers
-* The AMD ADL SDK (in developer.amd.com site)
+* The AMD ADL SDK (on the developer.amd.com site)
 * The pciutils developer package (includes)
 
 ## Installing prerequisites (Ubuntu)
@@ -47,17 +46,6 @@ apt-get install opencl
 apt-get install libpci-dev
 apt-get install unzip
 ```
-
-* download and unzip the adl sdk from here: `http://developer.amd.com/display-library-adl-sdk/`
-
-or
-
-```
-git clone https://github.com/elitak/amd-adl-sdk
-```
-
-
-* clone this repo into the base path of the adl-sdk
 
 ### Building program
 
