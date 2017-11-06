@@ -22,6 +22,8 @@
 #endif
 
 #include "parameters.h"
+#include "amdgpuproprocessing.h"
+#include "catalystcrimsonprocessing.h"
 
 #define AMDCOVC_VERSION "0.4.0"
 
@@ -68,9 +70,9 @@ static const char* helpAndUsageString =
     "Example usage:\n"
     "\n"
     "amdcovc\n"
-    "    print short informations about state of the all adapters\n\n"
+    "    print short information about the state of all adapters\n\n"
     "amdcovc -a 1,2,4-6\n"
-    "    print short informations about adapter 1, 2 and 4 to 6\n\n"
+    "    print short information about adapter 1, 2 and 4 to 6\n\n"
     "amdcovc coreclk:1=900 coreclk=1000\n"
     "    set core clock to 900 for adapter 1, set core clock to 1000 for adapter 0\n\n"
     "amdcovc coreclk:1:0=900 coreclk:0:1=1000\n"
@@ -85,11 +87,11 @@ static const char* helpAndUsageString =
     "    set Vddc voltage to 1.111 V for adapter 0\n"
     "    set Vddc voltage to 0.81 for adapter 0 for performance level 0\n\n"
     "\n"
-    "WARNING: Before any setting of AMD Overdrive parameters,\n"
+    "WARNING: Before setting any of the AMD Overdrive parameters,\n"
     "please stop any processes doing GPU computations and renderings.\n"
     "Please use this utility carefully, as it can damage your hardware.\n"
     "\n"
-    "If the X11 server is not running, then this program requires root privileges.\n";
+    "If the X11 server is not running, this program will require root privileges.\n";
 
 static const char* versionString =
     "amdcovc " AMDCOVC_VERSION
@@ -103,7 +105,7 @@ try
     bool printHelp = false;
     bool printVerbose = false;
     std::vector<OVCParameter> ovcParameters;
-    std::vector<int> choosenAdapters;
+    std::vector<int> chosenAdapters;
     bool useAdaptersList = false;
     bool chooseAllAdapters = false;
 
@@ -121,14 +123,14 @@ try
         }
         else if (::strncmp(argv[i], "--adapters=", 11) == 0)
         {
-            Adapters::ParseAdaptersList(argv[i] + 11, choosenAdapters, chooseAllAdapters);
+            Adapters::ParseAdaptersList(argv[i] + 11, chosenAdapters, chooseAllAdapters);
             useAdaptersList = true;
         }
         else if (::strcmp(argv[i], "--adapters") == 0)
         {
             if ( i + 1 < argc)
             {
-                Adapters::ParseAdaptersList(argv[++i], choosenAdapters, chooseAllAdapters);
+                Adapters::ParseAdaptersList(argv[++i], chosenAdapters, chooseAllAdapters);
                 useAdaptersList = true;
             }
             else
@@ -138,13 +140,13 @@ try
         }
         else if (::strncmp(argv[i], "-a", 2)==0)
         {
-            if (argv[i][2]!=0)
+            if (argv[i][2] != 0)
             {
-                Adapters::ParseAdaptersList(argv[i] + 2, choosenAdapters, chooseAllAdapters);
+                Adapters::ParseAdaptersList(argv[i] + 2, chosenAdapters, chooseAllAdapters);
             }
-            else if (i+1 < argc)
+            else if (i + 1 < argc)
             {
-                Adapters::ParseAdaptersList(argv[++i], choosenAdapters, chooseAllAdapters);
+                Adapters::ParseAdaptersList(argv[++i], chosenAdapters, chooseAllAdapters);
             }
             else
             {
@@ -190,83 +192,11 @@ try
 
     if (handle.open())
     {
-        // AMD Catalyst/Crimson
-        ADLMainControl mainControl(handle, 0);
-        int adaptersNum = mainControl.getAdaptersNum();
-
-        // list for converting user indices to input indices to ADL interface
-        std::vector<int> activeAdapters;
-        Adapters::GetActiveAdaptersIndices(mainControl, adaptersNum, activeAdapters);
-
-        if (useAdaptersList)
-        {
-            // sort and check adapter list
-            for (int adapterIndex: choosenAdapters)
-            {
-                if (adapterIndex>=int(activeAdapters.size()) || adapterIndex<0)
-                {
-                    throw Error("Some adapter indices out of range");
-                }
-            }
-        }
-
-        if (!ovcParameters.empty())
-        {
-            Parameters::SetOVCParameters(mainControl, adaptersNum, activeAdapters, ovcParameters);
-        }
-        else
-        {
-            if (printVerbose)
-            {
-                Adapters::PrintAdaptersInfoVerbose(mainControl, adaptersNum, activeAdapters, choosenAdapters, useAdaptersList && !chooseAllAdapters);
-            }
-            else
-            {
-                Adapters::PrintAdaptersInfo(mainControl, adaptersNum, activeAdapters, choosenAdapters, useAdaptersList && !chooseAllAdapters);
-            }
-        }
+        CatalystCrimsonProcessing::Process(handle, useAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, printVerbose, useAdaptersList);
     }
     else
     {
-        // AMDGPU-PRO
-        AMDGPUAdapterHandle handle;
-
-        if (!ovcParameters.empty())
-        {
-            std::vector<PerfClocks> perfClocks;
-
-            for (unsigned int i = 0; i < handle.getAdaptersNum(); i++)
-            {
-                unsigned int coreClock, memoryClock;
-                handle.getPerformanceClocks(i, coreClock, memoryClock);
-                perfClocks.push_back(PerfClocks{ coreClock, memoryClock });
-            }
-
-            Parameters::SetOVCParameters(handle, ovcParameters, perfClocks);
-        }
-        else
-        {
-            if (useAdaptersList)
-            {
-                // sort and check adapter list
-                for (int adapterIndex: choosenAdapters)
-                {
-                    if (adapterIndex >= int(handle.getAdaptersNum()) || adapterIndex < 0)
-                    {
-                        throw Error("Some adapter indices are out of range");
-                    }
-                }
-            }
-
-            if (printVerbose)
-            {
-                Adapters::PrintAdaptersInfoVerbose(handle, choosenAdapters, useAdaptersList && !chooseAllAdapters);
-            }
-            else
-            {
-                Adapters::PrintAdaptersInfo(handle, choosenAdapters, useAdaptersList && !chooseAllAdapters);
-            }
-        }
+        AmdGpuProProcessing::Process(ovcParameters, useAdaptersList, chosenAdapters, chooseAllAdapters, printVerbose);
     }
 
     if (pciAccess != nullptr)
