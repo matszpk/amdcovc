@@ -1,6 +1,6 @@
 #include "conststrings.h"
 
-static const char* ConstStrings::HelpAndUsage =
+const char* ConstStrings::HelpAndUsage =
     "amdcovc " AMDCOVC_VERSION " by Mateusz Szpakowski (matszpk@interia.pl)\n"
     "This program is distributed under terms of the GPLv2.\n"
     "and is available at https://github.com/matszpk/amdcovc.\n"
@@ -54,17 +54,16 @@ static const char* ConstStrings::HelpAndUsage =
     "    set fanspeed to default for adapter 1\n\n"
     "amdcovc vcore=1.111 vcore::0=0.81\n"
     "    set Vddc voltage to 1.111 V for adapter 0\n"
-    "    set Vddc voltage to 0.81 for adapter 0 for performance level 0\n\n"
-    ConstStrings::OverdriveWarning "\n";
+    "    set Vddc voltage to 0.81 for adapter 0 for performance level 0\n\n";
 
-static const char* ConstStrings::OverdriveWarning =
+const char* ConstStrings::OverdriveWarning =
     "WARNING: Before setting any of the AMD Overdrive parameters,\n"
     "please stop any processes doing GPU computations and renderings.\n"
     "Please use this utility carefully, as it can damage your hardware.\n"
     "\n"
     "If the X11 server is not running, this program will require root privileges.\n";
 
-static const char* ConstStrings::Version =
+const char* ConstStrings::Version =
     "amdcovc " AMDCOVC_VERSION
     " by Mateusz Szpakowski (matszpk@interia.pl)\n"
     "Program is distributed under terms of the GPLv2.\n"

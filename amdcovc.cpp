@@ -43,7 +43,7 @@ bool checkPrintHelp(bool printHelp)
 {
     if (printHelp)
     {
-        std::cout << ConstStrings::HelpAndUsage;
+        std::cout << ConstStrings::HelpAndUsage << "\n" << ConstStrings::OverdriveWarning;
         std::cout.flush();
         return true;
     }
@@ -59,8 +59,7 @@ void checkFailed(bool failed)
     }
 }
 
-void processParameters(bool useAdaptersList, std::std::vector<int> chosenAdapters, std::std::vector<OVCParameter> ovcParameters, bool chooseAllAdapters
-                      bool printVerbose)
+void processParameters(bool useAdaptersList, std::vector<int> chosenAdapters, std::vector<OVCParameter> ovcParameters, bool chooseAllAdapters, bool printVerbose)
 {
     ATIADLHandle handle;
 
@@ -86,7 +85,7 @@ void cleanupPciAccess()
     }
 }
 
-bool setPrintHelp(char** argv, int i)
+bool setPrintHelp(const char** argv, int i)
 {
     if (::strcmp(argv[i], "--help") == 0 || ::strcmp(argv[i], "-?") == 0)
     {
@@ -96,7 +95,7 @@ bool setPrintHelp(char** argv, int i)
     return false;
 }
 
-bool setPrintVerbose(char** argv, int i)
+bool setPrintVerbose(const char** argv, int i)
 {
     if (::strcmp(argv[i], "--verbose") == 0 || ::strcmp(argv[i], "-v") == 0)
     {
@@ -106,7 +105,7 @@ bool setPrintVerbose(char** argv, int i)
     return false;
 }
 
-bool setUseAdaptersListEquals(char** argv, int i)
+bool setUseAdaptersListEquals(const char** argv, int i)
 {
     if (::strncmp(argv[i], "--adapters=", 11) == 0)
     {
@@ -116,7 +115,7 @@ bool setUseAdaptersListEquals(char** argv, int i)
     return false;
 }
 
-bool setUseAdaptersList(char** argv, int i);
+bool setUseAdaptersList(const char** argv, int argc, int i)
 {
   if (::strcmp(argv[i], "--adapters") == 0)
   {
@@ -134,7 +133,7 @@ bool setUseAdaptersList(char** argv, int i);
   return false;
 }
 
-bool parseParametersOrFail(char** argv, int i)
+bool parseParametersOrFail(const char** argv, int i)
 {
     OVCParameter param;
 
@@ -150,7 +149,7 @@ bool parseParametersOrFail(char** argv, int i)
     return false;
 }
 
-bool parseAdaptersList(char** argv, int i)
+bool parseAdaptersList(const char** argv, int argc, int i)
 {
     if (::strncmp(argv[i], "-a", 2)==0)
     {
@@ -173,7 +172,7 @@ bool parseAdaptersList(char** argv, int i)
     return false;
 }
 
-bool checkPrintVersion(char** argv, int i)
+bool checkPrintVersion(const char** argv, int i)
 {
     if (::strcmp(argv[i], "--version") == 0)
     {
@@ -195,15 +194,15 @@ try
 
     for (int i = 1; i < argc; i++)
     {
-        printHelp = setPrintHelp(argc, i);
+        printHelp = setPrintHelp(argv, i);
 
-        printVerbose = setPrintVerbose(argc, i);
+        printVerbose = setPrintVerbose(argv, i);
 
         useAdaptersList = setUseAdaptersListEquals(argv, i);
 
-        useAdaptersList |= setUseAdaptersList(argv, i);
+        useAdaptersList |= setUseAdaptersList(argv, argc, i);
 
-        useAdaptersList |= parseAdaptersList(argv, i);
+        useAdaptersList |= parseAdaptersList(argv, argc, i);
 
         if(checkPrintVersion(argv, i))
         {
