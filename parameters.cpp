@@ -11,7 +11,7 @@ bool Parameters::ParseOVCParameter(const char* string, OVCParameter& param)
 
         if (afterName==nullptr)
         {
-            std::cerr << "This is not a parameter: '" << string << "'!" << std::endl;
+            std::cerr << "Invalid parameter specified: '" << string << "'!" << std::endl;
 
             return false;
         }
@@ -254,12 +254,12 @@ void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, 
             {
                 int i = *ait;
 
-                if (i>=realAdaptersNum)
+                if (i >= realAdaptersNum)
                 {
                     continue;
                 }
 
-                int partId = (param.partId!=LAST_PERFLEVEL) ? param.partId : odParams[i].iNumberOfPerformanceLevels - 1;
+                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : odParams[i].iNumberOfPerformanceLevels - 1;
 
                 if (partId >= odParams[i].iNumberOfPerformanceLevels || partId < 0)
                 {
@@ -334,12 +334,12 @@ void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, 
 
     for (OVCParameter param: ovcParams)
     {
-        if (param.type!=OVCParamType::FAN_SPEED)
+        if (param.type != OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, realAdaptersNum); ait; ++ait)
             {
                 int i = *ait;
-                int partId = (param.partId!=LAST_PERFLEVEL) ? param.partId: odParams[i].iNumberOfPerformanceLevels -1;
+                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId: odParams[i].iNumberOfPerformanceLevels - 1;
 
                 switch(param.type)
                 {
@@ -470,7 +470,7 @@ void Parameters::SetOVCParameters(ADLMainControl& mainControl, int adaptersNum, 
                         {
                             perfLevel.iVddc = defaultPerfLevel.iVddc;
                         }
-                        else if (perfLevel.iVddc==0)
+                        else if (perfLevel.iVddc == 0)
                         {
                             std::cout << "Voltage for adapter " << i << " is not set!" << std::endl;
                         }
@@ -560,11 +560,12 @@ void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector
     // check other params
     for (OVCParameter param: ovcParams)
     {
-        if (param.type!=OVCParamType::FAN_SPEED)
+        if (param.type != OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
                 int i = *ait;
+
                 if (i>=adaptersNum)
                 {
                     continue;
@@ -658,12 +659,12 @@ void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector
 
     for (OVCParameter param: ovcParams)
     {
-        if (param.type!=OVCParamType::FAN_SPEED)
+        if (param.type != OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
                 int i = *ait;
-                int partId = (param.partId!=LAST_PERFLEVEL)?param.partId:0;
+                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : 0;
 
                 switch(param.type)
                 {
@@ -747,7 +748,7 @@ void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector
 
     for (OVCParameter param: ovcParams)
     {
-        if (param.type==OVCParamType::FAN_SPEED)
+        if (param.type == OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
@@ -760,7 +761,7 @@ void Parameters::SetOVCParameters(AMDGPUAdapterHandle& handle, const std::vector
 
     for (OVCParameter param: ovcParams)
     {
-        if (param.type!=OVCParamType::FAN_SPEED)
+        if (param.type != OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {

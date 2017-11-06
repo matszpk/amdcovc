@@ -29,7 +29,7 @@ try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
     {
         if (getuid() != 0)
         {
-            std::cout << "This program requires root privileges to be working correctly if X11 server is not installed." << std::endl;
+            std::cout << "This program requires root privileges to be working correctly if the X11 server is not running." << std::endl;
         }
 
         withX = false;
@@ -40,7 +40,7 @@ try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
         errno = 0;
         fd = open(devName, O_RDWR);
 
-        if (fd==-1)
+        if (fd == -1)
         {
             cl_uint platformsNum;
 
@@ -49,7 +49,7 @@ try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
             errno = 0;
             fd = open(devName, O_RDWR);
 
-            if (fd==-1)
+            if (fd == -1)
             {
                 throw Error(errno, "Cannot open GPU device");
             }
@@ -159,7 +159,7 @@ void ADLMainControl::getODParameters(int adapterIndex, ADLODParameters& odParame
 
 void ADLMainControl::getODPerformanceLevels(int adapterIndex, bool isDefault, int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const
 {
-    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel)*(perfLevelsNum -1);
+    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel)*(perfLevelsNum - 1);
     std::unique_ptr<char[]> odPlBuf(new char[odPLBufSize]);
 
     ADLODPerformanceLevels* odPLevels = (ADLODPerformanceLevels*)odPlBuf.get();
@@ -187,14 +187,14 @@ void ADLMainControl::setFanSpeedToDefault(int adapterIndex, int thermalCtrlIndex
 
 void ADLMainControl::setODPerformanceLevels(int adapterIndex, int perfLevelsNum, ADLODPerformanceLevel* perfLevels) const
 {
-    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel)*(perfLevelsNum -1);
+    const size_t odPLBufSize = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel) * (perfLevelsNum - 1);
     std::unique_ptr<char[]> odPlBuf(new char[odPLBufSize]);
 
     ADLODPerformanceLevels* odPLevels = (ADLODPerformanceLevels*)odPlBuf.get();
     odPLevels->iSize = odPLBufSize;
     odPLevels->iReserved = 0;
 
-    std::copy(perfLevels, perfLevels+perfLevelsNum, odPLevels->aLevels);
+    std::copy(perfLevels, perfLevels + perfLevelsNum, odPLevels->aLevels);
 
     handle.Overdrive5_ODPerformanceLevels_Set(adapterIndex, odPLevels);
 }

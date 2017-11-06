@@ -262,7 +262,7 @@ void Adapters::PrintAdaptersInfoVerbose(ADLMainControl& mainControl, int adapter
 
         int temperature = mainControl.getTemperature(ai, 0);
 
-        std::cout << "  Temperature: " << temperature/1000.0 << " C\n";
+        std::cout << "  Temperature: " << temperature / 1000.0 << " C\n";
 
         mainControl.getFanSpeedInfo(ai, 0, fsInfo);
 
@@ -341,7 +341,7 @@ void Adapters::ParseAdaptersList(const char* string, std::vector<int>& adapters,
         errno = 0;
         int adapterIndex = strtol(string, &endptr, 10);
 
-        if (errno!=0 || endptr==string)
+        if (errno != 0 || endptr==string)
         {
             throw Error("Unable to parse adapter index");
         }
@@ -355,7 +355,7 @@ void Adapters::ParseAdaptersList(const char* string, std::vector<int>& adapters,
             errno = 0;
             int adapterIndexEnd = strtol(string, &endptr, 10);
 
-            if (errno!=0 || endptr==string)
+            if (errno != 0 || endptr==string)
             {
                 throw Error("Unable to parse adapter index");
             }

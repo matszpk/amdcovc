@@ -49,7 +49,7 @@ void AmdGpuProProcessing::validateAdapterList(bool useAdaptersList, std::vector<
         {
             if (adapterIndex >= int(handle.getAdaptersNum()) || adapterIndex < 0)
             {
-                throw Error("Some adapter indices are out of range");
+                throw Error("Some adapter indices are out of range.");
             }
         }
     }

@@ -14,7 +14,7 @@ bool ATIADLHandle::open()
 try
 {
     dlerror(); // clear old errors
-    handle = dlopen("libatiadlxx.so", RTLD_LAZY|RTLD_GLOBAL);
+    handle = dlopen("libatiadlxx.so", RTLD_LAZY | RTLD_GLOBAL);
 
     if (handle == nullptr)
     {
@@ -92,7 +92,7 @@ void ATIADLHandle::Main_Control_Create(ADL_MAIN_MALLOC_CALLBACK callback, int iE
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Main_Control_Create error");
+        throw Error(error, "ADL_Main_Control_Create error.");
     }
 }
 
@@ -102,7 +102,7 @@ void ATIADLHandle::Main_Control_Destroy() const
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Main_Control_Destroy error");
+        throw Error(error, "ADL_Main_Control_Destroy error.");
     }
 }
 
@@ -112,7 +112,7 @@ void ATIADLHandle::ConsoleMode_FileDescriptor_Set(int fileDescriptor) const
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_ConsoleMode_FileDescriptor_Set error");
+        throw Error(error, "ADL_ConsoleMode_FileDescriptor_Set error.");
     }
 }
 
@@ -122,7 +122,7 @@ void ATIADLHandle::Adapter_NumberOfAdapters_Get(int* number) const
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Adapter_NumberOfAdapters_Get error");
+        throw Error(error, "ADL_Adapter_NumberOfAdapters_Get error.");
     }
 }
 
@@ -132,7 +132,7 @@ void ATIADLHandle::Adapter_Active_Get(int adapterIndex, int* status) const
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Adapter_Active_Get error");
+        throw Error(error, "ADL_Adapter_Active_Get error.");
     }
 }
 
@@ -142,7 +142,7 @@ void ATIADLHandle::Adapter_Info_Get(LPAdapterInfo info, int inputSize) const
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_AdapterInfo_Get error");
+        throw Error(error, "ADL_AdapterInfo_Get error.");
     }
 }
 
@@ -152,7 +152,7 @@ void ATIADLHandle::Overdrive5_CurrentActivity_Get(int adapterIndex, ADLPMActivit
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Overdrive5_CurrentActivity_Get error");
+        throw Error(error, "ADL_Overdrive5_CurrentActivity_Get error.");
     }
 }
 
@@ -162,7 +162,7 @@ void ATIADLHandle::Overdrive5_Temperature_Get(int adapterIndex, int thermalCtrlI
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Overdrive5_Temperature_Get error");
+        throw Error(error, "ADL_Overdrive5_Temperature_Get error.");
     }
 }
 
@@ -172,7 +172,7 @@ void ATIADLHandle::Overdrive5_FanSpeedInfo_Get(int adapterIndex, int thermalCtrl
 
     if (error != ADL_OK)
     {
-        throw Error(error, "ADL_Overdrive5_FanSpeedInfo_Get error");
+        throw Error(error, "ADL_Overdrive5_FanSpeedInfo_Get error.");
     }
 }
 

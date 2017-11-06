@@ -60,7 +60,7 @@ void PCIAccess::GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterI
     }
 
     pciStrPtr++;
-    errno  = 0;
+    errno = 0;
 
     busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
 
@@ -69,7 +69,7 @@ void PCIAccess::GetFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterI
         throw Error(errno, "Unable to parse BusID");
     }
 
-    pciStrPtr = pciStrPtrNew+1;
+    pciStrPtr = pciStrPtrNew + 1;
     errno  = 0;
     devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
 

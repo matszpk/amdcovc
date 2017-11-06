@@ -156,7 +156,7 @@ AMDGPUAdapterHandle::AMDGPUAdapterHandle() : totDeviceCount(0)
 
         if (hwmonIndex == UINT_MAX)
         {
-            throw Error("Unable to find hwmon? directory");
+            throw Error("Unable to find hwmon directory.");
         }
 
         hwmonIndices.push_back(hwmonIndex);
@@ -187,14 +187,14 @@ static std::vector<unsigned int> parseDPMFile(const char* filename, uint32_t& ch
 
         if (errno !=0 || p == p2)
         {
-            throw Error(errno, "Unable to parse index");
+            throw Error(errno, "Unable to parse index.");
         }
 
         p = p2;
 
         if (*p != ':' || p[1] != ' ')
         {
-            throw Error(errno, "Unable to parse next part of line");
+            throw Error(errno, "Unable to parse the next part of the line.");
         }
 
         p += 2;
@@ -203,14 +203,14 @@ static std::vector<unsigned int> parseDPMFile(const char* filename, uint32_t& ch
 
         if (errno != 0 || p == p2)
         {
-            throw Error(errno, "Unable to parse clock");
+            throw Error(errno, "Unable to parse clock.");
         }
 
         p = p2;
 
         if (::strncmp(p, "Mhz", 3) != 0)
         {
-            throw Error(errno, "Unable to parse next part of line");
+            throw Error(errno, "Unable to parse the next part of the line.");
         }
 
         p += 3;
@@ -252,14 +252,14 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
 
         if (errno!=0 || p==p2)
         {
-            throw Error(errno, "Unable to parse index");
+            throw Error(errno, "Unable to parse index.");
         }
 
         p = p2;
 
         if (*p != ':' || p[1] != ' ')
         {
-            throw Error(errno, "Unable to parse next part of line");
+            throw Error(errno, "Unable to parse the next part of the line");
         }
 
         p += 2;
@@ -267,7 +267,7 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
 
         if (errno != 0 || p == p2)
         {
-            throw Error(errno, "Unable to parse bandwidth");
+            throw Error(errno, "Unable to parse bandwidth.");
         }
 
         p = p2;
@@ -286,14 +286,14 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
         }
         else
         {
-            throw Error(errno, "Invalid bandwidth specified");
+            throw Error(errno, "Invalid bandwidth specified.");
         }
 
         p += 2;
 
         if (::strncmp(p, ", x", 3) != 0)
         {
-            throw Error(errno, "Unable to parse next part of line");
+            throw Error(errno, "Unable to parse the next part of the line.");
         }
 
         errno = 0;
@@ -301,7 +301,7 @@ static void parseDPMPCIEFile(const char* filename, unsigned int& pcieMB, unsigne
 
         if (errno != 0 || p == p2)
         {
-            throw Error(errno, "Unable to parse lanes");
+            throw Error(errno, "Unable to parse lanes.");
         }
 
         if (*p == ' ' && p[1] == '*')
@@ -450,11 +450,11 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
             {
                 errno = 0;
                 char* endp;
-                adapterInfo.gpuLoad = strtoul(line.c_str()+10, &endp, 10);
+                adapterInfo.gpuLoad = strtoul(line.c_str() + 10, &endp, 10);
 
                 if (errno != 0 || endp == line.c_str()+10)
                 {
-                    throw Error("Unable to parse GPU load");
+                    throw Error("Unable to parse GPU load.");
                 }
 
                 break;
@@ -491,7 +491,7 @@ void AMDGPUAdapterHandle::setFanSpeed(int index, int fanSpeed) const
 
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/pwm1", cardIndex, hwmonIndex);
 
-    writeFileContentValue(dbuf, int( round( fanSpeed/100.0 * (maxFanSpeed-minFanSpeed) + minFanSpeed) ) );
+    writeFileContentValue(dbuf, int( round( fanSpeed / 100.0 * (maxFanSpeed-minFanSpeed) + minFanSpeed) ) );
 }
 
 void AMDGPUAdapterHandle::setFanSpeedToDefault(int index) const

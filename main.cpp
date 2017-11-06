@@ -85,9 +85,9 @@ void cleanupPciAccess()
     }
 }
 
-bool setPrintHelp(const char** argv, int i)
+bool setPrintHelp(const char* argvi)
 {
-    if (::strcmp(argv[i], "--help") == 0 || ::strcmp(argv[i], "-?") == 0)
+    if (::strcmp(argvi, "--help") == 0 || ::strcmp(argvi, "-?") == 0)
     {
         return true;
     }
@@ -95,9 +95,9 @@ bool setPrintHelp(const char** argv, int i)
     return false;
 }
 
-bool setPrintVerbose(const char** argv, int i)
+bool setPrintVerbose(const char* argvi)
 {
-    if (::strcmp(argv[i], "--verbose") == 0 || ::strcmp(argv[i], "-v") == 0)
+    if (::strcmp(argvi, "--verbose") == 0 || ::strcmp(argvi, "-v") == 0)
     {
         return true;
     }
@@ -105,11 +105,11 @@ bool setPrintVerbose(const char** argv, int i)
     return false;
 }
 
-bool setUseAdaptersListEquals(const char** argv, int i)
+bool setUseAdaptersListEquals(const char* argvi)
 {
     if (::strncmp(argv[i], "--adapters=", 11) == 0)
     {
-        Adapters::ParseAdaptersList(argv[i] + 11, chosenAdapters, chooseAllAdapters);
+        Adapters::ParseAdaptersList(argvi + 11, chosenAdapters, chooseAllAdapters);
         return true;
     }
     return false;
@@ -126,18 +126,18 @@ bool setUseAdaptersList(const char** argv, int argc, int i)
       }
       else
       {
-          throw Error("Adapter list not supplied");
+          throw Error("Adapter list not supplied.");
       }
   }
 
   return false;
 }
 
-bool parseParametersOrFail(const char** argv, int i)
+bool parseParametersOrFail(const char* argvi)
 {
     OVCParameter param;
 
-    if (Parameters::ParseOVCParameter(argv[i], param))
+    if (Parameters::ParseOVCParameter(argvi, param))
     {
         ovcParameters.push_back(param);
     }
@@ -163,7 +163,7 @@ bool parseAdaptersList(const char** argv, int argc, int i)
         }
         else
         {
-            throw Error("Adapter list not supplied");
+            throw Error("Adapter list not supplied.");
         }
 
         return true;
@@ -194,33 +194,33 @@ try
 
     for (int i = 1; i < argc; i++)
     {
-        printHelp = setPrintHelp(argv, i);
+        printHelp |= setPrintHelp(argv[i]);
 
-        printVerbose = setPrintVerbose(argv, i);
+        printVerbose |= setPrintVerbose(argv[i]);
 
-        useAdaptersList = setUseAdaptersListEquals(argv, i);
+        useAdaptersList |= setUseAdaptersListEquals(argv[i]);
 
         useAdaptersList |= setUseAdaptersList(argv, argc, i);
 
         useAdaptersList |= parseAdaptersList(argv, argc, i);
 
-        if(checkPrintVersion(argv, i))
-        {
-            return 0;
-        }
-
         if( !(printHelp | printVerbose | useAdaptersList) )
         {
-            failed = parseParametersOrFail(argv, i);
+            failed |= parseParametersOrFail(argv[i]);
         }
+    }
+
+    checkFailed(failed);
+
+    if(checkPrintVersion(argv[i]))
+    {
+        return 0;
     }
 
     if(checkPrintHelp(printHelp))
     {
         return 0;
     }
-
-    checkFailed(failed);
 
     processParameters(useAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, printVerbose);
 
