@@ -1,4 +1,4 @@
-#include "catalystcrimsonovcparameters.h"
+#include "catalystcrimsonovc.h"
 
 void CatalystCrimsonOvc::Set(ADLMainControl& MainControl, const std::vector<int>& ActiveAdapters, const std::vector<OVCParameter>& OvcParams)
 {

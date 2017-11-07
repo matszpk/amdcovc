@@ -1,5 +1,5 @@
-#ifndef CATALYSTCRIMSONOVCPARAMETERS_H
-#define CATALYSTCRIMSONOVCPARAMETERS_H
+#ifndef CATALYSTCRIMSONOVC_H
+#define CATALYSTCRIMSONOVC_H
 
 #include <vector>
 #include <cmath>
@@ -8,7 +8,7 @@
 #include "structs.h"
 #include "conststrings.h"
 
-class CatalystCrimsonOvcParameters
+class CatalystCrimsonOvc
 {
 
 private:
@@ -19,4 +19,4 @@ public:
 
 };
 
-#endif /* CATALYSTCRIMSONOVCPARAMETERS_H */
+#endif /* CATALYSTCRIMSONOVC_H */
