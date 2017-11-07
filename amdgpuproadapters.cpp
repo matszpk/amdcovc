@@ -111,10 +111,7 @@ void AmdGpuProAdapters::PrintInfoVerbose(AMDGPUAdapterHandle& handle, const std:
             "  Core Overdrive: " << adapterInfo.coreOD << "\n"
             "  Memory Overdrive: " << adapterInfo.memoryOD << "\n";
 
-        if (adapterInfo.gpuLoad>=0)
-        {
-            std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
-        }
+        printGpuLoad(adapterInfo);
 
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
             "  Current BusLanes: " << adapterInfo.busLanes << "\n"
@@ -126,26 +123,9 @@ void AmdGpuProAdapters::PrintInfoVerbose(AMDGPUAdapterHandle& handle, const std:
                 (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/ double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0) << "%\n"
             "  Controlled FanSpeed: " << ( adapterInfo.defaultFanSpeed ? "yes" : "no" ) << "\n";
 
-        // print available core clocks
-        if (!adapterInfo.coreClocks.empty())
-        {
-            std::cout << "  Core clocks:\n";
+        printCoreClocks(adapterInfo);
 
-            for (uint32_t v: adapterInfo.coreClocks)
-            {
-                std::cout << "    " << v << "MHz\n";
-            }
-        }
-
-        if (!adapterInfo.memoryClocks.empty())
-        {
-            std::cout << "  Memory Clocks:\n";
-
-            for (uint32_t v: adapterInfo.memoryClocks)
-            {
-                std::cout << "    " << v << "MHz\n";
-            }
-        }
+        printMemoryClocks(adapterInfo);
 
         if (useChoosen)
         {
