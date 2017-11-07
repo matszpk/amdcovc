@@ -8,7 +8,7 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
 
     for (int ai = 0; ai < adaptersNum; ai++)
     {
-        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter != i ))
+        if (useChoosen && (choosenIter == choosenAdapters.end() || *choosenIter != i ))
         {
             i++;
             continue;
@@ -40,17 +40,7 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
             std::cout << std::endl;
         }
 
-        if (!adapterInfo.memoryClocks.empty())
-        {
-            std::cout << "  Memory Clocks: ";
-
-            for (uint32_t v: adapterInfo.memoryClocks)
-            {
-                std::cout << " " << v;
-            }
-
-            std::cout << std::endl;
-        }
+        printMemoryClocks(adapterInfo);
 
         if (useChoosen)
         {
@@ -58,6 +48,21 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
         }
 
         i++;
+    }
+}
+
+void printMemoryClocks(const AMDGPUAdapterInfo adapterInfo)
+{
+    if (!adapterInfo.memoryClocks.empty())
+    {
+        std::cout << "  Memory Clocks: ";
+
+        for (uint32_t v: adapterInfo.memoryClocks)
+        {
+            std::cout << " " << v;
+        }
+
+        std::cout << std::endl;
     }
 }
 
