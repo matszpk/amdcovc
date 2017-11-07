@@ -5,6 +5,7 @@
 
 #include "amdgpuadapterhandle.h"
 #include "adlmaincontrol.h"
+#include "pciaccess.h"
 
 class CatalystCrimsonAdapters
 {
