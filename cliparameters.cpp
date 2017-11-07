@@ -126,7 +126,7 @@ bool CliParameters::ParseParametersOrFail(const char* Argvi)
 {
     OVCParameter param;
 
-    if (this->ParseOVCParameter(Argvi, param))
+    if (this->parseOVCParameter(Argvi, param))
     {
         ovcParameters.push_back(param);
     }

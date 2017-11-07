@@ -1,13 +1,13 @@
 #include "amdgpuproovcparameters.h"
 
-void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParameter>& OvcParams, const std::vector<PerfClocks>& PerfClocks)
+void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParameter>& OvcParams, const std::vector<PerfClocks>& PerfClocksList)
 {
     std::cout << ConstStrings::OverdriveWarning << std::endl;
 
     bool failed = false;
     int adaptersNum = Handle_.getAdaptersNum();
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (!param.allAdapters)
         {
@@ -24,7 +24,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
     }
 
     // check fanspeed
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type == OVCParamType::FAN_SPEED)
         {
@@ -42,7 +42,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
     }
 
     // check other params
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type != OVCParamType::FAN_SPEED)
         {
@@ -64,7 +64,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
                     continue;
                 }
 
-                const PerfClocks& perfClks = perfClocks[i];
+                const PerfClocks& perfClks = PerfClocksList[i];
 
                 switch(param.type)
                 {
@@ -119,7 +119,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
     }
 
     // print what has been changed
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type==OVCParamType::FAN_SPEED)
         {
@@ -141,7 +141,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
         }
     }
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type != OVCParamType::FAN_SPEED)
         {
@@ -230,7 +230,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
     std::vector<FanSpeedSetup> fanSpeedSetups(adaptersNum);
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type == OVCParamType::FAN_SPEED)
         {
@@ -243,7 +243,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
         }
     }
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type != OVCParamType::FAN_SPEED)
         {
@@ -251,7 +251,7 @@ void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector
             {
                 int i = *ait;
 
-                const PerfClocks& perfClks = perfClocks[i];
+                const PerfClocks& perfClks = PerfClocksList[i];
 
                 switch(param.type)
                 {

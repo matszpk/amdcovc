@@ -3,6 +3,7 @@
 
 #include "amdgpuproovcparameters.h"
 #include "structs.h"
+#include "adapters.h"
 
 class AmdGpuProProcessing
 {

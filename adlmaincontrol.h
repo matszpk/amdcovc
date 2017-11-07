@@ -12,7 +12,6 @@
 #endif
 
 #include "atiadlhandle.h"
-#include "adlmaincontrol.h"
 
 class ADLMainControl
 {

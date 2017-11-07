@@ -4,7 +4,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
 {
     std::cout << ConstStrings::OverdriveWarning << std::endl;
 
-    const int realAdaptersNum = activeAdapters.size();
+    const int realAdaptersNum = ActiveAdapters.size();
 
     std::vector<ADLODParameters> odParams(realAdaptersNum);
     std::vector<std::vector<ADLODPerformanceLevel> > perfLevels(realAdaptersNum);
@@ -14,7 +14,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
 
     bool failed = false;
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (!param.allAdapters)
         {
@@ -32,7 +32,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
     }
 
     // check fanspeed
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type == OVCParamType::FAN_SPEED)
         {
@@ -51,7 +51,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
 
     for (int ai = 0; ai < realAdaptersNum; ai++)
     {
-        int i = activeAdapters[ai];
+        int i = ActiveAdapters[ai];
 
         MainControl.getODParameters(i, odParams[ai]);
 
@@ -63,7 +63,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
     }
 
     // check other params
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type!=OVCParamType::FAN_SPEED)
         {
@@ -127,7 +127,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
     }
 
     // print what has been changed
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type==OVCParamType::FAN_SPEED)
         {
@@ -149,7 +149,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
         }
     }
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type != OVCParamType::FAN_SPEED)
         {
@@ -229,7 +229,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
     std::vector<FanSpeedSetup> fanSpeedSetups(realAdaptersNum);
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type==OVCParamType::FAN_SPEED)
         {
@@ -242,7 +242,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
         }
     }
 
-    for (OVCParameter param: ovcParams)
+    for (OVCParameter param: OvcParams)
     {
         if (param.type!=OVCParamType::FAN_SPEED)
         {
@@ -314,11 +314,11 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
         {
             if (!fanSpeedSetups[i].useDefault)
             {
-                MainControl.setFanSpeed(activeAdapters[i], 0 /* must be zero */, int(round(fanSpeedSetups[i].value)));
+                MainControl.setFanSpeed(ActiveAdapters[i], 0 /* must be zero */, int(round(fanSpeedSetups[i].value)));
             }
             else
             {
-                MainControl.setFanSpeedToDefault(activeAdapters[i], 0);
+                MainControl.setFanSpeedToDefault(ActiveAdapters[i], 0);
             }
         }
     }
@@ -328,7 +328,7 @@ void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::v
     {
         if (changedDevices[i])
         {
-            MainControl.setODPerformanceLevels(activeAdapters[i], odParams[i].iNumberOfPerformanceLevels, perfLevels[i].data());
+            MainControl.setODPerformanceLevels(ActiveAdapters[i], odParams[i].iNumberOfPerformanceLevels, perfLevels[i].data());
         }
     }
 }

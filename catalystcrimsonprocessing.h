@@ -1,8 +1,12 @@
 #ifndef CATALYSTCRIMSONPARAMETERS_H
 #define CATALYSTCRIMSONPARAMETERS_H
 
+#include <vector>
+
 #include "catalystcrimsonovcparameters.h"
 #include "structs.h"
+#include "atiadlhandle.h"
+#include "adapters.h"
 
 class CatalystCrimsonProcessing
 {

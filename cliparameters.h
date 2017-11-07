@@ -1,10 +1,11 @@
 #ifndef CLIPARAMETERS_H
 #define CLIPARAMETERS_H
 
-#include "parameters.h"
 #include "amdgpuproprocessing.h"
 #include "catalystcrimsonprocessing.h"
 #include "conststrings.h"
+#include "structs.h"
+#include "adapters.h"
 
 class CliParameters
 {
