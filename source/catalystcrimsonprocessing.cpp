@@ -1,7 +1,7 @@
 #include "catalystcrimsonprocessing.h"
 
-void CatalystCrimsonProcessing::Process(ATIADLHandle Handle_, bool UseAdaptersList, std::vector<int> ChosenAdapters, std::vector<OVCParameter> OvcParameters, bool ChooseAllAdapters,
-             bool PrintVerbose)
+void CatalystCrimsonProcessing::Process(ATIADLHandle Handle_, bool UseAdaptersList, std::vector<int> ChosenAdapters,
+                                        std::vector<OVCParameter> OvcParameters, bool ChooseAllAdapters, bool PrintVerbose)
 {
     ADLMainControl mainControl(Handle_, 0);
     int adaptersNum = mainControl.getAdaptersNum();
@@ -11,6 +11,8 @@ void CatalystCrimsonProcessing::Process(ATIADLHandle Handle_, bool UseAdaptersLi
 
     checkAdapterList(UseAdaptersList, ChosenAdapters, activeAdapters);
 
+    bool useChosen = UseAdaptersList && !ChooseAllAdapters;
+
     if (!OvcParameters.empty())
     {
         CatalystCrimsonOvc::Set(mainControl, activeAdapters, OvcParameters);
@@ -19,11 +21,11 @@ void CatalystCrimsonProcessing::Process(ATIADLHandle Handle_, bool UseAdaptersLi
 
     if (PrintVerbose)
     {
-        CatalystCrimsonAdapters::PrintInfoVerbose(mainControl, adaptersNum, activeAdapters, ChosenAdapters, UseAdaptersList && !ChooseAllAdapters);
+        CatalystCrimsonAdapters::PrintInfoVerbose(mainControl, adaptersNum, activeAdapters, ChosenAdapters, useChosen);
         return;
     }
 
-    CatalystCrimsonAdapters::PrintInfo(mainControl, adaptersNum, activeAdapters, ChosenAdapters, UseAdaptersList && !ChooseAllAdapters);
+    CatalystCrimsonAdapters::PrintInfo(mainControl, adaptersNum, activeAdapters, ChosenAdapters, useChosen);
 }
 
 void CatalystCrimsonProcessing::checkAdapterList(bool useAdaptersList, std::vector<int> chosenAdapters, std::vector<int> activeAdapters)

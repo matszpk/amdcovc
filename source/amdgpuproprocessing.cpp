@@ -31,13 +31,15 @@ void AmdGpuProProcessing::setOvcParameters(std::vector<OVCParameter> ovcParamete
 
 void AmdGpuProProcessing::printAdapterInfo(bool printVerbose, std::vector<int> chosenAdapters, bool useAdaptersList, bool chooseAllAdapters)
 {
+    bool useChosen = useAdaptersList && !chooseAllAdapters;
+
     if (printVerbose)
     {
-        AmdGpuProAdapters::PrintInfoVerbose(handle, chosenAdapters, useAdaptersList && !chooseAllAdapters);
+        AmdGpuProAdapters::PrintInfoVerbose(handle, chosenAdapters, useChoosen);
     }
     else
     {
-        AmdGpuProAdapters::PrintInfo(handle, chosenAdapters, useAdaptersList && !chooseAllAdapters);
+        AmdGpuProAdapters::PrintInfo(handle, chosenAdapters, useChoosen);
     }
 }
 
