@@ -126,7 +126,7 @@ bool CliParameters::ParseParametersOrFail(const char* Argvi)
 {
     OVCParameter param;
 
-    if (Parameters::ParseOVCParameter(Argvi, param))
+    if (this->ParseOVCParameter(Argvi, param))
     {
         ovcParameters.push_back(param);
     }
@@ -159,4 +159,185 @@ bool CliParameters::ParseAdaptersList(const char** Argv, int Argc, int I)
     }
 
     return false;
+}
+
+bool CliParameters::parseOVCParameter(const char* string, OVCParameter& param)
+{
+    const char* afterName = strchr(string, ':');
+
+    if (afterName==nullptr)
+    {
+        afterName = strchr(string, '=');
+
+        if (afterName==nullptr)
+        {
+            std::cerr << "Invalid parameter specified: '" << string << "'!" << std::endl;
+
+            return false;
+        }
+    }
+
+    std::string name(string, afterName);
+    param.argText = string;
+    param.adapters.clear();
+    param.adapters.push_back(0); // default is 0
+    param.allAdapters = false;
+    param.partId = 0;
+    param.useDefault = false;
+    bool partIdSet = false;
+
+    if (name=="coreclk")
+    {
+        param.type = OVCParamType::CORE_CLOCK;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="memclk")
+    {
+        param.type = OVCParamType::MEMORY_CLOCK;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="coreod")
+    {
+        param.type = OVCParamType::CORE_OD;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="memod")
+    {
+        param.type = OVCParamType::MEMORY_OD;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="vcore")
+    {
+        param.type = OVCParamType::VDDC_VOLTAGE;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="fanspeed")
+    {
+        param.type = OVCParamType::FAN_SPEED;
+        partIdSet = false;
+    }
+    else if (name=="icoreclk")
+    {
+        param.type = OVCParamType::CORE_CLOCK;
+        partIdSet = true;
+    }
+    else if (name=="imemclk")
+    {
+        param.type = OVCParamType::MEMORY_CLOCK;
+        partIdSet = true;
+    }
+    else if (name=="ivcore")
+    {
+        param.type = OVCParamType::VDDC_VOLTAGE;
+        partIdSet = true;
+    }
+    else
+    {
+        std::cout << "Wrong parameter name in '" << string << "'!" << std::endl;
+        return false;
+    }
+
+    char* next;
+
+    if (*afterName == ':')
+    {
+        afterName++;
+
+        try
+        {
+            const char* afterList = ::strchr(afterName, ':');
+
+            if (afterList==nullptr)
+            {
+                afterList = ::strchr(afterName, '=');
+            }
+
+            if (afterList==nullptr)
+            {
+                afterList += strlen(afterName); // to end
+            }
+
+            if (afterList!=afterName)
+            {
+                std::string listString(afterName, afterList);
+                Adapters::ParseAdaptersList(listString.c_str(), param.adapters, param.allAdapters);
+                afterName = afterList;
+            }
+        }
+        catch(const Error& error)
+        {
+            std::cerr << "Unable to parse adapter list for '" << string << "': " << error.what() << std::endl;
+            return false;
+        }
+    }
+    else if (*afterName==0)
+    {
+        std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+        return false;
+    }
+
+    if (*afterName==':' && !partIdSet)
+    {
+        afterName++;
+        errno = 0;
+        int value = strtol(afterName, &next, 10);
+
+        if (errno!=0)
+        {
+            std::cerr << "Unable to parse partId in '" << string << "'!" << std::endl;
+            return false;
+        }
+
+        if (afterName != next)
+        {
+            param.partId = value;
+        }
+
+        afterName = next;
+    }
+    else if (*afterName==0)
+    {
+        std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+        return false;
+    }
+
+    if (*afterName=='=')
+    {
+        afterName++;
+        errno = 0;
+
+        if (::strcmp(afterName, "default") == 0)
+        {
+            param.useDefault = true;
+            afterName += 7;
+        }
+        else
+        {
+            param.value = strtod(afterName, &next);
+
+            if (errno!=0 || afterName==next)
+            {
+                std::cerr << "Unable to parse value in '" << string << "'!" << std::endl;
+                return false;
+            }
+            if (std::isinf(param.value) || std::isnan(param.value))
+            {
+                std::cerr << "Value of '" << string << "' is not finite!" << std::endl;
+                return false;
+            }
+            afterName = next;
+        }
+        if (*afterName!=0)
+        {
+            std::cerr << "Invalid data in '" << string << "'!" << std::endl;
+            return false;
+        }
+    }
+    else
+    {
+        std::cerr << "Unterminated parameter '" << string << "'!" << std::endl;
+        return false;
+    }
+
+    return true;
 }

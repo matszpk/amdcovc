@@ -13,7 +13,7 @@ void CatalystCrimsonProcessing::Process(ATIADLHandle Handle_, bool UseAdaptersLi
 
     if (!OvcParameters.empty())
     {
-        Parameters::SetOVCParameters(mainControl, adaptersNum, activeAdapters, OvcParameters);
+        CatalystCrimsonOvcParameters::Set(mainControl, activeAdapters, OvcParameters);
         return;
     }
 

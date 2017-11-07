@@ -26,7 +26,7 @@ void AmdGpuProProcessing::setOvcParameters(std::vector<OVCParameter> ovcParamete
         perfClocks.push_back(PerfClocks{ coreClock, memoryClock });
     }
 
-    Parameters::SetOVCParameters(handle, ovcParameters, perfClocks);
+    AmdGpuProOvcParameters::Set(handle, ovcParameters, perfClocks);
 }
 
 void AmdGpuProProcessing::printAdapterInfo(bool printVerbose, std::vector<int> chosenAdapters, bool useAdaptersList, bool chooseAllAdapters)

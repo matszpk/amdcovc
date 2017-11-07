@@ -21,6 +21,8 @@ private:
 
   bool chooseAllAdapters;
 
+  bool parseOVCParameter(const char* string, OVCParameter& param);
+
 public:
 
   bool SetPrintHelp(const char* Argvi);

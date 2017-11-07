@@ -1,7 +1,8 @@
 #ifndef AMDGPUPROPARAMETERS_H
 #define AMDGPUPROPARAMETERS_H
 
-#include "parameters.h"
+#include "amdgpuproovcparameters.h"
+#include "structs.h"
 
 class AmdGpuProProcessing
 {
