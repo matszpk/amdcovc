@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "adlmaincontrol.h"
+#include "amdgpuadapterhandle.h"
 
 class AmdGpuProAdapters
 {
