@@ -11,6 +11,8 @@ class AmdGpuProAdapters
 
 private:
 
+  static void printMemoryClocks(const AMDGPUAdapterInfo adapterInfo)
+
 public:
 
   static void PrintInfo(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen);

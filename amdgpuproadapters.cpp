@@ -51,7 +51,7 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
     }
 }
 
-void printMemoryClocks(const AMDGPUAdapterInfo adapterInfo)
+void AmdGpuProAdapters::printMemoryClocks(const AMDGPUAdapterInfo adapterInfo)
 {
     if (!adapterInfo.memoryClocks.empty())
     {
