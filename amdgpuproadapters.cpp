@@ -16,29 +16,13 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
 
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
 
-        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n  Core: " << adapterInfo.coreClock << " MHz, Mem: " <<
-                adapterInfo.memoryClock << " MHz, CoreOD: " << adapterInfo.coreOD << ", MemOD: " << adapterInfo.memoryOD << ", ";
+        printAdapterSummary(adapterInfo);
 
-        if (adapterInfo.gpuLoad>=0)
-        {
-            std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
-        }
+        printGpuLoad(adapterInfo);
 
-        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, Fan: " <<
-                double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed) / double(adapterInfo.maxFanSpeed - adapterInfo.minFanSpeed) * 100.0 <<
-                "%" << std::endl;
+        printTemperature(adapterInfo);
 
-        if (!adapterInfo.coreClocks.empty())
-        {
-            std::cout << "  Core clocks: ";
-
-            for (uint32_t v: adapterInfo.coreClocks)
-            {
-                std::cout << " " << v;
-            }
-
-            std::cout << std::endl;
-        }
+        printCoreClocks(adapterInfo);
 
         printMemoryClocks(adapterInfo);
 
@@ -48,6 +32,42 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
         }
 
         i++;
+    }
+}
+
+void AmdGpuProAdapters::printAdapterSummary(const AMDGPUAdapterInfo adapterInfo)
+{
+    std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n  Core: " << adapterInfo.coreClock << " MHz, Mem: " <<
+            adapterInfo.memoryClock << " MHz, CoreOD: " << adapterInfo.coreOD << ", MemOD: " << adapterInfo.memoryOD << ", ";
+
+}
+
+void AmdGpuProAdapters::printGpuLoad(const AMDGPUAdapterInfo adapterInfo)
+{
+    if (adapterInfo.gpuLoad>=0)
+    {
+        std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
+    }
+}
+
+void AmdGpuProAdapters::printTemperature(const AMDGPUAdapterInfo adapterInfo)
+{
+    std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, Fan: " <<
+        double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed) / double(adapterInfo.maxFanSpeed - adapterInfo.minFanSpeed) * 100.0 << "%" << std::endl;
+}
+
+void AmdGpuProAdapters::printCoreClocks(const AMDGPUAdapterInfo adapterInfo)
+{
+    if (!adapterInfo.coreClocks.empty())
+    {
+        std::cout << "  Core clocks: ";
+
+        for (uint32_t v: adapterInfo.coreClocks)
+        {
+            std::cout << " " << v;
+        }
+
+        std::cout << std::endl;
     }
 }
 

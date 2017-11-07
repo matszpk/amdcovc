@@ -13,6 +13,14 @@ private:
 
   static void printMemoryClocks(const AMDGPUAdapterInfo adapterInfo);
 
+  static void printCoreClocks(const AMDGPUAdapterInfo adapterInfo);
+
+  static void printTemperature(const AMDGPUAdapterInfo adapterInfo);
+
+  static void printGpuLoad(const AMDGPUAdapterInfo adapterInfo);
+
+  static void printAdapterSummary(const AMDGPUAdapterInfo adapterInfo);
+
 public:
 
   static void PrintInfo(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen);
