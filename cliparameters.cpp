@@ -64,13 +64,13 @@ void CliParameters::ProcessParameters(bool UseAdaptersList, bool PrintVerbose)
     if (handle.open())
     {
         CatalystCrimsonProcessing *processor = new CatalystCrimsonProcessing();
-        processor->Process(handle, useAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, printVerbose);
+        processor->Process(handle, UseAdaptersList, chosenAdapters, ovcParameters, chooseAllAdapters, PrintVerbose);
         delete processor;
     }
     else
     {
         AmdGpuProProcessing *processor = new AmdGpuProProcessing();
-        processor->Process(ovcParameters, useAdaptersList, chosenAdapters, chooseAllAdapters, printVerbose);
+        processor->Process(ovcParameters, UseAdaptersList, chosenAdapters, chooseAllAdapters, PrintVerbose);
         delete processor;
     }
 }

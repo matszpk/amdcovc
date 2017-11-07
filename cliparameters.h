@@ -25,7 +25,7 @@ public:
 
   bool SetPrintHelp(const char* Argvi);
 
-  bool CheckPrintHelp(bool PrintHelp);
+  void CheckPrintHelp(bool PrintHelp);
 
   bool SetPrintVersion(const char* Argvi);
 
@@ -46,6 +46,6 @@ public:
   bool ParseParametersOrFail(const char* Argvi);
 
   bool ParseAdaptersList(const char** Argv, int Argc, int I);
-}
+};
 
 #endif /* CLIPARAMETERS_H */

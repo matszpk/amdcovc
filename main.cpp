@@ -23,10 +23,11 @@
 
 #include "cliparameters.h"
 
+CliParameters *cli = new CliParameters();
+
 int main(int argc, const char** argv)
 try
 {
-    CliParameters *cli = new CliParameters();
     bool printHelp = false;
     bool printVersion = false;
     bool printVerbose = false;
@@ -35,36 +36,36 @@ try
 
     for (int i = 1; i < argc; i++)
     {
-        printHelp |= cli.SetPrintHelp(argv[i]);
-        printVersion |= cli.SetPrintVersion(argv[i]);
-        printVerbose |= cli.SetPrintVerbose(argv[i]);
-        useAdaptersList |= cli.SetUseAdaptersListEquals(argv[i]);
-        useAdaptersList |= cli.SetUseAdaptersList(argv, argc, i);
-        useAdaptersList |= cli.ParseAdaptersList(argv, argc, i);
+        printHelp |= cli->SetPrintHelp(argv[i]);
+        printVersion |= cli->SetPrintVersion(argv[i]);
+        printVerbose |= cli->SetPrintVerbose(argv[i]);
+        useAdaptersList |= cli->SetUseAdaptersListEquals(argv[i]);
+        useAdaptersList |= cli->SetUseAdaptersList(argv, argc, i);
+        useAdaptersList |= cli->ParseAdaptersList(argv, argc, i);
 
         if( !( printVersion | printHelp | printVerbose | useAdaptersList ) )
         {
-            failed |= cli.ParseParametersOrFail(argv[i]);
+            failed |= cli->ParseParametersOrFail(argv[i]);
         }
     }
 
-    cli.CheckFailed(failed);
-    cli.CheckPrintVersion(printVersion);
-    cli.CheckPrintHelp(printHelp);
+    cli->CheckFailed(failed);
+    cli->CheckPrintVersion(printVersion);
+    cli->CheckPrintHelp(printHelp);
 
     if( printVersion | printHelp )
     {
         return 0;
     }
 
-    cli.ProcessParameters(useAdaptersList, printVerbose);
-    cli.CleanupPciAccess();
+    cli->ProcessParameters(useAdaptersList, printVerbose);
+    cli->CleanupPciAccess();
 
     return 0;
 }
 catch(const std::exception& ex)
 {
-    cli.CleanupPciAccess();
+    cli->CleanupPciAccess();
 
     std::cerr << ex.what() << std::endl;
 
