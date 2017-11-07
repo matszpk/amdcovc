@@ -35,11 +35,11 @@ void AmdGpuProProcessing::printAdapterInfo(bool printVerbose, std::vector<int> c
 
     if (printVerbose)
     {
-        AmdGpuProAdapters::PrintInfoVerbose(handle, chosenAdapters, useChoosen);
+        AmdGpuProAdapters::PrintInfoVerbose(handle, chosenAdapters, useChosen);
     }
     else
     {
-        AmdGpuProAdapters::PrintInfo(handle, chosenAdapters, useChoosen);
+        AmdGpuProAdapters::PrintInfo(handle, chosenAdapters, useChosen);
     }
 }
 
