@@ -2,8 +2,9 @@
 #define AMDGPUPROPARAMETERS_H
 
 #include "amdgpuproovcparameters.h"
+#include "amdgpuproadapters.h"
 #include "structs.h"
-#include "adapters.h"
+
 
 class AmdGpuProProcessing
 {

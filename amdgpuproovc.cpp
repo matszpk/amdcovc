@@ -1,6 +1,6 @@
-#include "amdgpuproovcparameters.h"
+#include "amdgpuproovc.h"
 
-void AmdGpuProOvcParameters::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParameter>& OvcParams, const std::vector<PerfClocks>& PerfClocksList)
+void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParameter>& OvcParams, const std::vector<PerfClocks>& PerfClocksList)
 {
     std::cout << ConstStrings::OverdriveWarning << std::endl;
 

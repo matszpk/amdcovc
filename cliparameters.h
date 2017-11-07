@@ -5,7 +5,7 @@
 #include "catalystcrimsonprocessing.h"
 #include "conststrings.h"
 #include "structs.h"
-#include "adapters.h"
+#include "adapterslist.h"
 
 class CliParameters
 {

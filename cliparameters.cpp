@@ -98,7 +98,7 @@ bool CliParameters::SetUseAdaptersListEquals(const char* Argvi)
 {
     if (::strncmp(Argvi, "--adapters=", 11) == 0)
     {
-        Adapters::ParseAdaptersList(Argvi + 11, chosenAdapters, chooseAllAdapters);
+        AdaptersList::Parse(Argvi + 11, chosenAdapters, chooseAllAdapters);
         return true;
     }
     return false;
@@ -110,7 +110,7 @@ bool CliParameters::SetUseAdaptersList(const char** Argv, int Argc, int I)
   {
       if ( I + 1 < Argc)
       {
-          Adapters::ParseAdaptersList(Argv[++I], chosenAdapters, chooseAllAdapters);
+          AdaptersList::Parse(Argv[++I], chosenAdapters, chooseAllAdapters);
           return true;
       }
       else
@@ -144,11 +144,11 @@ bool CliParameters::ParseAdaptersList(const char** Argv, int Argc, int I)
     {
         if (Argv[I][2] != 0)
         {
-            Adapters::ParseAdaptersList(Argv[I] + 2, chosenAdapters, chooseAllAdapters);
+            AdaptersList::Parse(Argv[I] + 2, chosenAdapters, chooseAllAdapters);
         }
         else if (I + 1 < Argc)
         {
-            Adapters::ParseAdaptersList(Argv[++I], chosenAdapters, chooseAllAdapters);
+            AdaptersList::Parse(Argv[++I], chosenAdapters, chooseAllAdapters);
         }
         else
         {
@@ -260,7 +260,7 @@ bool CliParameters::parseOVCParameter(const char* string, OVCParameter& param)
             if (afterList!=afterName)
             {
                 std::string listString(afterName, afterList);
-                Adapters::ParseAdaptersList(listString.c_str(), param.adapters, param.allAdapters);
+                AdaptersList::Parse(listString.c_str(), param.adapters, param.allAdapters);
                 afterName = afterList;
             }
         }

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "catalystcrimsonovcparameters.h"
+#include "catalystcrimsonovadapters.h"
 #include "structs.h"
 #include "atiadlhandle.h"
 #include "adapters.h"

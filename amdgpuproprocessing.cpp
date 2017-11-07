@@ -26,18 +26,18 @@ void AmdGpuProProcessing::setOvcParameters(std::vector<OVCParameter> ovcParamete
         perfClocks.push_back(PerfClocks{ coreClock, memoryClock });
     }
 
-    AmdGpuProOvcParameters::Set(handle, ovcParameters, perfClocks);
+    AmdGpuProOvc::Set(handle, ovcParameters, perfClocks);
 }
 
 void AmdGpuProProcessing::printAdapterInfo(bool printVerbose, std::vector<int> chosenAdapters, bool useAdaptersList, bool chooseAllAdapters)
 {
     if (printVerbose)
     {
-        Adapters::PrintAdaptersInfoVerbose(handle, chosenAdapters, useAdaptersList && !chooseAllAdapters);
+        AmdGpuProAdapters::PrintInfoVerbose(handle, chosenAdapters, useAdaptersList && !chooseAllAdapters);
     }
     else
     {
-        Adapters::PrintAdaptersInfo(handle, chosenAdapters, useAdaptersList && !chooseAllAdapters);
+        AmdGpuProAdapters::PrintInfo(handle, chosenAdapters, useAdaptersList && !chooseAllAdapters);
     }
 }
 

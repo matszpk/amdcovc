@@ -1,5 +1,5 @@
-#ifndef AMDGPUPROOVCPARAMETERS_H
-#define AMDGPUPROOVCPARAMETERS_H
+#ifndef AMDGPUPROOVC_H
+#define AMDGPUPROOVC_H
 
 #include <vector>
 
@@ -7,7 +7,7 @@
 #include "structs.h"
 #include "conststrings.h"
 
-class AmdGpuProOvcParameters
+class AmdGpuProOvc
 {
 
 private:
@@ -18,4 +18,4 @@ public:
 
 };
 
-#endif /* AMDGPUPROOVCPARAMETERS_H */
+#endif /* AMDGPUPROOVC_H */

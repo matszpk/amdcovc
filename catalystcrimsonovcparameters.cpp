@@ -1,6 +1,6 @@
 #include "catalystcrimsonovcparameters.h"
 
-void CatalystCrimsonOvcParameters::Set(ADLMainControl& MainControl, const std::vector<int>& ActiveAdapters, const std::vector<OVCParameter>& OvcParams)
+void CatalystCrimsonOvc::Set(ADLMainControl& MainControl, const std::vector<int>& ActiveAdapters, const std::vector<OVCParameter>& OvcParams)
 {
     std::cout << ConstStrings::OverdriveWarning << std::endl;
 
