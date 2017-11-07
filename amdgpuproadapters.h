@@ -11,7 +11,7 @@ class AmdGpuProAdapters
 
 private:
 
-  static void printMemoryClocks(const AMDGPUAdapterInfo adapterInfo)
+  static void printMemoryClocks(const AMDGPUAdapterInfo adapterInfo);
 
 public:
 
