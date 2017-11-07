@@ -1,7 +1,7 @@
 #ifndef AMDGPUPROPARAMETERS_H
 #define AMDGPUPROPARAMETERS_H
 
-#include "amdgpuproovcparameters.h"
+#include "amdgpuproovc.h"
 #include "amdgpuproadapters.h"
 #include "structs.h"
 

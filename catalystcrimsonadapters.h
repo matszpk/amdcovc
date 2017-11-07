@@ -1,6 +1,11 @@
 #ifndef CATALYSTCRIMSONADAPTERS_H
 #define CATALYSTCRIMSONADAPTERS_H
 
+#include <vector>
+
+#include "amdgpuadapterhandle.h"
+#include "adlmaincontrol.h"
+
 class CatalystCrimsonAdapters
 {
 
@@ -8,11 +13,11 @@ private:
 
 public:
 
-  static void CatalystCrimsonAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen);
+  static void PrintInfo(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen);
 
-  static void CatalystCrimsonAdapters::PrintInfoVerbose(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen)
+  static void PrintInfoVerbose(AMDGPUAdapterHandle& handle, const std::vector<int>& choosenAdapters, bool useChoosen);
 
-  static void CatalystCrimsonAdapters::GetActiveAdaptersIndices(ADLMainControl& mainControl, int adaptersNum, std::vector<int>& activeAdapters);
+  static void GetActiveAdaptersIndices(ADLMainControl& mainControl, int adaptersNum, std::vector<int>& activeAdapters);
 
 };
 

@@ -3,11 +3,11 @@
 
 #include <vector>
 
-#include "catalystcrimsonovcparameters.h"
-#include "catalystcrimsonovadapters.h"
+#include "catalystcrimsonovc.h"
+#include "catalystcrimsonadapters.h"
 #include "structs.h"
 #include "atiadlhandle.h"
-#include "adapters.h"
+#include "adapterslist.h"
 
 class CatalystCrimsonProcessing
 {
