@@ -22,7 +22,7 @@ void CatalystCrimsonOvc::Set(ADLMainControl& MainControl, const std::vector<int>
 
             for (int adapterIndex: param.adapters)
             {
-                if (!listFailed && (adapterIndex>=realAdaptersNum || adapterIndex <0 ))
+                if (!listFailed && (adapterIndex >= realAdaptersNum || adapterIndex <0 ))
                 {
                     std::cerr << "Some adapter indices are out of range in '" << param.argText << "'!" << std::endl;
                     listFailed = failed = true;
