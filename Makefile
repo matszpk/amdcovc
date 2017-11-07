@@ -7,11 +7,11 @@ ADLSDKDIR = ./dependencies/ADL_SDK_V10.2
 CXX = g++
 CXXFLAGS = -Wall -O3 -std=c++11
 LDFLAGS = -Wall -O3 -std=c++11
-SRC_DIR = ./
+SRC_DIR = ./source
 OBJ_DIR = ./
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
-INCDIRS = -I$(ADLSDKDIR)/include -I ./
+INCDIRS = -I$(ADLSDKDIR)/include -I ./includes
 LIBDIRS =
 LIBS = -ldl -lpci -lm -lOpenCL -pthread
 
