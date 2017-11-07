@@ -19,7 +19,7 @@ private:
 
   static void printGpuLoad(const AMDGPUAdapterInfo adapterInfo);
 
-  static void printAdapterSummary(const AMDGPUAdapterInfo adapterInfo);
+  static void printAdapterSummary(const AMDGPUAdapterInfo adapterInfo, int i);
 
 public:
 

@@ -16,7 +16,7 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
 
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
 
-        printAdapterSummary(adapterInfo);
+        printAdapterSummary(adapterInfo, i);
 
         printGpuLoad(adapterInfo);
 
@@ -35,7 +35,7 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
     }
 }
 
-void AmdGpuProAdapters::printAdapterSummary(const AMDGPUAdapterInfo adapterInfo)
+void AmdGpuProAdapters::printAdapterSummary(const AMDGPUAdapterInfo adapterInfo, int i)
 {
     std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n  Core: " << adapterInfo.coreClock << " MHz, Mem: " <<
             adapterInfo.memoryClock << " MHz, CoreOD: " << adapterInfo.coreOD << ", MemOD: " << adapterInfo.memoryOD << ", ";
