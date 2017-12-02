@@ -14,7 +14,7 @@ private:
 
     static void setFanSpeeds(int adaptersNum, std::vector<FanSpeedSetup> fanSpeedSetups, AMDGPUAdapterHandle& Handle_);
 
-    static boid checkFanSpeeds(std::vector<OVCParameter>& ovcParams, bool& failed);
+    static void checkFanSpeeds(std::vector<OVCParameter>& ovcParams, bool& failed);
 
 public:
 
