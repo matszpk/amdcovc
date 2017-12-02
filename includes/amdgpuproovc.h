@@ -16,6 +16,8 @@ private:
 
     static void checkFanSpeeds(const std::vector<OVCParameter>& ovcParams, bool& failed);
 
+    static void checkAdapterIndicies(const std::vector<OVCParameter>& ovcParams, bool & failed);
+
 public:
 
     static void Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParameter>& OvcParams, const std::vector<PerfClocks>& PerfClocksList);

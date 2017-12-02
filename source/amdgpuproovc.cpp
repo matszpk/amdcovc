@@ -318,20 +318,39 @@ void AmdGpuProOvc::setFanSpeeds(int adaptersNum, std::vector<FanSpeedSetup> fanS
 
 void AmdGpuProOvc::checkFanSpeeds(const std::vector<OVCParameter>& ovcParams, bool& failed)
 {
-  for (OVCParameter param: ovcParams)
-  {
-      if (param.type == OVCParamType::FAN_SPEED)
-      {
-          if(param.partId != 0)
-          {
-              std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
-              failed = true;
-          }
-          if( !param.useDefault && (param.value < 0.0 || param.value > 100.0) )
-          {
-              std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
-              failed = true;
-          }
-      }
-  }
+    for (OVCParameter param: ovcParams)
+    {
+        if (param.type == OVCParamType::FAN_SPEED)
+        {
+            if(param.partId != 0)
+            {
+                std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
+                failed = true;
+            }
+            if( !param.useDefault && (param.value < 0.0 || param.value > 100.0) )
+            {
+                std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
+                failed = true;
+            }
+        }
+    }
+}
+
+void AmdGpuProOvc::checkAdapterIndicies(const std::std::vector<OVCParameter>& ovcParams, bool& failed)
+{
+    for (OVCParameter param: OvcParams)
+    {
+        if (!param.allAdapters)
+        {
+            bool listFailed = false;
+            for (int adapterIndex: param.adapters)
+            {
+                if ( !listFailed && (adapterIndex >= adaptersNum || adapterIndex < 0) )
+                {
+                    std::cerr << "Some adapter indices out of range in '" << param.argText << "'!" << std::endl;
+                    listFailed = failed = true;
+                }
+            }
+        }
+    }
 }
