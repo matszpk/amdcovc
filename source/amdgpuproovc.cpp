@@ -11,76 +11,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
 
     checkFanSpeeds(OvcParams, failed);
 
-    // check other params
-    for (OVCParameter param: OvcParams)
-    {
-        if (param.type != OVCParamType::FAN_SPEED)
-        {
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
-            {
-                int i = *ait;
-
-                if (i>=adaptersNum)
-                {
-                    continue;
-                }
-
-                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : 0;
-
-                if (partId != 0)
-                {
-                    std::cerr << "Performance level out of range in '" << param.argText << "'!" << std::endl;
-                    failed = true;
-                    continue;
-                }
-
-                const PerfClocks& perfClks = PerfClocksList[i];
-
-                switch(param.type)
-                {
-                    case OVCParamType::CORE_CLOCK:
-
-                        if (!param.useDefault && (param.value < perfClks.coreClock || param.value > perfClks.coreClock * 1.20))
-                        {
-                            std::cerr << "Core clock out of range in '" << param.argText << "'!" << std::endl;
-                            failed = true;
-                        }
-                        break;
-
-                    case OVCParamType::MEMORY_CLOCK:
-
-                        if (!param.useDefault && (param.value < perfClks.memoryClock || param.value > perfClks.memoryClock * 1.20))
-                        {
-                            std::cerr << "Memory clock out of range in '" << param.argText << "'!" << std::endl;
-                            failed = true;
-                        }
-                        break;
-
-                    case OVCParamType::CORE_OD:
-
-                        if (!param.useDefault && (param.value < 0.0 || param.value > 20.0))
-                        {
-                            std::cerr << "Core Overdrive out of range in '" << param.argText << "'!" << std::endl;
-                            failed = true;
-                        }
-                        break;
-
-                    case OVCParamType::MEMORY_OD:
-
-                        if (!param.useDefault && (param.value < 0.0 || param.value > 20.0))
-                        {
-                            std::cerr << "Memory Overdrive out of range in '" << param.argText << "'!" << std::endl;
-                            failed = true;
-                        }
-                        break;
-
-                    default:
-
-                        break;
-                }
-            }
-        }
-    }
+    checkParameters(OvcParams, adapt, failed);
 
     if (failed)
     {
@@ -233,7 +164,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
                         }
                         else
                         {
-                            Handle_.setOverdriveCoreParam(i, int(round((double(param.value - perfClks.coreClock) / perfClks.coreClock) * 100.0)));
+                            Handle_.setOverdriveCoreParam(i, int( round( ( double( param.value - perfClks.coreClock ) / perfClks.coreClock ) * 100.0 ) ) );
                         }
                         break;
 
@@ -335,6 +266,79 @@ void AmdGpuProOvc::checkAdapterIndicies(const std::vector<OVCParameter>& ovcPara
                 {
                     std::cerr << "Some adapter indices out of range in '" << param.argText << "'!" << std::endl;
                     listFailed = failed = true;
+                }
+            }
+        }
+    }
+}
+
+void AmdGpuProOvc::checkParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, bool& failed)
+{
+    for (OVCParameter param: OvcParams)
+    {
+        if (param.type != OVCParamType::FAN_SPEED)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
+            {
+                int i = *ait;
+
+                if (i>=adaptersNum)
+                {
+                    continue;
+                }
+
+                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : 0;
+
+                if (partId != 0)
+                {
+                    std::cerr << "Performance level out of range in '" << param.argText << "'!" << std::endl;
+                    failed = true;
+                    continue;
+                }
+
+                const PerfClocks& perfClks = PerfClocksList[i];
+
+                switch(param.type)
+                {
+                    case OVCParamType::CORE_CLOCK:
+
+                        if (!param.useDefault && (param.value < perfClks.coreClock || param.value > perfClks.coreClock * 1.20))
+                        {
+                            std::cerr << "Core clock out of range in '" << param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+
+                    case OVCParamType::MEMORY_CLOCK:
+
+                        if (!param.useDefault && (param.value < perfClks.memoryClock || param.value > perfClks.memoryClock * 1.20))
+                        {
+                            std::cerr << "Memory clock out of range in '" << param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+
+                    case OVCParamType::CORE_OD:
+
+                        if (!param.useDefault && (param.value < 0.0 || param.value > 20.0))
+                        {
+                            std::cerr << "Core Overdrive out of range in '" << param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+
+                    case OVCParamType::MEMORY_OD:
+
+                        if (!param.useDefault && (param.value < 0.0 || param.value > 20.0))
+                        {
+                            std::cerr << "Memory Overdrive out of range in '" << param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+
+                    default:
+
+                        break;
                 }
             }
         }
