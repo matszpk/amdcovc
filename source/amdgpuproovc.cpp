@@ -14,7 +14,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
             bool listFailed = false;
             for (int adapterIndex: param.adapters)
             {
-                if (!listFailed && (adapterIndex>=adaptersNum || adapterIndex < 0))
+                if ( !listFailed && (adapterIndex >= adaptersNum || adapterIndex < 0) )
                 {
                     std::cerr << "Some adapter indices out of range in '" << param.argText << "'!" << std::endl;
                     listFailed = failed = true;
@@ -23,23 +23,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
         }
     }
 
-    // check fanspeed
-    for (OVCParameter param: OvcParams)
-    {
-        if (param.type == OVCParamType::FAN_SPEED)
-        {
-            if(param.partId != 0)
-            {
-                std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
-                failed = true;
-            }
-            if(!param.useDefault && (param.value < 0.0 || param.value>100.0))
-            {
-                std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
-                failed = true;
-            }
-        }
-    }
+    checkFanSpeeds(OvcParams, failed);
 
     // check other params
     for (OVCParameter param: OvcParams)
@@ -330,4 +314,24 @@ void AmdGpuProOvc::setFanSpeeds(int adaptersNum, std::vector<FanSpeedSetup> fanS
             }
         }
     }
+}
+
+void AmdGpuProOvc::checkFanSpeeds(std::vector<OVCParameter>& ovcParams, bool& failed)
+{
+  for (OVCParameter param: ovcParams)
+  {
+      if (param.type == OVCParamType::FAN_SPEED)
+      {
+          if(param.partId != 0)
+          {
+              std::cerr << "Thermal Control Index is not 0 in '" << param.argText << "'!" << std::endl;
+              failed = true;
+          }
+          if( !param.useDefault && (param.value < 0.0 || param.value > 100.0) )
+          {
+              std::cerr << "FanSpeed value out of range in '" << param.argText << "'!" << std::endl;
+              failed = true;
+          }
+      }
+  }
 }
