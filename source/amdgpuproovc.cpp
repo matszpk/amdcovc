@@ -18,91 +18,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
     // print what has been changed
     printFanSpeedChanges(OvcParams, adaptersNum);
 
-    for (OVCParameter param: OvcParams)
-    {
-        if (param.type != OVCParamType::FAN_SPEED)
-        {
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
-            {
-                int i = *ait;
-                int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : 0;
-
-                switch(param.type)
-                {
-                    case OVCParamType::CORE_CLOCK:
-
-                        std::cout << "Setting core clock to ";
-
-                        if (param.useDefault)
-                        {
-                            std::cout << "default";
-                        }
-                        else
-                        {
-                            std::cout << param.value << " MHz";
-                        }
-                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
-                        break;
-
-                    case OVCParamType::MEMORY_CLOCK:
-
-                        std::cout << "Setting memory clock to ";
-
-                        if (param.useDefault)
-                        {
-                            std::cout << "default";
-                        }
-                        else
-                        {
-                            std::cout << param.value << " MHz";
-                        }
-                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
-                        break;
-
-                    case OVCParamType::CORE_OD:
-
-                        std::cout << "Setting core overdrive to ";
-
-                        if (param.useDefault)
-                        {
-                            std::cout << "default";
-                        }
-                        else
-                        {
-                            std::cout << param.value;
-                        }
-
-                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
-                        break;
-
-                    case OVCParamType::MEMORY_OD:
-
-                        std::cout << "Setting memory overdrive to ";
-
-                        if (param.useDefault)
-                        {
-                            std::cout << "default";
-                        }
-                        else
-                        {
-                            std::cout << param.value;
-                        }
-
-                        std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
-                        break;
-
-                    case OVCParamType::VDDC_VOLTAGE:
-
-                        std::cout << "VDDC voltage available only for AMD Catalyst/Crimson drivers." << std::endl;
-                        break;
-
-                    default:
-
-                        break;
-                }
-            }
-        }
-    }
+    printParameterChanges(OvcParams, adaptersNum);
 
     std::vector<FanSpeedSetup> fanSpeedSetups(adaptersNum);
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
@@ -353,4 +269,93 @@ void AmdGpuProOvc::printFanSpeedChanges(const std::vector<OVCParameter>& ovcPara
             }
         }
     }
+}
+
+void AmdGpuProOvc::printParameterChanges(const std::vector<OVCParameter>& ovcParams, int adaptersNum)
+{
+  for (OVCParameter param: ovcParams)
+  {
+      if (param.type != OVCParamType::FAN_SPEED)
+      {
+          for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
+          {
+              int i = *ait;
+              int partId = (param.partId != LAST_PERFLEVEL) ? param.partId : 0;
+
+              switch(param.type)
+              {
+                  case OVCParamType::CORE_CLOCK:
+
+                      std::cout << "Setting core clock to ";
+
+                      if (param.useDefault)
+                      {
+                          std::cout << "default";
+                      }
+                      else
+                      {
+                          std::cout << param.value << " MHz";
+                      }
+                      std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
+                      break;
+
+                  case OVCParamType::MEMORY_CLOCK:
+
+                      std::cout << "Setting memory clock to ";
+
+                      if (param.useDefault)
+                      {
+                          std::cout << "default";
+                      }
+                      else
+                      {
+                          std::cout << param.value << " MHz";
+                      }
+                      std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
+                      break;
+
+                  case OVCParamType::CORE_OD:
+
+                      std::cout << "Setting core overdrive to ";
+
+                      if (param.useDefault)
+                      {
+                          std::cout << "default";
+                      }
+                      else
+                      {
+                          std::cout << param.value;
+                      }
+
+                      std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
+                      break;
+
+                  case OVCParamType::MEMORY_OD:
+
+                      std::cout << "Setting memory overdrive to ";
+
+                      if (param.useDefault)
+                      {
+                          std::cout << "default";
+                      }
+                      else
+                      {
+                          std::cout << param.value;
+                      }
+
+                      std::cout << " for adapter " << i << " at performance level " << partId << std::endl;
+                      break;
+
+                  case OVCParamType::VDDC_VOLTAGE:
+
+                      std::cout << "VDDC voltage available only for AMD Catalyst/Crimson drivers." << std::endl;
+                      break;
+
+                  default:
+
+                      break;
+              }
+          }
+      }
+  }
 }
