@@ -18,7 +18,7 @@ private:
 
     static void checkAdapterIndicies(const std::vector<OVCParameter>& ovcParams, int adaptersNum, bool & failed);
 
-    static void checkParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& PerfClocksList, bool & failed);
+    static void checkParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& perfClocksList, bool & failed);
 
 public:
 
