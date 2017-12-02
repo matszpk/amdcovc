@@ -272,7 +272,7 @@ void AmdGpuProOvc::checkAdapterIndicies(const std::vector<OVCParameter>& ovcPara
     }
 }
 
-void AmdGpuProOvc::checkParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, bool& failed)
+void AmdGpuProOvc::checkParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& PerfClocksList, bool& failed)
 {
     for (OVCParameter param: ovcParams)
     {
