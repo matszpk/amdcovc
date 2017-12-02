@@ -16,7 +16,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
     throwErrorOnFailed(failed);
 
     // print what has been changed
-    printFanSpeedChanges(ovcParams, adaptersNum);
+    printFanSpeedChanges(OvcParams, adaptersNum);
 
     for (OVCParameter param: OvcParams)
     {
