@@ -13,11 +13,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
 
     checkParameters(OvcParams, adaptersNum, PerfClocksList, failed);
 
-    if (failed)
-    {
-        std::cerr << "Error in parameters. No settings have been applied." << std::endl;
-        throw Error("Invalid parameters.");
-    }
+    throwErrorOnFailed(failed);
 
     // print what has been changed
     for (OVCParameter param: OvcParams)
@@ -176,7 +172,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
                         }
                         else
                         {
-                            Handle_.setOverdriveMemoryParam(i, int(round((double(param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0)));
+                            Handle_.setOverdriveMemoryParam( i, int( round( ( double( param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0 ) ) );
                         }
                         break;
 
@@ -188,7 +184,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
                         }
                         else
                         {
-                            Handle_.setOverdriveCoreParam(i, int(round(param.value)));
+                            Handle_.setOverdriveCoreParam( i, int( round( param.value ) ) );
                         }
                         break;
 
@@ -200,7 +196,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
                         }
                         else
                         {
-                            Handle_.setOverdriveMemoryParam(i, int(round(param.value)));
+                            Handle_.setOverdriveMemoryParam( i, int( round( param.value ) ) );
                         }
                         break;
 
@@ -223,7 +219,7 @@ void AmdGpuProOvc::setFanSpeeds(int adaptersNum, std::vector<FanSpeedSetup> fanS
         {
             if (!fanSpeedSetups[i].useDefault)
             {
-                Handle_.setFanSpeed(i, int(round(fanSpeedSetups[i].value)));
+                Handle_.setFanSpeed( i, int( round( fanSpeedSetups[i].value ) ) );
             }
             else
             {
@@ -342,5 +338,14 @@ void AmdGpuProOvc::checkParameters(const std::vector<OVCParameter>& ovcParams, i
                 }
             }
         }
+    }
+}
+
+void AmdGpuProOvc::throwErrorOnFailed(bool failed)
+{
+    if (failed)
+    {
+        std::cerr << "Error in parameters. No settings have been applied." << std::endl;
+        throw Error("Invalid parameters.");
     }
 }
