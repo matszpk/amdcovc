@@ -29,7 +29,7 @@ try : handle(_handle), fd(-1), mainControlCreated(false), withX(true)
     {
         if (getuid() != 0)
         {
-            std::cout << "This program requires root privileges to be working correctly if the X11 server is not running." << std::endl;
+            std::cout << "This program requires root privileges to run if X11 server is not running." << std::endl;
         }
 
         withX = false;

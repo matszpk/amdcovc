@@ -115,12 +115,12 @@ void AmdGpuProAdapters::PrintInfoVerbose(AMDGPUAdapterHandle& handle, const std:
 
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
             "  Current BusLanes: " << adapterInfo.busLanes << "\n"
-            "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n"
-            "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
+            "  Temperature: " << adapterInfo.temperature / 1000.0 << " C\n"
+            "  Critical temperature: " << adapterInfo.tempCritical / 1000.0 << " C\n"
             "  FanSpeed Min (Value): " << adapterInfo.minFanSpeed << "\n"
             "  FanSpeed Max (Value): " << adapterInfo.maxFanSpeed << "\n"
             "  Current FanSpeed: " <<
-                (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/ double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0) << "%\n"
+                (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed) / double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0) << "%\n"
             "  Controlled FanSpeed: " << ( adapterInfo.defaultFanSpeed ? "yes" : "no" ) << "\n";
 
         printCoreClocks(adapterInfo);

@@ -10,7 +10,6 @@ void AmdGpuProProcessing::Process(std::vector<OVCParameter> OvcParameters, bool 
     else
     {
         this->validateAdapterList(UseAdaptersList, ChosenAdapters);
-
         this->printAdapterInfo(PrintVerbose, ChosenAdapters, UseAdaptersList, ChooseAllAdapters);
     }
 }

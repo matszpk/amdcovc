@@ -1,9 +1,6 @@
 #include "error.h"
 
-Error::Error(const char* _description) : description(_description)
-{
-
-}
+Error::Error(const char* _description) : description(_description) { }
 
 Error::Error(int error, const char* _description)
 {
@@ -18,7 +15,4 @@ const char* Error::what() const noexcept
     return description.c_str();
 }
 
-Error::~Error() noexcept
-{
-
-}
+Error::~Error() noexcept { }

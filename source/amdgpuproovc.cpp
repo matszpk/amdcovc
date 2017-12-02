@@ -121,7 +121,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
     // print what has been changed
     for (OVCParameter param: OvcParams)
     {
-        if (param.type==OVCParamType::FAN_SPEED)
+        if (param.type == OVCParamType::FAN_SPEED)
         {
             for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
             {
@@ -311,7 +311,11 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
         }
     }
 
-    /// set fan speeds
+    setFanSpeeds(adaptersNum, fanSpeedSetups, Handle_);
+}
+
+void AmdGpuProOvc::setFanSpeeds(int adaptersNum, std::vector<FanSpeedSetup> fanSpeedSetups, AMDGPUAdapterHandle& Handle_)
+{
     for (int i = 0; i < adaptersNum; i++)
     {
         if (fanSpeedSetups[i].isSet)
