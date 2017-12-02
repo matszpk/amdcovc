@@ -16,27 +16,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
     throwErrorOnFailed(failed);
 
     // print what has been changed
-    for (OVCParameter param: OvcParams)
-    {
-        if (param.type == OVCParamType::FAN_SPEED)
-        {
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
-            {
-                std::cout << "Setting fan speed to ";
-
-                if (param.useDefault)
-                {
-                    std::cout << "default";
-                }
-                else
-                {
-                    std::cout << param.value << "%";
-                }
-
-                std::cout << " for adapter " << *ait << " at thermal controller " << param.partId << std::endl;
-            }
-        }
-    }
+    printFanSpeedChanges(ovcParams, adaptersNum);
 
     for (OVCParameter param: OvcParams)
     {
@@ -347,5 +327,30 @@ void AmdGpuProOvc::throwErrorOnFailed(bool failed)
     {
         std::cerr << "Error in parameters. No settings have been applied." << std::endl;
         throw Error("Invalid parameters.");
+    }
+}
+
+void AmdGpuProOvc::printFanSpeedChanges(const std::vector<OVCParameter>& ovcParams, int adaptersNum)
+{
+    for (OVCParameter param: ovcParams)
+    {
+        if (param.type == OVCParamType::FAN_SPEED)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
+            {
+                std::cout << "Setting fan speed to ";
+
+                if (param.useDefault)
+                {
+                    std::cout << "default";
+                }
+                else
+                {
+                    std::cout << param.value << "%";
+                }
+
+                std::cout << " for adapter " << *ait << " at thermal controller " << param.partId << std::endl;
+            }
+        }
     }
 }
