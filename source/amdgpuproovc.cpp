@@ -23,7 +23,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
         }
     }
 
-    checkFanSpeeds(OvcParams, failed);
+    checkFanSpeeds(OvcParams, adaptersNum, failed);
 
     // check other params
     for (OVCParameter param: OvcParams)
@@ -336,7 +336,7 @@ void AmdGpuProOvc::checkFanSpeeds(const std::vector<OVCParameter>& ovcParams, bo
     }
 }
 
-void AmdGpuProOvc::checkAdapterIndicies(const std::vector<OVCParameter>& ovcParams, bool& failed)
+void AmdGpuProOvc::checkAdapterIndicies(const std::vector<OVCParameter>& ovcParams, int adaptersNum, bool& failed)
 {
     for (OVCParameter param: ovcParams)
     {

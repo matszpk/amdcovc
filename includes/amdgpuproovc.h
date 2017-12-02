@@ -16,7 +16,7 @@ private:
 
     static void checkFanSpeeds(const std::vector<OVCParameter>& ovcParams, bool& failed);
 
-    static void checkAdapterIndicies(const std::vector<OVCParameter>& ovcParams, bool & failed);
+    static void checkAdapterIndicies(const std::vector<OVCParameter>& ovcParams, int adaptersNum, bool & failed);
 
 public:
 
