@@ -7,23 +7,9 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
     bool failed = false;
     int adaptersNum = Handle_.getAdaptersNum();
 
-    for (OVCParameter param: OvcParams)
-    {
-        if (!param.allAdapters)
-        {
-            bool listFailed = false;
-            for (int adapterIndex: param.adapters)
-            {
-                if ( !listFailed && (adapterIndex >= adaptersNum || adapterIndex < 0) )
-                {
-                    std::cerr << "Some adapter indices out of range in '" << param.argText << "'!" << std::endl;
-                    listFailed = failed = true;
-                }
-            }
-        }
-    }
+    checkAdapterIndicies(OvcParams, adaptersNum, failed);
 
-    checkFanSpeeds(OvcParams, adaptersNum, failed);
+    checkFanSpeeds(OvcParams, failed);
 
     // check other params
     for (OVCParameter param: OvcParams)
