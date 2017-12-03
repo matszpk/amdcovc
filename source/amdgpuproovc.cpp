@@ -23,7 +23,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
 
     setFanSpeedSetup(fanSpeedSetups, OvcParams, adaptersNum);
 
-    //
+    setParameters(Handle_, OvcParams, adaptersNum, PerfClocksList);
 
     setFanSpeeds(adaptersNum, fanSpeedSetups, Handle_);
 }
