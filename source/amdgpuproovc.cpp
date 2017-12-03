@@ -351,7 +351,7 @@ void AmdGpuProOvc::setFanSpeedSetup(std::vector<FanSpeedSetup>& fanSpeedSetups, 
 {
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
 
-    for (OVCParameter param: OvcParams)
+    for (OVCParameter param: ovcParams)
     {
         if (param.type == OVCParamType::FAN_SPEED)
         {
