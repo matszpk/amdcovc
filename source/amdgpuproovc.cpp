@@ -299,7 +299,7 @@ void AmdGpuProOvc::setFanSpeedSetup(std::vector<FanSpeedSetup>& fanSpeedSetups, 
     }
 }
 
-void AmdGpuProOvc::setParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& perfClocksList)
+void AmdGpuProOvc::setParameters(AMDGPUAdapterHandle& handle_, const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& perfClocksList)
 {
     for (OVCParameter param: ovcParams)
     {
@@ -317,11 +317,11 @@ void AmdGpuProOvc::setParameters(const std::vector<OVCParameter>& ovcParams, int
 
                         if (param.useDefault)
                         {
-                            Handle_.setOverdriveCoreParam(i, 0);
+                            handle_.setOverdriveCoreParam(i, 0);
                         }
                         else
                         {
-                            Handle_.setOverdriveCoreParam(i, int( round( ( double( param.value - perfClks.coreClock ) / perfClks.coreClock ) * 100.0 ) ) );
+                            handle_.setOverdriveCoreParam(i, int( round( ( double( param.value - perfClks.coreClock ) / perfClks.coreClock ) * 100.0 ) ) );
                         }
                         break;
 
@@ -329,11 +329,11 @@ void AmdGpuProOvc::setParameters(const std::vector<OVCParameter>& ovcParams, int
 
                         if (param.useDefault)
                         {
-                            Handle_.setOverdriveMemoryParam(i, 0);
+                            handle_.setOverdriveMemoryParam(i, 0);
                         }
                         else
                         {
-                            Handle_.setOverdriveMemoryParam( i, int( round( ( double( param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0 ) ) );
+                            handle_.setOverdriveMemoryParam( i, int( round( ( double( param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0 ) ) );
                         }
                         break;
 
@@ -341,11 +341,11 @@ void AmdGpuProOvc::setParameters(const std::vector<OVCParameter>& ovcParams, int
 
                         if (param.useDefault)
                         {
-                            Handle_.setOverdriveCoreParam(i, 0);
+                            handle_.setOverdriveCoreParam(i, 0);
                         }
                         else
                         {
-                            Handle_.setOverdriveCoreParam( i, int( round( param.value ) ) );
+                            handle_.setOverdriveCoreParam( i, int( round( param.value ) ) );
                         }
                         break;
 
@@ -353,11 +353,11 @@ void AmdGpuProOvc::setParameters(const std::vector<OVCParameter>& ovcParams, int
 
                         if (param.useDefault)
                         {
-                            Handle_.setOverdriveMemoryParam(i, 0);
+                            handle_.setOverdriveMemoryParam(i, 0);
                         }
                         else
                         {
-                            Handle_.setOverdriveMemoryParam( i, int( round( param.value ) ) );
+                            handle_.setOverdriveMemoryParam( i, int( round( param.value ) ) );
                         }
                         break;
 

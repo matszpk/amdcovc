@@ -28,7 +28,7 @@ private:
 
     static void setFanSpeedSetup(std::vector<FanSpeedSetup>& fanSpeedSetups, const std::vector<OVCParameter>& ovcParams, int adaptersNum);
 
-    static void setParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& perfClocksList);
+    static void setParameters(AMDGPUAdapterHandle& handle_, const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& perfClocksList);
 
 public:
 
