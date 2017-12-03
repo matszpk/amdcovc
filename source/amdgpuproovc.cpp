@@ -23,73 +23,7 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
 
     setFanSpeedSetup(fanSpeedSetups, OvcParams, adaptersNum);
 
-    for (OVCParameter param: OvcParams)
-    {
-        if (param.type != OVCParamType::FAN_SPEED)
-        {
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
-            {
-                int i = *ait;
-
-                const PerfClocks& perfClks = PerfClocksList[i];
-
-                switch(param.type)
-                {
-                    case OVCParamType::CORE_CLOCK:
-
-                        if (param.useDefault)
-                        {
-                            Handle_.setOverdriveCoreParam(i, 0);
-                        }
-                        else
-                        {
-                            Handle_.setOverdriveCoreParam(i, int( round( ( double( param.value - perfClks.coreClock ) / perfClks.coreClock ) * 100.0 ) ) );
-                        }
-                        break;
-
-                    case OVCParamType::MEMORY_CLOCK:
-
-                        if (param.useDefault)
-                        {
-                            Handle_.setOverdriveMemoryParam(i, 0);
-                        }
-                        else
-                        {
-                            Handle_.setOverdriveMemoryParam( i, int( round( ( double( param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0 ) ) );
-                        }
-                        break;
-
-                    case OVCParamType::CORE_OD:
-
-                        if (param.useDefault)
-                        {
-                            Handle_.setOverdriveCoreParam(i, 0);
-                        }
-                        else
-                        {
-                            Handle_.setOverdriveCoreParam( i, int( round( param.value ) ) );
-                        }
-                        break;
-
-                    case OVCParamType::MEMORY_OD:
-
-                        if (param.useDefault)
-                        {
-                            Handle_.setOverdriveMemoryParam(i, 0);
-                        }
-                        else
-                        {
-                            Handle_.setOverdriveMemoryParam( i, int( round( param.value ) ) );
-                        }
-                        break;
-
-                    default:
-
-                        break;
-                }
-            }
-        }
-    }
+    //
 
     setFanSpeeds(adaptersNum, fanSpeedSetups, Handle_);
 }
@@ -360,6 +294,76 @@ void AmdGpuProOvc::setFanSpeedSetup(std::vector<FanSpeedSetup>& fanSpeedSetups, 
                 fanSpeedSetups[*ait].value = param.value;
                 fanSpeedSetups[*ait].useDefault = param.useDefault;
                 fanSpeedSetups[*ait].isSet = true;
+            }
+        }
+    }
+}
+
+void AmdGpuProOvc::setParameters(const std::vector<OVCParameter>& ovcParams, int adaptersNum, const std::vector<PerfClocks>& perfClocksList)
+{
+    for (OVCParameter param: ovcParams)
+    {
+        if (param.type != OVCParamType::FAN_SPEED)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
+            {
+                int i = *ait;
+
+                const PerfClocks& perfClks = perfClocksList[i];
+
+                switch(param.type)
+                {
+                    case OVCParamType::CORE_CLOCK:
+
+                        if (param.useDefault)
+                        {
+                            Handle_.setOverdriveCoreParam(i, 0);
+                        }
+                        else
+                        {
+                            Handle_.setOverdriveCoreParam(i, int( round( ( double( param.value - perfClks.coreClock ) / perfClks.coreClock ) * 100.0 ) ) );
+                        }
+                        break;
+
+                    case OVCParamType::MEMORY_CLOCK:
+
+                        if (param.useDefault)
+                        {
+                            Handle_.setOverdriveMemoryParam(i, 0);
+                        }
+                        else
+                        {
+                            Handle_.setOverdriveMemoryParam( i, int( round( ( double( param.value - perfClks.memoryClock) / perfClks.memoryClock) * 100.0 ) ) );
+                        }
+                        break;
+
+                    case OVCParamType::CORE_OD:
+
+                        if (param.useDefault)
+                        {
+                            Handle_.setOverdriveCoreParam(i, 0);
+                        }
+                        else
+                        {
+                            Handle_.setOverdriveCoreParam( i, int( round( param.value ) ) );
+                        }
+                        break;
+
+                    case OVCParamType::MEMORY_OD:
+
+                        if (param.useDefault)
+                        {
+                            Handle_.setOverdriveMemoryParam(i, 0);
+                        }
+                        else
+                        {
+                            Handle_.setOverdriveMemoryParam( i, int( round( param.value ) ) );
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
             }
         }
     }
