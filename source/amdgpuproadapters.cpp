@@ -38,7 +38,7 @@ void AmdGpuProAdapters::PrintInfo(AMDGPUAdapterHandle& handle, const std::vector
 void AmdGpuProAdapters::printAdapterSummary(const AMDGPUAdapterInfo adapterInfo, int i)
 {
     std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n  Core: " << adapterInfo.coreClock << " MHz, Mem: " <<
-            adapterInfo.memoryClock << " MHz, CoreOD: " << adapterInfo.coreOD << ", MemOD: " << adapterInfo.memoryOD << ", ";
+        adapterInfo.memoryClock << " MHz, CoreOD: " << adapterInfo.coreOD << ", MemOD: " << adapterInfo.memoryOD << ", ";
 
 }
 
@@ -53,7 +53,8 @@ void AmdGpuProAdapters::printGpuLoad(const AMDGPUAdapterInfo adapterInfo)
 void AmdGpuProAdapters::printTemperature(const AMDGPUAdapterInfo adapterInfo)
 {
     std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, Fan: " <<
-        double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed) / double(adapterInfo.maxFanSpeed - adapterInfo.minFanSpeed) * 100.0 << "%" << std::endl;
+        double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed) / double(adapterInfo.maxFanSpeed - adapterInfo.minFanSpeed) * 100.0 <<
+        "%" << std::endl;
 }
 
 void AmdGpuProAdapters::printCoreClocks(const AMDGPUAdapterInfo adapterInfo)

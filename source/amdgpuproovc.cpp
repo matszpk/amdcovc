@@ -15,26 +15,13 @@ void AmdGpuProOvc::Set(AMDGPUAdapterHandle& Handle_, const std::vector<OVCParame
 
     throwErrorOnFailed(failed);
 
-    // print what has been changed
     printFanSpeedChanges(OvcParams, adaptersNum);
 
     printParameterChanges(OvcParams, adaptersNum);
 
     std::vector<FanSpeedSetup> fanSpeedSetups(adaptersNum);
-    std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
 
-    for (OVCParameter param: OvcParams)
-    {
-        if (param.type == OVCParamType::FAN_SPEED)
-        {
-            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
-            {
-                fanSpeedSetups[*ait].value = param.value;
-                fanSpeedSetups[*ait].useDefault = param.useDefault;
-                fanSpeedSetups[*ait].isSet = true;
-            }
-        }
-    }
+    setFanSpeedSetup(fanSpeedSetups, OvcParams, adaptersNum);
 
     for (OVCParameter param: OvcParams)
     {
@@ -358,4 +345,22 @@ void AmdGpuProOvc::printParameterChanges(const std::vector<OVCParameter>& ovcPar
           }
       }
   }
+}
+
+void AmdGpuProOvc::setFanSpeedSetup(std::vector<FanSpeedSetup>& fanSpeedSetups, const std::vector<OVCParameter>& ovcParams, int adaptersNum)
+{
+    std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(), FanSpeedSetup{ 0.0, false, false });
+
+    for (OVCParameter param: OvcParams)
+    {
+        if (param.type == OVCParamType::FAN_SPEED)
+        {
+            for (AdapterIterator ait(param.adapters, param.allAdapters, adaptersNum); ait; ++ait)
+            {
+                fanSpeedSetups[*ait].value = param.value;
+                fanSpeedSetups[*ait].useDefault = param.useDefault;
+                fanSpeedSetups[*ait].isSet = true;
+            }
+        }
+    }
 }
