@@ -37,7 +37,9 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#ifdef HAVE_ADLSDK
 #include <CL/cl.h>
+#endif
 extern "C" {
 #include <pci/pci.h>
 }
@@ -45,10 +47,13 @@ extern "C" {
 #ifdef __linux__
 #define LINUX 1
 #endif
+#ifdef HAVE_ADLSDK
 #include "../include/adl_sdk.h"
+#endif
 
 #define AMDCOVC_VERSION "0.3.0pre5"
 
+#ifdef HAVE_ADLSDK
 // Memory allocation function
 void* __stdcall ADL_Main_Memory_Alloc (int iSize)
 {
@@ -65,6 +70,7 @@ void __stdcall ADL_Main_Memory_Free (void** lpBuffer)
         *lpBuffer = nullptr;
     }
 }
+#endif
 
 class Error: public std::exception
 {
@@ -86,6 +92,7 @@ public:
     { return description.c_str(); }
 };
 
+#ifdef HAVE_ADLSDK
 class ATIADLHandle
 {
 private:
@@ -552,6 +559,7 @@ void ADLMainControl::setODPerformanceLevels(int adapterIndex, int perfLevelsNum,
     std::copy(perfLevels, perfLevels+perfLevelsNum, odPLevels->aLevels);
     handle.Overdrive5_ODPerformanceLevels_Set(adapterIndex, odPLevels);
 }
+#endif
 
 /*
  * AMD-GPU infos
@@ -605,6 +613,7 @@ static void initializePCIAccess()
     pci_scan_bus(pciAccess);
 }
 
+#ifdef HAVE_ADLSDK
 static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
 {
     if (pciAccess==nullptr)
@@ -652,6 +661,7 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
             break;
         }
 }
+#endif
 
 /* AMDGPU code */
 
@@ -1164,8 +1174,9 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
     }
 }
 
-/* AMDGPU code */
+/* end of AMDGPU code */
 
+#ifdef HAVE_ADLSDK
 static void getActiveAdaptersIndices(ADLMainControl& mainControl, int adaptersNum,
                     std::vector<int>& activeAdapters)
 {
@@ -1304,6 +1315,7 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
         i++;
     }
 }
+#endif
 
 static void parseAdaptersList(const char* string, std::vector<int>& adapters,
                               bool& allAdapters)
@@ -1576,6 +1588,7 @@ struct AdapterIterator
     { return allAdapters ? position : adapters[position]; }
 };
 
+#ifdef HAVE_ADLSDK
 static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
             const std::vector<int>& activeAdapters,
             const std::vector<OVCParameter>& ovcParams)
@@ -1829,6 +1842,7 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
             mainControl.setODPerformanceLevels(activeAdapters[i],
                     odParams[i].iNumberOfPerformanceLevels, perfLevels[i].data());
 }
+#endif
 
 /* AMDGPU code */
 
@@ -2220,6 +2234,7 @@ try
     if (failed)
         throw Error("Can't parse parameters");
     
+#ifdef HAVE_ADLSDK
     ATIADLHandle handle;
     if (handle.open())
     {   // AMD Catalyst/Crimson
@@ -2248,6 +2263,7 @@ try
         }
     }
     else
+#endif
     {   // AMD GPU(-PRO)
         AMDGPUAdapterHandle handle;
         if (!ovcParameters.empty())
