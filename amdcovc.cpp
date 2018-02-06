@@ -680,17 +680,17 @@ static void getFromPCI_AMDGPU(const char* rlink, AMDGPUAdapterInfo& adapterInfo)
         throw Error(errno, "Can't parse PCI location");
     pciStrPtr++;
     errno  = 0;
-    busNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
+    busNum = strtoul(pciStrPtr, &pciStrPtrNew, 16);
     if (errno!=0 || pciStrPtr==pciStrPtrNew)
         throw Error(errno, "Can't parse BusID");
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
-    devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+    devNum = strtoul(pciStrPtr, &pciStrPtrNew, 16);
     if (errno!=0 || pciStrPtr==pciStrPtrNew)
         throw Error(errno, "Can't parse DevID");
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
-    funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+    funcNum = strtoul(pciStrPtr, &pciStrPtrNew, 16);
     if (errno!=0 || pciStrPtr==pciStrPtrNew)
         throw Error(errno, "Can't parse FuncID");
     pci_dev* dev = pciAccess->devices;
