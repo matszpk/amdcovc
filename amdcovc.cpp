@@ -956,8 +956,11 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     char dbuf[120];
     char rlink[120];
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device", cardIndex);
-    ::readlink(dbuf, rlink, 120);
-    rlink[119] = 0;
+    auto linkRead = ::readlink(dbuf, rlink, 120);
+    if (linkRead < 0) {
+        throw Error(errno, "Can't readlink 'sys/class/drm/card?/device'");
+    }
+    rlink[linkRead] = 0;
     getFromPCI_AMDGPU(rlink, adapterInfo);
     // parse pp_dpm_sclk
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
