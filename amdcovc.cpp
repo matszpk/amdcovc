@@ -956,7 +956,7 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     char dbuf[120];
     char rlink[120];
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device", cardIndex);
-    auto linkRead = ::readlink(dbuf, rlink, 120);
+    auto linkRead = ::readlink(dbuf, rlink, sizeof(rlink) - 1);
     if (linkRead < 0) {
         throw Error(errno, "Can't readlink 'sys/class/drm/card?/device'");
     }
