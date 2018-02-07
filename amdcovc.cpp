@@ -1482,11 +1482,6 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
                 parseAdaptersList(listString.c_str(), param.adapters, param.allAdapters);
                 afterName = afterList;
             }
-            else
-            {
-                std::cerr << "Can't parse adapters list" << std::endl;
-                return false;
-            }
         }
         catch(const Error& error)
         {
