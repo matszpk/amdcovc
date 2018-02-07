@@ -637,12 +637,12 @@ static void getFromPCI(int deviceIndex, AdapterInfo& adapterInfo)
         throw Error(errno, "Can't parse BusID");
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
-    devNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+    devNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
     if (errno!=0 || pciStrPtr==pciStrPtrNew)
         throw Error(errno, "Can't parse DevID");
     pciStrPtr = pciStrPtrNew+1;
     errno  = 0;
-    funcNum = strtoul(pciStrPtr, &pciStrPtr, 10);
+    funcNum = strtoul(pciStrPtr, &pciStrPtrNew, 10);
     if (errno!=0 || pciStrPtr==pciStrPtrNew)
         throw Error(errno, "Can't parse FuncID");
     pci_dev* dev = pciAccess->devices;
@@ -1140,8 +1140,10 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
                 "  Device Topology: " << adapterInfo.busNo << ':' <<
                 adapterInfo.deviceNo << ":" <<
                 adapterInfo.funcNo << "\n"
-                "  Vendor ID: " << adapterInfo.vendorId << "\n"
-                "  Device ID: " << adapterInfo.deviceId << "\n"
+                "  Vendor ID: " << adapterInfo.vendorId << " (0x" << std::hex <<
+                        adapterInfo.vendorId << std::dec << ")" << "\n"
+                "  Device ID: " << adapterInfo.deviceId << " (0x" << std::hex <<
+                        adapterInfo.deviceId << std::dec << ")" << "\n"
                 "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
                 "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
                 "  Core Overdrive: " << adapterInfo.coreOD << "\n"
@@ -1262,7 +1264,8 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
                 "  Device Topology: " << adapterInfos[ai].iBusNumber << ':' <<
                 adapterInfos[ai].iDeviceNumber << ":" <<
                 adapterInfos[ai].iFunctionNumber << "\n"
-                "  Vendor ID: " << adapterInfos[ai].iVendorID << std::endl;
+                "  Vendor ID: " << adapterInfos[ai].iVendorID << " (0x" << std::hex <<
+                        adapterInfos[ai].iVendorID << std::dec << ")" << std::endl;
         ADLFanSpeedInfo fsInfo;
         ADLPMActivity activity;
         mainControl.getCurrentActivity(ai, activity);
