@@ -23,18 +23,18 @@ WILL BE WORKING CORRECTLY IN ANY CASE! Read license before using this program.
 Program to work requires following things:
 
 * C++ environment compliant with C++11 standard (libraries)
-* OpenCL environment (to force initializing of devices)
 * pciutils library (libpci).
 
-Optional components that can be used by program:
+Optional components that can be used by program for AMD Catalyst drivers:
 
-* libadlxx.so library (AMD ADL library) (required for AMD Catalyst drivers)
+* OpenCL environment (to force initializing of devices)
+* libadlxx.so library (AMD ADL library)
 
 To build program you need:
 
 * compiler compliant with C++11 standard
-* OpenCL headers
-* AMD ADL SDK (in developer.amd.com site)
+* OpenCL headers (for AMD Catalyst drivers)
+* AMD ADL SDK (in developer.amd.com site) (for AMD Catalyst drivers)
 * pciutils developer package (includes)
 
 ### Building program
