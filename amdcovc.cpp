@@ -51,7 +51,7 @@ extern "C" {
 #include "../include/adl_sdk.h"
 #endif
 
-#define AMDCOVC_VERSION "0.3.0pre5"
+#define AMDCOVC_VERSION "0.3.0pre7"
 
 #ifdef HAVE_ADLSDK
 // Memory allocation function
@@ -958,7 +958,7 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device", cardIndex);
     auto linkRead = ::readlink(dbuf, rlink, sizeof(rlink) - 1);
     if (linkRead < 0) {
-        throw Error(errno, "Can't readlink 'sys/class/drm/card?/device'");
+//         throw Error(errno, "Can't readlink 'sys/class/drm/card?/device'");
     }
     rlink[linkRead] = 0;
     getFromPCI_AMDGPU(rlink, adapterInfo);
