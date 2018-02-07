@@ -28,7 +28,7 @@ Program to work requires following things:
 
 Optional components that can be used by program:
 
-* libadlxx.so library (AMD ADL library)
+* libadlxx.so library (AMD ADL library) (required for AMD Catalyst drivers)
 
 To build program you need:
 
