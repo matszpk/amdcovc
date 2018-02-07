@@ -4,7 +4,7 @@
 ###
 
 # 1 - if you need AMD Catalyst support, 0 - if you won't
-HAVE_ADLSDK = 1
+HAVE_ADLSDK = 0
 CXX = g++
 CXXFLAGS = -Wall -O3 -std=c++11
 LDFLAGS = -Wall -O3 -std=c++11

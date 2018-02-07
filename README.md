@@ -39,7 +39,28 @@ To build program you need:
 
 ### Building program
 
-To build program, just type:
+If you want to use amdovc with AMD Catalyst drivers, you should enable ADLSDK
+by replacing line in Makefile:
+
+```
+HAVE_ADLSDK = 0
+```
+
+to 
+
+```
+HAVE_ADLSDK = 1
+```
+
+and you should set correct place of the ADLSDK in Makefile in line:
+
+```
+ADLSDKDIR = /home/mat/docs/src/ADL_SDK9
+```
+
+by replacing `/home/mat/docs/src/ADL_SDK9` by your correct path.
+
+Now. To build program, just type:
 
 ```
 make
