@@ -1338,6 +1338,7 @@ static void parseAdaptersList(const char* string, std::vector<int>& adapters,
         char* endptr;
         errno = 0;
         int adapterIndex = strtol(string, &endptr, 10);
+        std::cout << "adapx: " << string << ", " << endptr << std::endl;
         if (errno!=0 || endptr==string)
             throw Error("Can't parse adapter index");
         
@@ -1474,12 +1475,17 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
             if (afterList==nullptr)
                 afterList = ::strchr(afterName, '=');
             if (afterList==nullptr)
-                afterList += strlen(afterName); // to end
+                afterList = afterName + strlen(afterName); // to end
             if (afterList!=afterName)
             {
                 std::string listString(afterName, afterList);
                 parseAdaptersList(listString.c_str(), param.adapters, param.allAdapters);
                 afterName = afterList;
+            }
+            else
+            {
+                std::cerr << "Can't parse adapters list" << std::endl;
+                return false;
             }
         }
         catch(const Error& error)
@@ -1500,7 +1506,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         afterName++;
         errno = 0;
         int value = strtol(afterName, &next, 10);
-        if (errno!=0)
+        if (errno!=0 || next==afterName)
         {
             std::cerr << "Can't parse partId in '" << string << "'!" << std::endl;
             return false;
