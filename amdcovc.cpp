@@ -1338,7 +1338,6 @@ static void parseAdaptersList(const char* string, std::vector<int>& adapters,
         char* endptr;
         errno = 0;
         int adapterIndex = strtol(string, &endptr, 10);
-        std::cout << "adapx: " << string << ", " << endptr << std::endl;
         if (errno!=0 || endptr==string)
             throw Error("Can't parse adapter index");
         
