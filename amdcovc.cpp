@@ -1500,7 +1500,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
         afterName++;
         errno = 0;
         int value = strtol(afterName, &next, 10);
-        if (errno!=0 || next==afterName)
+        if (errno!=0)
         {
             std::cerr << "Can't parse partId in '" << string << "'!" << std::endl;
             return false;
