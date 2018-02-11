@@ -733,6 +733,7 @@ public:
 };
 
 static bool getFileContentValue(const char* filename, unsigned int& value)
+try
 {
     value = 0;
     std::ifstream ifs(filename, std::ios::binary);
@@ -747,9 +748,18 @@ static bool getFileContentValue(const char* filename, unsigned int& value)
         throw Error("Can't parse value from file");
     return (p != p2);
 }
+catch(const std::exception& ex)
+{
+    std::cerr << "No value" << std::endl;
+    return false;
+}
 
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
+    if (access(filename, F_OK|W_OK))
+    {
+        throw Error((std::string("Can't write file '")+filename+"'").c_str());
+    }
     std::ofstream ofs(filename, std::ios::binary);
     try
     {
