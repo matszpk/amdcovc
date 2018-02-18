@@ -153,7 +153,10 @@ To overclock graphic card on AMD GPU(-PRO) driver, can you use `coreod` and `mem
 parameters. Parameters coreclk and memclk is available in AMD GPU(-PRO) driver mode.
 
 NOTE: An AMDCOVC under AMDGPU(-PRO) drivers can't underclock a GPU core and a memory.
-Currently, this feature is not implemented in these drivers.
+Currently, this feature is not implemented in these drivers. AMDCOVC under AMDGPU(-PRO)
+set GPU core overdrive and a memory overdirve parameters which determines overclocking
+in percent. These paramaters does not impact on current GPU and memory clocks, but they
+impacts on their maximal values.
 
 ### List of options
 

@@ -750,7 +750,6 @@ try
 }
 catch(const std::exception& ex)
 {
-    std::cerr << "No value" << std::endl;
     return false;
 }
 
@@ -961,7 +960,7 @@ void AMDGPUAdapterHandle::getPerformanceClocks(int adapterIndex, unsigned int& c
 
 AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
 {
-    AMDGPUAdapterInfo adapterInfo;
+    AMDGPUAdapterInfo adapterInfo{};
     unsigned int cardIndex = amdDevices[index];
     char dbuf[120];
     char rlink[120];
