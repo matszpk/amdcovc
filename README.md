@@ -152,6 +152,9 @@ For fanspeed 'default' value force automatic speed setup.
 To overclock graphic card on AMD GPU(-PRO) driver, can you use `coreod` and `memod`
 parameters. Parameters coreclk and memclk is available in AMD GPU(-PRO) driver mode.
 
+NOTE: An AMDCOVC under AMDGPU(-PRO) drivers can't underclock a GPU core and a memory.
+Currently, this feature is not implemented in these drivers.
+
 ### List of options
 
 List of options:
