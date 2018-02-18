@@ -155,8 +155,8 @@ parameters. Parameters coreclk and memclk is available in AMD GPU(-PRO) driver m
 NOTE: An AMDCOVC under AMDGPU(-PRO) drivers can't underclock a GPU core and a memory.
 Currently, this feature is not implemented in these drivers. AMDCOVC under AMDGPU(-PRO)
 set GPU core overdrive and a memory overdirve parameters which determines overclocking
-in percent. These paramaters does not impact on current GPU and memory clocks, but they
-impacts on their maximal values.
+in percent. These paramaters does not impact on current GPU and memory clocks, but these
+paramters impact on their maximal values of clocks.
 
 ### List of options
 
