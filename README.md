@@ -132,8 +132,12 @@ List of parameters that can be set:
 
 * coreclk[:[ADAPTERS][:LEVEL]]=CLOCK - set core clock in MHz
 * memclk[:[ADAPTERS][:LEVEL]]=CLOCK - set memory clock in MHz
+* ccoreclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current core clock in MHz (AMDGPU)
+* cmemclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current memory clock in MHz (AMDGPU)
 * coreod[:[ADAPTERS][:LEVEL]]=PERCENT - set core clock in percents (AMDGPU)
 * memod[:[ADAPTERS][:LEVEL]]=PERCENT - set memory clock in perecents (AMDGPU)
+* corepl[:[ADAPTERS][:LEVEL]]=LEVEL - set current core performance level (AMDGPU)
+* mempl[:[ADAPTERS][:LEVEL]]=LEVEL - set current memory performance level (AMDGPU)
 * vcore[:[ADAPTERS][:LEVEL]]=VOLTAGE - set Vddc voltage in Volts
 * icoreclk[:ADAPTERS]=CLOCK - set core clock in MHz for idle level
 * imemclk[:ADAPTERS]=CLOCK - set memory clock in MHz for idle level
@@ -152,11 +156,13 @@ For fanspeed 'default' value force automatic speed setup.
 To overclock graphic card on AMD GPU(-PRO) driver, can you use `coreod` and `memod`
 parameters. Parameters coreclk and memclk is available in AMD GPU(-PRO) driver mode.
 
-NOTE: An AMDCOVC under AMDGPU(-PRO) drivers can't underclock a GPU core and a memory.
-Currently, this feature is not implemented in these drivers. AMDCOVC under AMDGPU(-PRO)
-set GPU core overdrive and a memory overdirve parameters which determines overclocking
-in percent. These paramaters does not impact on current GPU and memory clocks, but these
-paramters impact on their maximal values of clocks.
+AMDCOVC under AMDGPU(-PRO) the coreclk and memclk paramters sets GPU core overdrive
+and a memory overdirve parameters which determines overclocking in percent.
+These paramaters does not impact on current GPU and memory clocks, but these paramters
+impact on their maximal values of clocks.
+To underclock core and memory you should use ccoreclk and cmemclk parameters or
+corepl and mempl parameters. These parameters set current core and memory
+performance level. The value default sets default automatic performance control.
 
 ### List of options
 
