@@ -48,7 +48,7 @@ extern "C" {
 #define LINUX 1
 #endif
 #ifdef HAVE_ADLSDK
-#include "../include/adl_sdk.h"
+#include <adl_sdk.h>
 #endif
 
 #define AMDCOVC_VERSION "0.3.9"
