@@ -51,7 +51,7 @@ extern "C" {
 #include <adl_sdk.h>
 #endif
 
-#define AMDCOVC_VERSION "0.3.9.1"
+#define AMDCOVC_VERSION "0.3.9.2"
 
 #ifdef HAVE_ADLSDK
 // Memory allocation function
@@ -593,10 +593,13 @@ struct AMDGPUAdapterInfo
     unsigned int memoryOD;
     AMDGPUPerfControl perfControl;
     unsigned int temperature;
+    unsigned int temperature2;
+    unsigned int temperature3;
     unsigned int tempCritical;
     unsigned int busLanes;
     unsigned int busSpeed;
     int gpuLoad;
+    unsigned int extraTemperatures;
 };
 
 static pci_access* pciAccess = nullptr;
@@ -1068,6 +1071,16 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_crit",
              cardIndex, hwmonIndex);
     getFileContentValue(dbuf, adapterInfo.tempCritical);
+    
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp2_input",
+             cardIndex, hwmonIndex);
+    if (getFileContentValue(dbuf, adapterInfo.temperature2))
+        adapterInfo.extraTemperatures |= 1;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp3_input",
+             cardIndex, hwmonIndex);
+    if (getFileContentValue(dbuf, adapterInfo.temperature3))
+        adapterInfo.extraTemperatures |= 2;
+    
     // parse GPU load
     snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
     {
@@ -1212,13 +1225,17 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)] << ", ";
         if (adapterInfo.gpuLoad>=0)
             std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
-        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C, "
-                "Fan: " << double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
+        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C";
+        if ((adapterInfo.extraTemperatures&1) != 0)
+            std::cout << ", T2: " << adapterInfo.temperature2/1000.0 << " C";
+        if ((adapterInfo.extraTemperatures&2) != 0)
+            std::cout << ", T3: " << adapterInfo.temperature3/1000.0 << " C";
+        std::cout << ", Fan: " << double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
                 double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0 <<
                 "%" << std::endl;
         if (!adapterInfo.coreClocks.empty())
         {
-            std::cout << "  Core clocks:";
+            std::cout << "  Core Clocks:";
             for (uint32_t v: adapterInfo.coreClocks)
                 std::cout << " " << v;
             std::cout << std::endl;
@@ -1266,7 +1283,12 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
                 "  Current BusLanes: " << adapterInfo.busLanes << "\n"
-                "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n"
+                "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n";
+        if ((adapterInfo.extraTemperatures&1) != 0)
+            std::cout << "  Temperature2: " << adapterInfo.temperature2/1000.0 << " C\n";
+        if ((adapterInfo.extraTemperatures&2) != 0)
+            std::cout << "  Temperature3: " << adapterInfo.temperature3/1000.0 << " C\n";
+        std::cout <<
                 "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
                 "  FanSpeed Min (Value): " << adapterInfo.minFanSpeed << "\n"
                 "  FanSpeed Max (Value): " << adapterInfo.maxFanSpeed << "\n"
@@ -1279,7 +1301,7 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
             // print available core clocks
         if (!adapterInfo.coreClocks.empty())
         {
-            std::cout << "  Core clocks:\n";
+            std::cout << "  Core Clocks:\n";
             for (uint32_t v: adapterInfo.coreClocks)
                 std::cout << "    " << v << "MHz\n";
         }

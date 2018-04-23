@@ -118,6 +118,22 @@ First level will be used in idle mode (if no work).
 
 The `Max Ranges` is minimal and maximal possible settings for graphics card.
 
+For AMDGPU mode, the AMDCOVC prints:
+
+```
+Adapter 2: Ellesmere [Radeon RX 470/480/570/580]
+  Core: 300 MHz, Mem: 300 MHz, CoreOD: 0, MemOD: 0
+  PerfCtrl: auto, Temp: 42 C, Fan: 31.7647%
+  Core Clocks: 300 608 910 1077 1145 1191 1236 1290
+  Memory Clocks: 300 1750
+```
+
+Likely as in AMD Catalyst mode, an AMDCOVC prints core and memory clocks,
+but also prints core and memory overdrive factors (0-20). The `PerfCtrl` is
+current performance control (can be low, manual or high). The line `Core Clocks`
+contains all possible clocks for core. The line `Memory Clocks`
+contains all possible clocks for memory.
+
 The verbose informations contains:
 
 * current state of graphics (Current CoreClock,...)
