@@ -138,9 +138,15 @@ The verbose informations contains:
 
 * current state of graphics (Current CoreClock,...)
 * minimal and maximal fan speed settings
-* minimal and maximal clocks and voltages
-* current performance level settings
-* default performance level settings
+* minimal and maximal clocks
+* minimal and maximal voltages (only AMD Catalyst mode)
+* current performance level settings (only AMD Catalyst mode)
+* default performance level settings (only AMD Catalyst mode)
+
+also, in AMDGPU mode:
+
+* list of possible core clocks
+* list of possible memory clocks
 
 ### List of parameters
 
