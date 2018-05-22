@@ -1217,7 +1217,9 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
         { i++; continue; }
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
         
-        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
+        std::cout << "Adapter " << i << ": PCI " <<
+                adapterInfo.busNo << ":" << adapterInfo.deviceNo << ":" <<
+                adapterInfo.funcNo << ": " << adapterInfo.name << "\n"
                 "  Core: " << adapterInfo.coreClock << " MHz, "
                 "Mem: " << adapterInfo.memoryClock << " MHz, "
                 "CoreOD: " << adapterInfo.coreOD << ", "
@@ -1266,9 +1268,8 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
         
         std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
-                "  Device Topology: " << adapterInfo.busNo << ':' <<
-                adapterInfo.deviceNo << ":" <<
-                adapterInfo.funcNo << "\n"
+                "  Device Topology: " << adapterInfo.busNo << ":" <<
+                adapterInfo.deviceNo << ":" << adapterInfo.funcNo << "\n"
                 "  Vendor ID: " << adapterInfo.vendorId << " (0x" << std::hex <<
                         adapterInfo.vendorId << std::dec << ")" << "\n"
                 "  Device ID: " << adapterInfo.deviceId << " (0x" << std::hex <<
@@ -1350,7 +1351,11 @@ static void printAdaptersInfo(ADLMainControl& mainControl, int adaptersNum,
         
         ADLPMActivity activity;
         mainControl.getCurrentActivity(ai, activity);
-        std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
+        std::cout << "Adapter " << i << ": PCI " <<
+                adapterInfos[ai].iBusNumber << ":" <<
+                adapterInfos[ai].iDeviceNumber << ":" <<
+                adapterInfos[ai].iFunctionNumber <<
+                ": " << adapterInfos[ai].strAdapterName << "\n"
                 "  Core: " << activity.iEngineClock/100.0 << " MHz, "
                 "Mem: " << activity.iMemoryClock/100.0 << " MHz, "
                 "Vddc: " << activity.iVddc/1000.0 << " V, "
@@ -1399,7 +1404,7 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
         if (adapterInfos[ai].strAdapterName[0]==0)
             getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
         std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
-                "  Device Topology: " << adapterInfos[ai].iBusNumber << ':' <<
+                "  Device Topology: " << adapterInfos[ai].iBusNumber << ":" <<
                 adapterInfos[ai].iDeviceNumber << ":" <<
                 adapterInfos[ai].iFunctionNumber << "\n"
                 "  Vendor ID: " << adapterInfos[ai].iVendorID << " (0x" << std::hex <<

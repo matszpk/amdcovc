@@ -110,7 +110,8 @@ Adapter 1: Pitcairn PRO [Radeon HD 7850 / R7 265 / R9 270 1024SP]
 ```
 
 The first line below adapter is current state of graphics card (core clock,
-memory clock, voltage, load, temperature and fan speed).
+memory clock, voltage, load, temperature and fan speed). The new version add additonal
+info about device topology (for example `PCI 3:0:0`).
 
 The `PerfLevels` is current performance level settings from lowest to highest.
 Ofcourse, the highest performance levels is used while some computations/rendering.
