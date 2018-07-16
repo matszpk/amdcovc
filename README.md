@@ -169,9 +169,12 @@ List of parameters that can be set:
 
 Extra specifiers in parameters:
 
-* ADAPTERS - adapter (device) index list (default is 0)
+* ADAPTERS - adapter (device) index list (default is 0) or `all` for all adapters
 * LEVEL - performance level (typically 0 or 1, default is last)
 * THID - thermal controller index (must be 0)
+
+The adapter's list can be a single number (0), a single range (0-1) or list of
+numbers and ranges, or `all` specifier (choose all adapters).
 
 You can use 'default' in value place to set default value.
 For fanspeed 'default' value force automatic speed setup.
