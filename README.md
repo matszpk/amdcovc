@@ -68,7 +68,11 @@ make
 
 ### Invoking program
 
-NOTE: If no X11 server is running, then this program requires root privileges.
+NOTE for AMD Crimson/Catalyst drivers):
+If no X11 server is running, then this program requires root privileges.
+
+NOTE for AMDGPU(-PRO) drivers:
+Any parameter settings requires root privileges.
 
 To run program, just type:
 

@@ -43,6 +43,9 @@
 extern "C" {
 #include <pci/pci.h>
 }
+#ifdef HAVE_TERMINFO
+#include <term.h>
+#endif
 
 #ifdef __linux__
 #define LINUX 1
@@ -51,7 +54,141 @@ extern "C" {
 #include <adl_sdk.h>
 #endif
 
-#define AMDCOVC_VERSION "0.3.9.2"
+#define AMDCOVC_VERSION "0.3.10pre1"
+
+enum TermColor {
+    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
+};
+
+enum SaneColor {
+    GOOD = TermColor::GREEN,
+    WARNING = TermColor::YELLOW,
+    BAD = TermColor::RED
+};
+
+#ifdef HAVE_TERMINFO
+static const char* tinfoSetAF = nullptr; // set a foreground
+static const char* tinfoSetF = nullptr;  // set foreground
+static const char* tinfoSgr0 = nullptr; // exit to std mode
+static const char* tinfoBold = nullptr; // bold mode
+static const char* tinfoOrigColors = nullptr;
+static const char* tinfoOrigPairs = nullptr;
+
+static void setTermNormal();
+
+static void initializeTermModes()
+{
+    if (!isatty(1))
+        return; // if no terminal
+    // setup terminal
+    int err;
+    if (setupterm(nullptr, 1, &err) != 0)
+        return;
+    // get tparams
+    tinfoSetAF = tigetstr("setaf");
+    tinfoSetF = tigetstr("setf");
+    tinfoBold = tigetstr("bold");
+    tinfoSgr0 = tigetstr("sgr0");
+    tinfoOrigColors = tigetstr("oc");
+    tinfoOrigPairs = tigetstr("op");
+    
+    // initialize to standard terminal mode
+    setTermNormal();
+}
+
+static void setTermForeground(int color)
+{
+    if (tinfoSetAF != nullptr)
+    {
+        const char* p = tiparm(tinfoSetAF, color);
+        std::cout.flush();
+        putp(p);
+    }
+    else if (tinfoSetF != nullptr)
+    {
+        const char* p = tiparm(tinfoSetF, (color&2) | ((color&4)>>2) | ((color&1)<<2));
+        std::cout.flush();
+        putp(p);
+    }
+    // do nothing if other
+}
+
+static void setTermBold()
+{
+    if (tinfoBold != nullptr)
+    {
+        std::cout.flush();
+        putp(tinfoBold);
+    }
+}
+
+static void setTermStdForeground()
+{
+    if (tinfoOrigColors != nullptr || tinfoOrigPairs != nullptr)
+        std::cout.flush();
+    if (tinfoOrigColors != nullptr)
+        putp(tinfoOrigColors);
+    if (tinfoOrigPairs != nullptr)
+        putp(tinfoOrigPairs);
+}
+
+static void setTermNormal()
+{
+    if (tinfoSgr0 != nullptr)
+    {
+        std::cout.flush();
+        putp(tinfoSgr0);
+    }
+}
+#else
+// if no terminal support
+static void initializeTermModes()
+{ }
+
+static void setTermForeground(int color)
+{ }
+
+static void setTermBold()
+{ }
+
+static void setTermStdForeground()
+{ }
+
+static void setTermNormal()
+{ }
+#endif
+
+static void printTemperature(double temp)
+{
+    if (temp < 75.0)
+        setTermForeground(SaneColor::GOOD);
+    else if (temp < 90.0)
+        setTermForeground(SaneColor::WARNING);
+    else
+        setTermForeground(SaneColor::BAD);
+    setTermBold();
+    
+    std::cout << temp << " C";
+    
+    setTermStdForeground();
+    setTermNormal();
+}
+
+static void printFanSpeed(double fanspeed)
+{
+    if (fanspeed < 60.0)
+        setTermForeground(SaneColor::GOOD);
+    else if (fanspeed < 80.0)
+        setTermForeground(SaneColor::WARNING);
+    else
+        setTermForeground(SaneColor::BAD);
+    setTermBold();
+    
+    std::cout << fanspeed << "%";
+    
+    setTermStdForeground();
+    setTermNormal();
+}
 
 #ifdef HAVE_ADLSDK
 // Memory allocation function
@@ -1217,9 +1354,12 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
         { i++; continue; }
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
         
+        setTermBold();
         std::cout << "Adapter " << i << ": PCI " <<
                 adapterInfo.busNo << ":" << adapterInfo.deviceNo << ":" <<
-                adapterInfo.funcNo << ": " << adapterInfo.name << "\n"
+                adapterInfo.funcNo << ": " << adapterInfo.name << "\n";
+        setTermNormal();
+        std::cout <<
                 "  Core: " << adapterInfo.coreClock << " MHz, "
                 "Mem: " << adapterInfo.memoryClock << " MHz, "
                 "CoreOD: " << adapterInfo.coreOD << ", "
@@ -1227,14 +1367,22 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)] << ", ";
         if (adapterInfo.gpuLoad>=0)
             std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
-        std::cout << "Temp: " << adapterInfo.temperature/1000.0 << " C";
+        std::cout << "Temp: ";
+        printTemperature(adapterInfo.temperature/1000.0);
         if ((adapterInfo.extraTemperatures&1) != 0)
-            std::cout << ", T2: " << adapterInfo.temperature2/1000.0 << " C";
+        {
+            std::cout << ", T2: ";
+            printTemperature(adapterInfo.temperature2/1000.0);
+        }
         if ((adapterInfo.extraTemperatures&2) != 0)
-            std::cout << ", T3: " << adapterInfo.temperature3/1000.0 << " C";
-        std::cout << ", Fan: " << double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
-                double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0 <<
-                "%" << std::endl;
+        {
+            std::cout << ", T3: ";
+            printTemperature(adapterInfo.temperature3/1000.0);
+        }
+        std::cout << ", Fan: ";
+        printFanSpeed(double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
+                double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0);
+        std::cout << std::endl;
         if (!adapterInfo.coreClocks.empty())
         {
             std::cout << "  Core Clocks:";
@@ -1267,7 +1415,10 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
         { i++; continue; }
         const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
         
-        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n"
+        setTermBold();
+        std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n";
+        setTermNormal();
+        std::cout <<
                 "  Device Topology: " << adapterInfo.busNo << ":" <<
                 adapterInfo.deviceNo << ":" << adapterInfo.funcNo << "\n"
                 "  Vendor ID: " << adapterInfo.vendorId << " (0x" << std::hex <<
@@ -1284,19 +1435,29 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
                 "  Current BusLanes: " << adapterInfo.busLanes << "\n"
-                "  Temperature: " << adapterInfo.temperature/1000.0 << " C\n";
+                "  Temperature: ";
+        printTemperature(adapterInfo.temperature/1000.0);
+        std::cout << "\n";
         if ((adapterInfo.extraTemperatures&1) != 0)
-            std::cout << "  Temperature2: " << adapterInfo.temperature2/1000.0 << " C\n";
+        {
+            std::cout << "  Temperature2: ";
+            printTemperature(adapterInfo.temperature2/1000.0);
+            std::cout << "\n";
+        }
         if ((adapterInfo.extraTemperatures&2) != 0)
-            std::cout << "  Temperature3: " << adapterInfo.temperature3/1000.0 << " C\n";
+        {
+            std::cout << "  Temperature3: ";
+            printTemperature(adapterInfo.temperature3/1000.0);
+            std::cout << "\n";
+        }
         std::cout <<
                 "  Critical temperature: " << adapterInfo.tempCritical/1000.0 << " C\n"
                 "  FanSpeed Min (Value): " << adapterInfo.minFanSpeed << "\n"
                 "  FanSpeed Max (Value): " << adapterInfo.maxFanSpeed << "\n"
-                "  Current FanSpeed: " <<
-                    (double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
-                    double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0)
-                    << "%\n"
+                "  Current FanSpeed: ";
+        printFanSpeed((double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
+                    double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0));
+        std::cout << "\n"
                 "  Controlled FanSpeed: " <<
                     (adapterInfo.defaultFanSpeed?"yes":"no") << "\n";
             // print available core clocks
@@ -1351,17 +1512,23 @@ static void printAdaptersInfo(ADLMainControl& mainControl, int adaptersNum,
         
         ADLPMActivity activity;
         mainControl.getCurrentActivity(ai, activity);
+        setTermBold();
         std::cout << "Adapter " << i << ": PCI " <<
                 adapterInfos[ai].iBusNumber << ":" <<
                 adapterInfos[ai].iDeviceNumber << ":" <<
                 adapterInfos[ai].iFunctionNumber <<
-                ": " << adapterInfos[ai].strAdapterName << "\n"
+                ": " << adapterInfos[ai].strAdapterName << "\n";
+        setTermNormal();
+        std::cout <<
                 "  Core: " << activity.iEngineClock/100.0 << " MHz, "
                 "Mem: " << activity.iMemoryClock/100.0 << " MHz, "
                 "Vddc: " << activity.iVddc/1000.0 << " V, "
                 "Load: " << activity.iActivityPercent << "%, "
-                "Temp: " << mainControl.getTemperature(ai, 0)/1000.0 << " C, "
-                "Fan: " << mainControl.getFanSpeed(ai, 0) << "%" << std::endl;
+                "Temp: ";
+        printTemperature(mainControl.getTemperature(ai, 0)/1000.0);
+        std::cout << ", Fan: ";
+        printFanSpeed(mainControl.getFanSpeed(ai, 0));
+        std::cout << std::endl;
         ADLODParameters odParams;
         mainControl.getODParameters(ai, odParams);
         std::cout << "  Max Ranges: Core: " << odParams.sEngineClock.iMin/100.0 << " - " <<
@@ -1403,8 +1570,10 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
         { i++; continue; }
         if (adapterInfos[ai].strAdapterName[0]==0)
             getFromPCI(adapterInfos[ai].iAdapterIndex, adapterInfos[ai]);
-        std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n"
-                "  Device Topology: " << adapterInfos[ai].iBusNumber << ":" <<
+        setTermBold();
+        std::cout << "Adapter " << i << ": " << adapterInfos[ai].strAdapterName << "\n";
+        setTermNormal();
+        std::cout << "  Device Topology: " << adapterInfos[ai].iBusNumber << ":" <<
                 adapterInfos[ai].iDeviceNumber << ":" <<
                 adapterInfos[ai].iFunctionNumber << "\n"
                 "  Vendor ID: " << adapterInfos[ai].iVendorID << " (0x" << std::hex <<
@@ -1421,13 +1590,17 @@ static void printAdaptersInfoVerbose(ADLMainControl& mainControl, int adaptersNu
                 "  Current BusLanes: " << activity.iCurrentBusLanes<< "\n";
         
         int temperature = mainControl.getTemperature(ai, 0);
-        std::cout << "  Temperature: " << temperature/1000.0 << " C\n";
+        std::cout << "  Temperature: ";
+        printTemperature(temperature/1000.0);
+        std::cout << "\n";
         mainControl.getFanSpeedInfo(ai, 0, fsInfo);
         std::cout << "  FanSpeed Min: " << fsInfo.iMinPercent << "%\n"
                 "  FanSpeed Max: " << fsInfo.iMaxPercent << "%\n"
                 "  FanSpeed MinRPM: " << fsInfo.iMinRPM << " RPM\n"
                 "  FanSpeed MaxRPM: " << fsInfo.iMaxRPM << " RPM" << "\n";
-        std::cout << "  Current FanSpeed: " << mainControl.getFanSpeed(ai, 0) << "%\n";
+        std::cout << "  Current FanSpeed: ";
+        printFanSpeed(mainControl.getFanSpeed(ai, 0));
+        std::cout << "\n";
         ADLODParameters odParams;
         mainControl.getODParameters(ai, odParams);
         std::cout << "  CoreClock: " << odParams.sEngineClock.iMin/100.0 << " - " <<
@@ -1627,7 +1800,7 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     }
     else
     {
-        std::cout << "Wrong parameter name in '" << string << "'!" << std::endl;
+        std::cerr << "Wrong parameter name in '" << string << "'!" << std::endl;
         return false;
     }
     
@@ -1766,12 +1939,15 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
             const std::vector<int>& activeAdapters,
             const std::vector<OVCParameter>& ovcParams)
 {
+    setTermBold();
     std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
     std::cout <<
         "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
         "please STOP ANY GPU computations and GPU renderings.\n"
         "Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n" 
         << std::endl;
+    
+    setTermForeground(SaneColor::BAD);
     
     const int realAdaptersNum = activeAdapters.size();
     std::vector<ADLODParameters> odParams(realAdaptersNum);
@@ -1883,6 +2059,9 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
         std::cerr << "NO ANY settings applied. Error in parameters!" << std::endl;
         throw Error("Wrong parameters!");
     }
+    
+    setTermStdForeground();
+    
     // print what has been changed
     for (OVCParameter param: ovcParams)
         if (param.type==OVCParamType::FAN_SPEED)
@@ -2014,6 +2193,8 @@ static void setOVCParameters(ADLMainControl& mainControl, int adaptersNum,
                 }
                 changedDevices[i] = true;
             }
+    
+    setTermNormal(); // reset terminal mode
     /// set fan speeds
     for (int i = 0; i < realAdaptersNum; i++)
         if (fanSpeedSetups[i].isSet)
@@ -2048,12 +2229,15 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
             const std::vector<PerfClocks>& perfClocks,
             const std::vector<AMDGPUAdapterInfo>& adapterInfos)
 {
+    setTermBold();
     std::cout << "WARNING: setting AMD Overdrive parameters!" << std::endl;
     std::cout <<
         "\nIMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
         "please STOP ANY GPU computations and GPU renderings.\n"
         "Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n" 
         << std::endl;
+    
+    setTermForeground(SaneColor::BAD);
     
     bool failed = false;
     int adaptersNum = handle.getAdaptersNum();
@@ -2208,6 +2392,9 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
         throw Error("Wrong parameters!");
     }
     
+    // print informations in bold
+    setTermStdForeground();
+    
     // print what has been changed
     for (OVCParameter param: ovcParams)
         if (param.type==OVCParamType::FAN_SPEED)
@@ -2311,6 +2498,7 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                         break;
                 }
             }
+    setTermNormal(); // reset terminal modes
     
     std::vector<FanSpeedSetup> fanSpeedSetups(adaptersNum);
     std::fill(fanSpeedSetups.begin(), fanSpeedSetups.end(),
@@ -2476,16 +2664,23 @@ static const char* helpAndUsageString =
 "amdcovc vcore=1.111 vcore::0=0.81\n"
 "    set Vddc voltage to 1.111 V for adapter 0\n"
 "    set Vddc voltage to 0.81 for adapter 0 for performance level 0\n"
-"\n"
+"\n";
+static const char* helpAndUsageStringCaution =
 "IMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
 "please STOP ANY GPU computations and GPU renderings.\n"
 "Please use this utility CAREFULLY, because it can DAMAGE your hardware!\n"
-"\n"
-"If no X11 server is running, then this program requires root privileges.\n";
+"\n";
+static const char* helpAndUsageStringNotes =
+"NOTICE FOR AMD Crimson/Catalyst drivers:\n"
+"If no X11 server is running, then this program requires root privileges.\n"
+"NOTICE FOR AMDGPU(-PRO) drivers:\n"
+"Any parameter settings requires root privileges.\n";
+
 
 int main(int argc, const char** argv)
 try
 {
+    initializeTermModes();
     bool printHelp = false;
     bool printVerbose = false;
     std::vector<OVCParameter> ovcParameters;
@@ -2535,14 +2730,25 @@ try
         else
         {
             OVCParameter param;
+            
+            setTermBold();
+            setTermForeground(SaneColor::BAD);
+            
             if (parseOVCParameter(argv[i], param))
                 ovcParameters.push_back(param);
             else
                 failed = true;
+            
+            setTermStdForeground();
+            setTermNormal();
         }
     if (printHelp)
     {
         std::cout << helpAndUsageString;
+        setTermBold();
+        std::cout << helpAndUsageStringCaution;
+        setTermNormal();
+        std::cout << helpAndUsageStringNotes;
         std::cout.flush();
         return 0;
     }
@@ -2621,6 +2827,10 @@ catch(const std::exception& ex)
 {
     if (pciAccess!=nullptr)
         pci_cleanup(pciAccess);
+    setTermBold();
+    setTermForeground(SaneColor::BAD);
     std::cerr << ex.what() << std::endl;
+    setTermStdForeground();
+    setTermNormal();
     return 1;
 }
