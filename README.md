@@ -29,6 +29,7 @@ Optional components that can be used by program for AMD Catalyst drivers:
 
 * OpenCL environment (to force initializing of devices)
 * libadlxx.so library (AMD ADL library)
+* ncurses library to coloring and bolding terminal outputs
 
 To build program you need:
 
@@ -59,6 +60,13 @@ ADLSDKDIR = /home/mat/docs/src/ADL_SDK9
 ```
 
 by replacing `/home/mat/docs/src/ADL_SDK9` by your correct path.
+
+You can also disable or enable terminal output coloring and bolding by disabling TERMINFO
+in Makefile by setting HAVE_TERMINFO variable:
+
+```
+HAVE_TERMINFO = 0
+```
 
 Now. To build program, just type:
 
