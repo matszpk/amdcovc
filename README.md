@@ -210,3 +210,19 @@ List of options:
 * -v, --verbose - print verbose informations
 * --version - print version
 * -?, --help - print help
+
+### Text styling and coloring
+
+By default AMDCOVC uses text coloring and styling (bolding) if the terminal/console
+able to display colors or text styles and if output is not the standard output/error.
+Following environment variables control whether coloring or text styling will be used:
+
+* AMDCOVC_NOCOLOR - disables coloring
+* AMDCOVC_NOBOLD - disables text bolding
+
+Set value of an environment variable to '1','on','y','true','t', 'on' or 'enable'
+to enable its function. For example just try by running AMDCOVC in following way:
+
+```
+AMDCOVC_NOCOLOR=1 ./amdcovc
+```

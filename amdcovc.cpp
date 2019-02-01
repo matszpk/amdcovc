@@ -54,7 +54,7 @@ extern "C" {
 #include <adl_sdk.h>
 #endif
 
-#define AMDCOVC_VERSION "0.3.10pre1"
+#define AMDCOVC_VERSION "0.3.10pre2"
 
 enum TermColor {
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
@@ -73,11 +73,36 @@ static const char* tinfoSgr0 = nullptr; // exit to std mode
 static const char* tinfoBold = nullptr; // bold mode
 static const char* tinfoOrigColors = nullptr;
 static const char* tinfoOrigPairs = nullptr;
+static bool tinfoNoColor = false;
+static bool tinfoNoBold = false;
 
 static void setTermNormal();
 
+static const char* envTrueStrings[] =
+{
+    "1", "y", "yes", "true", "t", "on", "enable"
+};
+
+static bool parseBoolEnv(const char* strValue)
+{
+    if (strValue == nullptr)
+        return false;
+    while(*strValue == ' ') strValue++;
+    if (*strValue==0)
+        return false;
+    const char* strEnd = strValue;
+    while(*strEnd != ' ' && *strEnd != 0) strEnd++;
+    
+    for (const char* trueStr: envTrueStrings)
+        if (strncasecmp(trueStr, strValue, strEnd-strValue)==0)
+            return true;
+    return false;
+}
+
 static void initializeTermModes()
 {
+    tinfoNoColor = parseBoolEnv(getenv("AMDCOVC_NOCOLOR"));
+    tinfoNoBold = parseBoolEnv(getenv("AMDCOVC_NOBOLD"));
     if (!isatty(1))
         return; // if no terminal
     // setup terminal
@@ -96,18 +121,26 @@ static void initializeTermModes()
     setTermNormal();
 }
 
+static void flushTermOutputs()
+{
+    std::cout.flush();
+    std::cerr.flush();
+}
+
 static void setTermForeground(int color)
 {
+    if (tinfoNoColor)
+        return;
     if (tinfoSetAF != nullptr)
     {
         const char* p = tiparm(tinfoSetAF, color);
-        std::cout.flush();
+        flushTermOutputs();
         putp(p);
     }
     else if (tinfoSetF != nullptr)
     {
         const char* p = tiparm(tinfoSetF, (color&2) | ((color&4)>>2) | ((color&1)<<2));
-        std::cout.flush();
+        flushTermOutputs();
         putp(p);
     }
     // do nothing if other
@@ -115,9 +148,11 @@ static void setTermForeground(int color)
 
 static void setTermBold()
 {
+    if (tinfoNoBold)
+        return;
     if (tinfoBold != nullptr)
     {
-        std::cout.flush();
+        flushTermOutputs();
         putp(tinfoBold);
     }
 }
@@ -125,7 +160,7 @@ static void setTermBold()
 static void setTermStdForeground()
 {
     if (tinfoOrigColors != nullptr || tinfoOrigPairs != nullptr)
-        std::cout.flush();
+        flushTermOutputs();
     if (tinfoOrigColors != nullptr)
         putp(tinfoOrigColors);
     if (tinfoOrigPairs != nullptr)
@@ -136,7 +171,7 @@ static void setTermNormal()
 {
     if (tinfoSgr0 != nullptr)
     {
-        std::cout.flush();
+        flushTermOutputs();
         putp(tinfoSgr0);
     }
 }
@@ -2664,6 +2699,13 @@ static const char* helpAndUsageString =
 "amdcovc vcore=1.111 vcore::0=0.81\n"
 "    set Vddc voltage to 1.111 V for adapter 0\n"
 "    set Vddc voltage to 0.81 for adapter 0 for performance level 0\n"
+"\n"
+"Coloring and text styles:\n"
+"AMDCOVC allow to control terminal text styling by two environment variables:\n"
+"  AMDCOVC_NOBOLD            disable bold fonts\n"
+"  AMDCOVC_NOCOLOR           disable text coloring\n"
+"Set value of an environment variable to '1','on','y','true','t', 'on' or 'enable'\n"
+"to enable its function.\n"
 "\n";
 static const char* helpAndUsageStringCaution =
 "IMPORTANT NOTICE: Before any setting of AMD Overdrive parameters,\n"
