@@ -11,7 +11,7 @@ CXXFLAGS = -Wall -O3 -std=c++11
 LDFLAGS = -Wall -O3 -std=c++11
 
 ifeq ($(HAVE_TERMINFO),1)
-TINFOLIB = -lncurses
+TINFOLIB = -lncurses -ltinfo
 TINFODEFINES = -DHAVE_TERMINFO=1
 else
 TINFOLIB =
