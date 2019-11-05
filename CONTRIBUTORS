@@ -1,0 +1,9 @@
+CONTRIBUTORS list:
+
+-----------------------------------------
+Rian Hunter rianhunter - fixes and buffer overflow fix
+Tit Petric titpetric - fix ADL SDK include's paths
+Jan Ziak atomsymbol - report issue with ncurses on some Linux distro and fix proposal
+
+
+
