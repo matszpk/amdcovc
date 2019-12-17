@@ -32,6 +32,8 @@
 #include <memory>
 #include <cmath>
 #include <ctime>
+#include <chrono>
+#include <thread>
 #include <cstdarg>
 #include <stdint.h>
 #include <unistd.h>
@@ -2939,6 +2941,7 @@ try
         else
         {
             do {
+                auto tstart = std::chrono::system_clock::now();
                 if (watch!=0)
                     beforePrintWatch(watch);
                 if (printVerbose)
@@ -2948,7 +2951,10 @@ try
                     printAdaptersInfo(mainControl, adaptersNum, activeAdapters,
                                 choosenAdapters, useAdaptersList && !chooseAllAdapters);
                 if (watch!=0)
-                    ::sleep(watch);
+                {
+                    auto tend = std::chrono::system_clock::now();
+                    std::this_thread::sleep_for(std::chrono::seconds(watch)-(tend-tstart));
+                }
             } while (watch!=0);
         }
     }
@@ -2980,6 +2986,7 @@ try
                         throw Error("Some adapter indices out of range");
             
             do {
+                auto tstart = std::chrono::system_clock::now();
                 if (watch!=0)
                     beforePrintWatch(watch);
                 if (printVerbose)
@@ -2989,7 +2996,10 @@ try
                     printAdaptersInfo(handle, choosenAdapters,
                                 useAdaptersList && !chooseAllAdapters);
                 if (watch!=0)
-                    ::sleep(watch);
+                {
+                    auto tend = std::chrono::system_clock::now();
+                    std::this_thread::sleep_for(std::chrono::seconds(watch)-(tend-tstart));
+                }
             } while (watch!=0);
         }
     }
