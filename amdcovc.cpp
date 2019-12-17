@@ -2953,7 +2953,9 @@ try
                 if (watch!=0)
                 {
                     auto tend = std::chrono::system_clock::now();
-                    std::this_thread::sleep_for(std::chrono::seconds(watch)-(tend-tstart));
+                    auto dur = std::chrono::seconds(watch)-(tend-tstart);
+                    if (dur>std::chrono::seconds(0))
+                        std::this_thread::sleep_for(dur);
                 }
             } while (watch!=0);
         }
@@ -2998,7 +3000,9 @@ try
                 if (watch!=0)
                 {
                     auto tend = std::chrono::system_clock::now();
-                    std::this_thread::sleep_for(std::chrono::seconds(watch)-(tend-tstart));
+                    auto dur = std::chrono::seconds(watch)-(tend-tstart);
+                    if (dur>std::chrono::seconds(0))
+                        std::this_thread::sleep_for(dur);
                 }
             } while (watch!=0);
         }
