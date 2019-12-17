@@ -18,7 +18,6 @@ please STOP ANY the GPU computations and the GPU renderings.
 YOU USE THIS PROGRAM AT YOUR OWN RISK! WE DO NOT GIVE ANY WARRANTY THAT PROGRAM
 WILL BE WORKING CORRECTLY IN ANY CASE! Read license before using this program.
 
-
 ### DONATION
 
 If you want to donate this project please send Bitcoins to following address:
