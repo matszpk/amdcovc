@@ -785,6 +785,8 @@ struct AMDGPUAdapterInfo
     unsigned int temperature3;
     unsigned int temperature4;
     unsigned int tempCritical;
+    unsigned int power;
+    unsigned int powerCap;
     unsigned int busLanes;
     unsigned int busSpeed;
     int gpuLoad;
@@ -1299,6 +1301,12 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
             getFileContentValue(dbuf, adapterInfo.voltage);
         }
     }
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/power1_average",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.power);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/power1_cap",
+             cardIndex, hwmonIndex);
+    getFileContentValue(dbuf, adapterInfo.powerCap);
     
     // parse GPU load
     snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
@@ -1473,6 +1481,9 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
         printFanSpeed(double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
                 double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0);
         std::cout << std::endl;
+        if (adapterInfo.powerCap!=0)
+            std::cout << "  Power: " << (adapterInfo.power/1000000.0) << " W (cap: " <<
+                    (adapterInfo.powerCap/1000000.0) << " W)\n";
         if (!adapterInfo.coreClocks.empty())
         {
             std::cout << "  Core Clocks:";
@@ -1558,7 +1569,10 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
         std::cout << "\n"
                 "  Controlled FanSpeed: " <<
                     (adapterInfo.defaultFanSpeed?"yes":"no") << "\n";
-            // print available core clocks
+        if (adapterInfo.powerCap!=0)
+            std::cout << "  Power: " << (adapterInfo.power/1000000.0) << " W (cap: " <<
+                    (adapterInfo.powerCap/1000000.0) << " W)\n";
+        // print available core clocks
         if (!adapterInfo.coreClocks.empty())
         {
             std::cout << "  Core Clocks:\n";
