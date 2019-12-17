@@ -213,6 +213,7 @@ List of options:
 
 * -a, --adapters=LIST - print informations only for these adapters
 * -v, --verbose - print verbose informations
+* -w, --watch=SECONDS - update status on terminal for every SECONDS - replaces command 'watch'
 * --version - print version
 * -?, --help - print help
 

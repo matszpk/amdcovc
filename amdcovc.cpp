@@ -31,6 +31,7 @@
 #include <string>
 #include <memory>
 #include <cmath>
+#include <ctime>
 #include <cstdarg>
 #include <stdint.h>
 #include <unistd.h>
@@ -67,6 +68,7 @@ enum SaneColor {
 };
 
 #ifdef HAVE_TERMINFO
+static const char* tinfoClrScr = nullptr; // clear screen
 static const char* tinfoSetAF = nullptr; // set a foreground
 static const char* tinfoSetF = nullptr;  // set foreground
 static const char* tinfoSgr0 = nullptr; // exit to std mode
@@ -110,6 +112,7 @@ static void initializeTermModes()
     if (setupterm(nullptr, 1, &err) != 0)
         return;
     // get tparams
+    tinfoClrScr = tigetstr("clear");
     tinfoSetAF = tigetstr("setaf");
     tinfoSetF = tigetstr("setf");
     tinfoBold = tigetstr("bold");
@@ -125,6 +128,15 @@ static void flushTermOutputs()
 {
     std::cout.flush();
     std::cerr.flush();
+}
+
+static void clearScreen()
+{
+    if (tinfoClrScr != nullptr)
+    {
+        flushTermOutputs();
+        putp(tinfoClrScr);
+    }
 }
 
 static void setTermForeground(int color)
@@ -178,6 +190,9 @@ static void setTermNormal()
 #else
 // if no terminal support
 static void initializeTermModes()
+{ }
+
+static void clearScreen()
 { }
 
 static void setTermForeground(int color)
@@ -2663,7 +2678,8 @@ static const char* helpAndUsageString =
 "Program is distributed under terms of the GPLv2.\n"
 "Program available at https://github.com/matszpk/amdcovc.\n"
 "\n"
-"Usage: amdcovc [--help|-?] [--verbose|-v] [-a LIST|--adapters=LIST] [PARAM ...]\n"
+"Usage: amdcovc [--help|-?] [-v|--verbose] [-a LIST|--adapters=LIST]\n"
+"[-w N|--watch=N] [PARAM ...]\n"
 "Print AMD Overdrive informations if no parameter given.\n"
 "Set AMD Overdrive parameters (clocks, fanspeeds,...) if any parameter given.\n"
 "\n"
@@ -2691,6 +2707,7 @@ static const char* helpAndUsageString =
 "List of options:\n"
 "  -a, --adapters=LIST       print informations only for these adapters\n"
 "  -v, --verbose             print verbose informations\n"
+"  -w, --watch=SECONDS       print status every SECONDS seconds to terminal\n"
 "      --version             print version\n"
 "  -?, --help                print help\n"
 "\n"
@@ -2734,6 +2751,13 @@ static const char* helpAndUsageStringNotes =
 "NOTICE FOR AMDGPU(-PRO) drivers:\n"
 "Any parameter settings requires root privileges.\n";
 
+static void beforePrintWatch(int watch)
+{
+    clearScreen();
+    time_t t;
+    time(&t);
+    std::cout << "Watch every " << watch << " seconds. Time: " << ctime(&t) << "\n";
+}
 
 int main(int argc, const char** argv)
 try
@@ -2745,6 +2769,7 @@ try
     std::vector<int> choosenAdapters;
     bool useAdaptersList = false;
     bool chooseAllAdapters = false;
+    int watch=0;
     
     bool failed = false;
     for (int i = 1; i < argc; i++)
@@ -2776,6 +2801,39 @@ try
             else
                 throw Error("Adapter list not supplied");
             useAdaptersList = true;
+        }
+        else if (::strncmp(argv[i], "--watch=", 8)==0)
+        {
+            errno = 0;
+            watch = strtoul(argv[i]+8, nullptr, 10);
+            if (errno!=0)
+                throw Error("Can't parse watch seconds");
+        }
+        else if (::strcmp(argv[i], "--watch")==0)
+        {
+            if (i+1 < argc)
+            {
+                errno = 0;
+                watch = strtoul(argv[++i], nullptr, 10);
+                if (errno!=0)
+                    throw Error("Can't parse watch seconds");
+            }
+            else
+                throw Error("Watch seconds not supplied");
+        }
+        else if (::strncmp(argv[i], "-w", 2)==0)
+        {
+            const char* p = 0;
+            if (argv[i][2]!=0)
+                p = argv[i]+2;
+            else if (i+1 < argc)
+                p = argv[++i];
+            else
+                throw Error("Watch seconds not supplied");
+            errno = 0;
+            watch = strtoul(p, nullptr, 10);
+            if (errno!=0)
+                throw Error("Can't parse watch seconds");
         }
         else if (::strcmp(argv[i], "--version")==0)
         {
@@ -2834,12 +2892,18 @@ try
             setOVCParameters(mainControl, adaptersNum, activeAdapters, ovcParameters);
         else
         {
-            if (printVerbose)
-                printAdaptersInfoVerbose(mainControl, adaptersNum, activeAdapters,
-                            choosenAdapters, useAdaptersList && !chooseAllAdapters);
-            else
-                printAdaptersInfo(mainControl, adaptersNum, activeAdapters,
-                            choosenAdapters, useAdaptersList && !chooseAllAdapters);
+            do {
+                if (watch!=0)
+                    beforePrintWatch(watch);
+                if (printVerbose)
+                    printAdaptersInfoVerbose(mainControl, adaptersNum, activeAdapters,
+                                choosenAdapters, useAdaptersList && !chooseAllAdapters);
+                else
+                    printAdaptersInfo(mainControl, adaptersNum, activeAdapters,
+                                choosenAdapters, useAdaptersList && !chooseAllAdapters);
+                if (watch!=0)
+                    ::sleep(watch);
+            } while (watch!=0);
         }
     }
     else
@@ -2868,13 +2932,19 @@ try
                 for (int adapterIndex: choosenAdapters)
                     if (adapterIndex>=int(handle.getAdaptersNum()) || adapterIndex<0)
                         throw Error("Some adapter indices out of range");
-                    
-            if (printVerbose)
-                printAdaptersInfoVerbose(handle, choosenAdapters,
-                            useAdaptersList && !chooseAllAdapters);
-            else
-                printAdaptersInfo(handle, choosenAdapters,
-                            useAdaptersList && !chooseAllAdapters);
+            
+            do {
+                if (watch!=0)
+                    beforePrintWatch(watch);
+                if (printVerbose)
+                    printAdaptersInfoVerbose(handle, choosenAdapters,
+                                useAdaptersList && !chooseAllAdapters);
+                else
+                    printAdaptersInfo(handle, choosenAdapters,
+                                useAdaptersList && !chooseAllAdapters);
+                if (watch!=0)
+                    ::sleep(watch);
+            } while (watch!=0);
         }
     }
     if (pciAccess!=nullptr)
