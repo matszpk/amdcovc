@@ -767,6 +767,7 @@ struct AMDGPUAdapterInfo
     unsigned int temperature;
     unsigned int temperature2;
     unsigned int temperature3;
+    unsigned int temperature4;
     unsigned int tempCritical;
     unsigned int busLanes;
     unsigned int busSpeed;
@@ -1252,6 +1253,10 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
              cardIndex, hwmonIndex);
     if (getFileContentValue(dbuf, adapterInfo.temperature3))
         adapterInfo.extraTemperatures |= 2;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp4_input",
+             cardIndex, hwmonIndex);
+    if (getFileContentValue(dbuf, adapterInfo.temperature4))
+        adapterInfo.extraTemperatures |= 4;
     
     // parse GPU load
     snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
@@ -1414,6 +1419,11 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
             std::cout << ", T3: ";
             printTemperature(adapterInfo.temperature3/1000.0);
         }
+        if ((adapterInfo.extraTemperatures&4) != 0)
+        {
+            std::cout << ", T4: ";
+            printTemperature(adapterInfo.temperature4/1000.0);
+        }
         std::cout << ", Fan: ";
         printFanSpeed(double(adapterInfo.fanSpeed-adapterInfo.minFanSpeed)/
                 double(adapterInfo.maxFanSpeed-adapterInfo.minFanSpeed)*100.0);
@@ -1483,6 +1493,12 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
         {
             std::cout << "  Temperature3: ";
             printTemperature(adapterInfo.temperature3/1000.0);
+            std::cout << "\n";
+        }
+        if ((adapterInfo.extraTemperatures&4) != 0)
+        {
+            std::cout << "  Temperature4: ";
+            printTemperature(adapterInfo.temperature4/1000.0);
             std::cout << "\n";
         }
         std::cout <<
