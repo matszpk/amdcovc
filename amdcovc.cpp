@@ -778,6 +778,7 @@ struct AMDGPUAdapterInfo
     unsigned int memoryClock;
     unsigned int coreOD;
     unsigned int memoryOD;
+    unsigned int voltage;
     AMDGPUPerfControl perfControl;
     unsigned int temperature;
     unsigned int temperature2;
@@ -950,6 +951,20 @@ try
     if (errno != 0)
         throw Error("Can't parse value from file");
     return (p != p2);
+}
+catch(const std::exception& ex)
+{
+    return false;
+}
+
+static bool getFileContentString(const char* filename, std::string& str)
+try
+{
+    std::ifstream ifs(filename, std::ios::binary);
+    ifs.exceptions(std::ios::failbit);
+    str.clear();
+    std::getline(ifs, str);
+    return true;
 }
 catch(const std::exception& ex)
 {
@@ -1272,6 +1287,18 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
              cardIndex, hwmonIndex);
     if (getFileContentValue(dbuf, adapterInfo.temperature4))
         adapterInfo.extraTemperatures |= 4;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/in0_label",
+             cardIndex, hwmonIndex);
+    std::string in0Label;
+    if (getFileContentString(dbuf, in0Label))
+    {
+        if (in0Label=="vddgfx")
+        {
+            snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/in0_input",
+                        cardIndex, hwmonIndex);
+            getFileContentValue(dbuf, adapterInfo.voltage);
+        }
+    }
     
     // parse GPU load
     snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
@@ -1418,7 +1445,10 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 "  Core: " << adapterInfo.coreClock << " MHz, "
                 "Mem: " << adapterInfo.memoryClock << " MHz, "
                 "CoreOD: " << adapterInfo.coreOD << ", "
-                "MemOD: " << adapterInfo.memoryOD << "\n  "
+                "MemOD: " << adapterInfo.memoryOD;
+        if (adapterInfo.voltage!=0)
+            std::cout << ", Vddc: " << adapterInfo.voltage << " mV";
+        std::cout << "\n  "
                 "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)] << ", ";
         if (adapterInfo.gpuLoad>=0)
             std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
@@ -1488,8 +1518,10 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
                 "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
                 "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
                 "  Core Overdrive: " << adapterInfo.coreOD << "\n"
-                "  Memory Overdrive: " << adapterInfo.memoryOD << "\n"
-                "  Performance Control: " <<
+                "  Memory Overdrive: " << adapterInfo.memoryOD << "\n";
+        if (adapterInfo.voltage!=0)
+            std::cout << "  Current Voltage: " << adapterInfo.voltage << " mV\n";
+        std::cout << "  Performance Control: " <<
                     perfControlNames[int(adapterInfo.perfControl)] << "\n";
         if (adapterInfo.gpuLoad>=0)
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
