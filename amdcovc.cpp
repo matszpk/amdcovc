@@ -210,6 +210,14 @@ static void setTermNormal()
 { }
 #endif
 
+static void beforePrintWatch(int watch)
+{
+    clearScreen();
+    time_t t;
+    time(&t);
+    std::cout << "Watch every " << watch << " seconds. Time: " << ctime(&t) << "\n";
+}
+
 static void printTemperature(double temp)
 {
     if (temp < 75.0)
@@ -1435,16 +1443,31 @@ void AMDGPUAdapterHandle::setPerformanceControl(int index,
 }
 
 static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
-            const std::vector<int>& choosenAdapters, bool useChoosen)
+            const std::vector<int>& choosenAdapters, bool useChoosen, int watch)
 {
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
     int i = 0;
+    
+    std::vector<AMDGPUAdapterInfo> adapterInfos(adaptersNum);
+    
     for (int ai = 0; ai < adaptersNum; ai++)
     {
         if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
         { i++; continue; }
-        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
+        adapterInfos[ai] = handle.parseAdapterInfo(ai);
+    }
+    
+    if (watch!=0)
+        beforePrintWatch(watch);
+    
+    choosenIter = choosenAdapters.begin();
+    i = 0;
+    for (int ai = 0; ai < adaptersNum; ai++)
+    {
+        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
+        { i++; continue; }
+        const AMDGPUAdapterInfo& adapterInfo = adapterInfos[ai];
         
         setTermBold();
         std::cout << "Adapter " << i << ": PCI " <<
@@ -1507,16 +1530,31 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
 }
 
 static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
-            const std::vector<int>& choosenAdapters, bool useChoosen)
+            const std::vector<int>& choosenAdapters, bool useChoosen, int watch)
 {
     int adaptersNum = handle.getAdaptersNum();
     auto choosenIter = choosenAdapters.begin();
     int i = 0;
+    
+    std::vector<AMDGPUAdapterInfo> adapterInfos(adaptersNum);
+    
     for (int ai = 0; ai < adaptersNum; ai++)
     {
         if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
         { i++; continue; }
-        const AMDGPUAdapterInfo adapterInfo = handle.parseAdapterInfo(ai);
+        adapterInfos[ai] = handle.parseAdapterInfo(ai);
+    }
+    
+    if (watch!=0)
+        beforePrintWatch(watch);
+    
+    choosenIter = choosenAdapters.begin();
+    i = 0;
+    for (int ai = 0; ai < adaptersNum; ai++)
+    {
+        if (useChoosen && (choosenIter==choosenAdapters.end() || *choosenIter!=i))
+        { i++; continue; }
+        const AMDGPUAdapterInfo& adapterInfo = adapterInfos[ai];
         
         setTermBold();
         std::cout << "Adapter " << i << ": " << adapterInfo.name << "\n";
@@ -2799,14 +2837,6 @@ static const char* helpAndUsageStringNotes =
 "NOTICE FOR AMDGPU(-PRO) drivers:\n"
 "Any parameter settings requires root privileges.\n";
 
-static void beforePrintWatch(int watch)
-{
-    clearScreen();
-    time_t t;
-    time(&t);
-    std::cout << "Watch every " << watch << " seconds. Time: " << ctime(&t) << "\n";
-}
-
 int main(int argc, const char** argv)
 try
 {
@@ -2989,14 +3019,12 @@ try
             
             do {
                 auto tstart = std::chrono::system_clock::now();
-                if (watch!=0)
-                    beforePrintWatch(watch);
                 if (printVerbose)
                     printAdaptersInfoVerbose(handle, choosenAdapters,
-                                useAdaptersList && !chooseAllAdapters);
+                                useAdaptersList && !chooseAllAdapters, watch);
                 else
                     printAdaptersInfo(handle, choosenAdapters,
-                                useAdaptersList && !chooseAllAdapters);
+                                useAdaptersList && !chooseAllAdapters, watch);
                 if (watch!=0)
                 {
                     auto tend = std::chrono::system_clock::now();
