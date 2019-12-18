@@ -35,6 +35,7 @@
 #include <chrono>
 #include <thread>
 #include <cstdarg>
+#include <locale.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -210,6 +211,8 @@ static void setTermNormal()
 { }
 #endif
 
+static bool terminalUTF8 = false;
+
 static void beforePrintWatch(int watch)
 {
     clearScreen();
@@ -228,7 +231,10 @@ static void printTemperature(double temp)
         setTermForeground(SaneColor::BAD);
     setTermBold();
     
-    std::cout << temp << " C";
+    if (terminalUTF8)
+        std::cout << temp << "°C";
+    else
+        std::cout << temp << "*C";
     
     setTermStdForeground();
     setTermNormal();
@@ -2880,6 +2886,13 @@ try
     bool useAdaptersList = false;
     bool chooseAllAdapters = false;
     int watch=0;
+    
+    {
+        const char* loc = setlocale(LC_CTYPE, "");
+        const size_t locLen = ::strlen(loc);
+        terminalUTF8 = locLen>=6 && ::strcmp(loc+locLen-6, ".UTF-8")==0;
+        loc = setlocale(LC_CTYPE, "C");
+    }
     
     bool failed = false;
     for (int i = 1; i < argc; i++)
