@@ -58,7 +58,7 @@ extern "C" {
 #include <adl_sdk.h>
 #endif
 
-#define AMDCOVC_VERSION "0.4.0pre1"
+#define AMDCOVC_VERSION "0.4.0"
 
 enum TermColor {
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
