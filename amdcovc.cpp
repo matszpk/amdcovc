@@ -794,6 +794,10 @@ struct AMDGPUAdapterInfo
     unsigned int temperature2;
     unsigned int temperature3;
     unsigned int temperature4;
+    std::string tempLabel;
+    std::string temp2Label;
+    std::string temp3Label;
+    std::string temp4Label;
     unsigned int tempCritical;
     unsigned int power;
     unsigned int powerCap;
@@ -1283,6 +1287,10 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_input",
              cardIndex, hwmonIndex);
     getFileContentValue(dbuf, adapterInfo.temperature);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_label",
+             cardIndex, hwmonIndex);
+    getFileContentString(dbuf, adapterInfo.tempLabel);
+    
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp1_crit",
              cardIndex, hwmonIndex);
     getFileContentValue(dbuf, adapterInfo.tempCritical);
@@ -1291,14 +1299,26 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
              cardIndex, hwmonIndex);
     if (getFileContentValue(dbuf, adapterInfo.temperature2))
         adapterInfo.extraTemperatures |= 1;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp2_label",
+             cardIndex, hwmonIndex);
+    getFileContentString(dbuf, adapterInfo.temp2Label);
+    
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp3_input",
              cardIndex, hwmonIndex);
     if (getFileContentValue(dbuf, adapterInfo.temperature3))
         adapterInfo.extraTemperatures |= 2;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp3_label",
+             cardIndex, hwmonIndex);
+    getFileContentString(dbuf, adapterInfo.temp3Label);
+    
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp4_input",
              cardIndex, hwmonIndex);
     if (getFileContentValue(dbuf, adapterInfo.temperature4))
         adapterInfo.extraTemperatures |= 4;
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/temp4_label",
+             cardIndex, hwmonIndex);
+    getFileContentString(dbuf, adapterInfo.temp4Label);
+    
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/hwmon/hwmon%u/in0_label",
              cardIndex, hwmonIndex);
     std::string in0Label;
@@ -1578,24 +1598,36 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
                 "  Current BusLanes: " << adapterInfo.busLanes << "\n"
-                "  Temperature: ";
+                "  Temperature";
+        if (!adapterInfo.tempLabel.empty())
+            std::cout << " (" << adapterInfo.tempLabel << ")";
+        std::cout << ": ";
         printTemperature(adapterInfo.temperature/1000.0);
         std::cout << "\n";
         if ((adapterInfo.extraTemperatures&1) != 0)
         {
-            std::cout << "  Temperature2: ";
+            std::cout << "  Temperature2";
+            if (!adapterInfo.temp2Label.empty())
+                std::cout << " (" << adapterInfo.temp2Label << ")";
+            std::cout << ": ";
             printTemperature(adapterInfo.temperature2/1000.0);
             std::cout << "\n";
         }
         if ((adapterInfo.extraTemperatures&2) != 0)
         {
-            std::cout << "  Temperature3: ";
+            std::cout << "  Temperature3";
+            if (!adapterInfo.temp3Label.empty())
+                std::cout << " (" << adapterInfo.temp3Label << ")";
+            std::cout << ": ";
             printTemperature(adapterInfo.temperature3/1000.0);
             std::cout << "\n";
         }
         if ((adapterInfo.extraTemperatures&4) != 0)
         {
-            std::cout << "  Temperature4: ";
+            std::cout << "  Temperature4";
+            if (!adapterInfo.temp4Label.empty())
+                std::cout << " (" << adapterInfo.temp4Label << ")";
+            std::cout << ": ";
             printTemperature(adapterInfo.temperature4/1000.0);
             std::cout << "\n";
         }
