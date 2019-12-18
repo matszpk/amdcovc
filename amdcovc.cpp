@@ -786,12 +786,18 @@ struct AMDGPUAdapterInfo
     std::string name;
     std::vector<unsigned int> memoryClocks;
     std::vector<unsigned int> coreClocks;
+    std::vector<unsigned int> socClocks;
+    std::vector<unsigned int> dcefClocks;
+    std::vector<unsigned int> fClocks;
     unsigned int minFanSpeed;
     unsigned int maxFanSpeed;
     bool defaultFanSpeed;
     unsigned int fanSpeed;
     unsigned int coreClock;
     unsigned int memoryClock;
+    unsigned int socClock;
+    unsigned int dcefClock;
+    unsigned int fClock;
     unsigned int coreOD;
     unsigned int memoryOD;
     unsigned int voltage;
@@ -1268,6 +1274,30 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
       adapterInfo.memoryClock = adapterInfo.memoryClocks[activeMemoryClockIndex];
     else
       adapterInfo.memoryClock = 0;
+    // parse pp_dpm_socclk
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_socclk", cardIndex);
+    unsigned int activeSocClockIndex;
+    adapterInfo.socClocks = parseDPMFile(dbuf, activeSocClockIndex);
+    if (activeSocClockIndex!=UINT_MAX)
+      adapterInfo.socClock = adapterInfo.socClocks[activeSocClockIndex];
+    else
+      adapterInfo.socClock = 0;
+    // parse pp_dpm_dcefclk
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_dcefclk", cardIndex);
+    unsigned int activeDcefClockIndex;
+    adapterInfo.dcefClocks = parseDPMFile(dbuf, activeDcefClockIndex);
+    if (activeDcefClockIndex!=UINT_MAX)
+      adapterInfo.dcefClock = adapterInfo.dcefClocks[activeDcefClockIndex];
+    else
+      adapterInfo.dcefClock = 0;
+    // parse pp_dpm_fclk
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_fclk", cardIndex);
+    unsigned int activeFClockIndex;
+    adapterInfo.fClocks = parseDPMFile(dbuf, activeFClockIndex);
+    if (activeFClockIndex!=UINT_MAX)
+      adapterInfo.fClock = adapterInfo.fClocks[activeFClockIndex];
+    else
+      adapterInfo.fClock = 0;
     
     unsigned int hwmonIndex = hwmonIndices[index];
     
@@ -1507,6 +1537,24 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 "MemOD: " << adapterInfo.memoryOD;
         if (adapterInfo.voltage!=0)
             std::cout << ", Vddc: " << adapterInfo.voltage << " mV";
+        if (adapterInfo.socClock!=0 || adapterInfo.dcefClock!=0)
+        {
+            std::cout << "\n  ";
+            if (adapterInfo.socClock!=0)
+            {
+                std::cout << "SOC: " << adapterInfo.socClock << " MHz";
+                if (adapterInfo.dcefClock!=0)
+                    std::cout << ", ";
+            }
+            if (adapterInfo.dcefClock!=0)
+            {
+                std::cout << "DCEF: " << adapterInfo.dcefClock << " MHz";
+                if (adapterInfo.fClock!=0)
+                    std::cout << ", ";
+            }
+            if (adapterInfo.fClock!=0)
+                std::cout << "FClock: " << adapterInfo.fClock << " MHz";
+        }
         std::cout << "\n  "
                 "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)] << ", ";
         if (adapterInfo.gpuLoad>=0)
@@ -1546,6 +1594,27 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
         {
             std::cout << "  Memory Clocks:";
             for (uint32_t v: adapterInfo.memoryClocks)
+                std::cout << " " << v;
+            std::cout << std::endl;
+        }
+        if (!adapterInfo.socClocks.empty())
+        {
+            std::cout << "  SOC Clocks:";
+            for (uint32_t v: adapterInfo.socClocks)
+                std::cout << " " << v;
+            std::cout << std::endl;
+        }
+        if (!adapterInfo.dcefClocks.empty())
+        {
+            std::cout << "  DCEF Clocks:";
+            for (uint32_t v: adapterInfo.dcefClocks)
+                std::cout << " " << v;
+            std::cout << std::endl;
+        }
+        if (!adapterInfo.fClocks.empty())
+        {
+            std::cout << "  F Clocks:";
+            for (uint32_t v: adapterInfo.fClocks)
                 std::cout << " " << v;
             std::cout << std::endl;
         }
@@ -1593,7 +1662,14 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
                 "  Device ID: " << adapterInfo.deviceId << " (0x" << std::hex <<
                         adapterInfo.deviceId << std::dec << ")" << "\n"
                 "  Current CoreClock: " << adapterInfo.coreClock << " MHz\n"
-                "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n"
+                "  Current MemoryClock: " << adapterInfo.memoryClock << " MHz\n";
+        if (adapterInfo.socClock!=0)
+            std::cout << "  Current SOCClock: " << adapterInfo.socClock << " MHz\n";
+        if (adapterInfo.dcefClock!=0)
+            std::cout << "  Current DCEFClock: " << adapterInfo.dcefClock << " MHz\n";
+        if (adapterInfo.fClock!=0)
+            std::cout << "  Current FClock: " << adapterInfo.fClock << " MHz\n";
+        std::cout <<
                 "  Core Overdrive: " << adapterInfo.coreOD << "\n"
                 "  Memory Overdrive: " << adapterInfo.memoryOD << "\n";
         if (adapterInfo.voltage!=0)
@@ -1661,6 +1737,24 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
         {
             std::cout << "  Memory Clocks:\n";
             for (uint32_t v: adapterInfo.memoryClocks)
+                std::cout << "    " << v << "MHz\n";
+        }
+        if (!adapterInfo.socClocks.empty())
+        {
+            std::cout << "  SOC Clocks:\n";
+            for (uint32_t v: adapterInfo.socClocks)
+                std::cout << "    " << v << "MHz\n";
+        }
+        if (!adapterInfo.dcefClocks.empty())
+        {
+            std::cout << "  DCEF Clocks:\n";
+            for (uint32_t v: adapterInfo.dcefClocks)
+                std::cout << "    " << v << "MHz\n";
+        }
+        if (!adapterInfo.fClocks.empty())
+        {
+            std::cout << "  F Clocks:\n";
+            for (uint32_t v: adapterInfo.fClocks)
                 std::cout << "    " << v << "MHz\n";
         }
         if (useChoosen)
