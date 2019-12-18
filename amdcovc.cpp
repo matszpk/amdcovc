@@ -959,6 +959,9 @@ public:
     void setOverdriveMemoryParam(int adapterIndex, unsigned int memoryOD) const;
     void setPerfCoreLevel(int adapterIndex, unsigned int corePLevel) const;
     void setPerfMemoryLevel(int adapterIndex, unsigned int memoryPLevel) const;
+    void setPerfSOCLevel(int adapterIndex, unsigned int socPLevel) const;
+    void setPerfDCEFLevel(int adapterIndex, unsigned int dcefPLevel) const;
+    void setPerfFLevel(int adapterIndex, unsigned int fPLevel) const;
     void setPerformanceControl(int adapterIndex, AMDGPUPerfControl perfControl) const;
     void getPerformanceClocks(int adapterIndex, unsigned int& coreClock,
                     unsigned int& memoryClock) const;
@@ -1483,6 +1486,51 @@ void AMDGPUAdapterHandle::setPerfMemoryLevel(int index, unsigned int memoryPLeve
     writeFileContentValue(dbuf, memoryPLevel);
 }
 
+void AMDGPUAdapterHandle::setPerfSOCLevel(int index, unsigned int socPLevel) const
+{
+    char dbuf[120];
+    unsigned int cardIndex = amdDevices[index];
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_socclk", cardIndex);
+    
+    if (access(dbuf, F_OK))
+    {
+        throw Error((std::string("File '")+dbuf+"' doesn't exist").c_str());
+    }
+    
+    setPerformanceControl(index, AMDGPUPerfControl::MANUAL);
+    writeFileContentValue(dbuf, socPLevel);
+}
+
+void AMDGPUAdapterHandle::setPerfDCEFLevel(int index, unsigned int dcefPLevel) const
+{
+    char dbuf[120];
+    unsigned int cardIndex = amdDevices[index];
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_dcefclk", cardIndex);
+    
+    if (access(dbuf, F_OK))
+    {
+        throw Error((std::string("File '")+dbuf+"' doesn't exist").c_str());
+    }
+    
+    setPerformanceControl(index, AMDGPUPerfControl::MANUAL);
+    writeFileContentValue(dbuf, dcefPLevel);
+}
+
+void AMDGPUAdapterHandle::setPerfFLevel(int index, unsigned int fPLevel) const
+{
+    char dbuf[120];
+    unsigned int cardIndex = amdDevices[index];
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_fclk", cardIndex);
+    
+    if (access(dbuf, F_OK))
+    {
+        throw Error((std::string("File '")+dbuf+"' doesn't exist").c_str());
+    }
+    
+    setPerformanceControl(index, AMDGPUPerfControl::MANUAL);
+    writeFileContentValue(dbuf, fPLevel);
+}
+
 static const char* perfControlNames[] =
 {
     "auto", "low", "manual", "high", "unknown"
@@ -1978,6 +2026,9 @@ enum class OVCParamType
     MEMORY_OD,
     CUR_CORE_CLOCK,
     CUR_MEMORY_CLOCK,
+    CUR_SOC_CLOCK,
+    CUR_DCEF_CLOCK,
+    CUR_F_CLOCK,
     CORE_PERF_LEVEL,
     MEMORY_PERF_LEVEL
 };
@@ -2035,6 +2086,21 @@ static bool parseOVCParameter(const char* string, OVCParameter& param)
     else if (name=="cmemclk")
     {
         param.type = OVCParamType::CUR_MEMORY_CLOCK;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="csocclk")
+    {
+        param.type = OVCParamType::CUR_SOC_CLOCK;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="cdcefclk")
+    {
+        param.type = OVCParamType::CUR_DCEF_CLOCK;
+        param.partId = LAST_PERFLEVEL;
+    }
+    else if (name=="cfclk")
+    {
+        param.type = OVCParamType::CUR_F_CLOCK;
         param.partId = LAST_PERFLEVEL;
     }
     else if (name=="coreod")
@@ -2581,6 +2647,12 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                         adapterInfos[i].coreClocks;
                 const std::vector<unsigned int>& memoryClocks =
                         adapterInfos[i].memoryClocks;
+                const std::vector<unsigned int>& socClocks =
+                        adapterInfos[i].socClocks;
+                const std::vector<unsigned int>& dcefClocks =
+                        adapterInfos[i].dcefClocks;
+                const std::vector<unsigned int>& fClocks =
+                        adapterInfos[i].fClocks;
                 
                 switch(param.type)
                 {
@@ -2622,6 +2694,39 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                                     (unsigned int)param.value) == memoryClocks.end()))
                         {
                             std::cerr << "Wrong current memory clock '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    case OVCParamType::CUR_SOC_CLOCK:
+                        if (!param.useDefault &&
+                            (size_t(param.value) != param.value ||
+                                std::find(socClocks.begin(), socClocks.end(),
+                                    (unsigned int)param.value) == socClocks.end()))
+                        {
+                            std::cerr << "Wrong current SOC clock '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    case OVCParamType::CUR_DCEF_CLOCK:
+                        if (!param.useDefault &&
+                            (size_t(param.value) != param.value ||
+                                std::find(dcefClocks.begin(), dcefClocks.end(),
+                                    (unsigned int)param.value) == dcefClocks.end()))
+                        {
+                            std::cerr << "Wrong current DCEF clock '" <<
+                                    param.argText << "'!" << std::endl;
+                            failed = true;
+                        }
+                        break;
+                    case OVCParamType::CUR_F_CLOCK:
+                        if (!param.useDefault &&
+                            (size_t(param.value) != param.value ||
+                                std::find(fClocks.begin(), fClocks.end(),
+                                    (unsigned int)param.value) == fClocks.end()))
+                        {
+                            std::cerr << "Wrong current F clock '" <<
                                     param.argText << "'!" << std::endl;
                             failed = true;
                         }
@@ -2738,6 +2843,33 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                         std::cout << " for adapter " << i <<
                                 " at performance level " << partId << std::endl;
                         break;
+                    case OVCParamType::CUR_SOC_CLOCK:
+                        std::cout << "Setting current SOC clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
+                    case OVCParamType::CUR_DCEF_CLOCK:
+                        std::cout << "Setting current DCEF clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
+                    case OVCParamType::CUR_F_CLOCK:
+                        std::cout << "Setting current F clock to ";
+                        if (param.useDefault)
+                            std::cout << "default";
+                        else
+                            std::cout << param.value << " MHz";
+                        std::cout << " for adapter " << i <<
+                                " at performance level " << partId << std::endl;
+                        break;
                     case OVCParamType::CORE_OD:
                         std::cout << "Setting core overdrive to ";
                         if (param.useDefault)
@@ -2808,6 +2940,12 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                         adapterInfos[i].coreClocks;
                 const std::vector<unsigned int>& memoryClocks =
                         adapterInfos[i].memoryClocks;
+                const std::vector<unsigned int>& socClocks =
+                        adapterInfos[i].socClocks;
+                const std::vector<unsigned int>& dcefClocks =
+                        adapterInfos[i].dcefClocks;
+                const std::vector<unsigned int>& fClocks =
+                        adapterInfos[i].fClocks;
                 
                 switch(param.type)
                 {
@@ -2847,6 +2985,39 @@ static void setOVCParameters(AMDGPUAdapterHandle& handle,
                                     (unsigned int)round(param.value));
                             if (cmit != memoryClocks.end())
                                 handle.setPerfMemoryLevel(i, cmit-memoryClocks.begin());
+                        }
+                        break;
+                    case OVCParamType::CUR_SOC_CLOCK:
+                        if (param.useDefault)
+                            handle.setPerformanceControl(i, AMDGPUPerfControl::AUTO);
+                        else
+                        {
+                            auto cmit = std::find(socClocks.begin(), socClocks.end(),
+                                    (unsigned int)round(param.value));
+                            if (cmit != socClocks.end())
+                                handle.setPerfSOCLevel(i, cmit-socClocks.begin());
+                        }
+                        break;
+                    case OVCParamType::CUR_DCEF_CLOCK:
+                        if (param.useDefault)
+                            handle.setPerformanceControl(i, AMDGPUPerfControl::AUTO);
+                        else
+                        {
+                            auto cmit = std::find(dcefClocks.begin(), dcefClocks.end(),
+                                    (unsigned int)round(param.value));
+                            if (cmit != dcefClocks.end())
+                                handle.setPerfDCEFLevel(i, cmit-dcefClocks.begin());
+                        }
+                        break;
+                    case OVCParamType::CUR_F_CLOCK:
+                        if (param.useDefault)
+                            handle.setPerformanceControl(i, AMDGPUPerfControl::AUTO);
+                        else
+                        {
+                            auto cmit = std::find(fClocks.begin(), fClocks.end(),
+                                    (unsigned int)round(param.value));
+                            if (cmit != fClocks.end())
+                                handle.setPerfFLevel(i, cmit-fClocks.begin());
                         }
                         break;
                     case OVCParamType::CORE_OD:
@@ -2906,6 +3077,9 @@ static const char* helpAndUsageString =
 "  memclk[:[ADAPTERS][:LEVEL]]=CLOCK     set memory clock in MHz\n"
 "  ccoreclk[:[ADAPTERS][:LEVEL]]=CLOCK   set current core clock in MHz (AMDGPU)\n"
 "  cmemclk[:[ADAPTERS][:LEVEL]]=CLOCK    set current memory clock in MHz (AMDGPU)\n"
+"  csocclk[:[ADAPTERS][:LEVEL]]=CLOCK    set current SOC clock in MHz (AMDGPU) (vega)\n"
+"  cdcefclk[:[ADAPTERS][:LEVEL]]=CLOCK   set current DCEF clock in MHz (AMDGPU) (vega)\n"
+"  cfclk[:[ADAPTERS][:LEVEL]]=CLOCK      set current F clock in MHz (AMDGPU) (vega2)\n"
 "  coreod[:[ADAPTERS][:LEVEL]]=PERCENT   set core Overdrive in percent (AMDGPU)\n"
 "  memod[:[ADAPTERS][:LEVEL]]=PERCENT    set memory Overdrive in percent (AMDGPU)\n"
 "  coreod[:[ADAPTERS][:LEVEL]]=LEVEL     set core performance level (AMDGPU)\n"
