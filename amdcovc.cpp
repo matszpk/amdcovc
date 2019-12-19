@@ -1765,7 +1765,7 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
         if (adapterInfo.gpuLoad>=0)
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
         if (adapterInfo.memLoad>=0)
-            std::cout << "  Mem Load: " << adapterInfo.memLoad << "%\n";
+            std::cout << "  Memory Load: " << adapterInfo.memLoad << "%\n";
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
                 "  Current BusLanes: " << adapterInfo.busLanes << "\n"
                 "  Temperature";
