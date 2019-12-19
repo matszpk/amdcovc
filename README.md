@@ -174,6 +174,9 @@ List of parameters that can be set:
 * memclk[:[ADAPTERS][:LEVEL]]=CLOCK - set memory clock in MHz
 * ccoreclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current core clock in MHz (AMDGPU)
 * cmemclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current memory clock in MHz (AMDGPU)
+* csocclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current SOC clock in MHz (AMDGPU) (vega)
+* cdcefclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current DCEF clock in MHz (AMDGPU) (vega)
+* cfclk[:[ADAPTERS][:LEVEL]]=CLOCK - set current F clock in MHz (AMDGPU) (vega2)
 * coreod[:[ADAPTERS][:LEVEL]]=PERCENT - set core clock in percents (AMDGPU)
 * memod[:[ADAPTERS][:LEVEL]]=PERCENT - set memory clock in perecents (AMDGPU)
 * corepl[:[ADAPTERS][:LEVEL]]=LEVEL - set current core performance level (AMDGPU)
