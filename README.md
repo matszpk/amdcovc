@@ -120,7 +120,7 @@ Sets core clock to 1000 MHz and memory clock to 1200 MHz.
 The AMDCOVC by default prints following informations about graphics card:
 
 ```
-Adapter 1: Pitcairn PRO [Radeon HD 7850 / R7 265 / R9 270 1024SP]
+Adapter 1: PCI 1:0:0: Pitcairn PRO [Radeon HD 7850 / R7 265 / R9 270 1024SP]
   Core: 1010 MHz, Mem: 1235 MHz, Vddc: 1.21 V, Load: 98%, Temp: 67 C, Fan: 54%
   Max Ranges: Core: 150 - 1050 MHz, Mem: 75 - 1450 MHz, Vddc: 0.8 - 1.225 V
   PerfLevels: Core: 300 - 1010 MHz, Mem: 150 - 1235 MHz, Vddc: 0.825 - 1.21 V
