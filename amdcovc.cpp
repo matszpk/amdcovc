@@ -989,6 +989,27 @@ catch(const std::exception& ex)
     return false;
 }
 
+static bool getFileContentValue(const char* filename, unsigned long long& value)
+try
+{
+    value = 0;
+    std::ifstream ifs(filename, std::ios::binary);
+    ifs.exceptions(std::ios::failbit);
+    std::string line;
+    std::getline(ifs, line);
+    char* p = (char*)line.c_str();
+    char* p2;
+    errno = 0;
+    value = strtoul(p, &p2, 0);
+    if (errno != 0)
+        throw Error("Can't parse value from file");
+    return (p != p2);
+}
+catch(const std::exception& ex)
+{
+    return false;
+}
+
 static bool getFileContentValue(const char* filename, int& value)
 try
 {
@@ -1434,6 +1455,21 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
             }
         }
     }
+    
+    if (adapterInfo.memLoad == -1)
+    {
+        // for VEGA
+        unsigned long long used, total;
+        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/mem_info_vram_used",
+                    cardIndex);
+        const bool haveUsed = getFileContentValue(dbuf, used);
+        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/mem_info_vram_total",
+                    cardIndex);
+        const bool haveTotal = getFileContentValue(dbuf, total);
+        if (haveUsed && haveTotal)
+            adapterInfo.memLoad = int(::ceil(double(used)*100.0 / double(total)));
+    }
+    
     snprintf(dbuf, 120, "/sys/class/drm/card%u/pp_dpm_pcie", cardIndex);
     parseDPMPCIEFile(dbuf, adapterInfo.busLanes, adapterInfo.busSpeed);
     
@@ -1640,12 +1676,12 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 std::cout << "FClock: " << adapterInfo.fClock << " MHz";
         }
         std::cout << "\n  "
-                "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)] << ", ";
+                "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)];
         if (adapterInfo.gpuLoad>=0)
-            std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
+            std::cout << ", Load: " << adapterInfo.gpuLoad << "%";
         if (adapterInfo.memLoad>=0)
-            std::cout << "MemLoad: " << adapterInfo.memLoad << "%, ";
-        std::cout << "Temp: ";
+            std::cout << ", MemLoad: " << adapterInfo.memLoad << "%";
+        std::cout << "\n  Temp: ";
         printTemperature(adapterInfo.temperature/1000.0);
         if ((adapterInfo.extraTemperatures&1) != 0)
         {
