@@ -816,6 +816,7 @@ struct AMDGPUAdapterInfo
     unsigned int busLanes;
     unsigned int busSpeed;
     int gpuLoad;
+    int memLoad;
     unsigned int extraTemperatures;
 };
 
@@ -979,6 +980,27 @@ try
     char* p2;
     errno = 0;
     value = strtoul(p, &p2, 0);
+    if (errno != 0)
+        throw Error("Can't parse value from file");
+    return (p != p2);
+}
+catch(const std::exception& ex)
+{
+    return false;
+}
+
+static bool getFileContentValue(const char* filename, int& value)
+try
+{
+    value = -1;
+    std::ifstream ifs(filename, std::ios::binary);
+    ifs.exceptions(std::ios::failbit);
+    std::string line;
+    std::getline(ifs, line);
+    char* p = (char*)line.c_str();
+    char* p2;
+    errno = 0;
+    value = strtol(p, &p2, 0);
     if (errno != 0)
         throw Error("Can't parse value from file");
     return (p != p2);
@@ -1374,9 +1396,19 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     getFileContentValue(dbuf, adapterInfo.powerCap);
     
     // parse GPU load
-    snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
+    adapterInfo.gpuLoad = -1;
+    adapterInfo.memLoad = -1;
+    
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/gpu_busy_percent",
+             cardIndex);
+    getFileContentValue(dbuf, adapterInfo.gpuLoad);
+    snprintf(dbuf, 120, "/sys/class/drm/card%u/device/mem_busy_percent",
+             cardIndex);
+    getFileContentValue(dbuf, adapterInfo.memLoad);
+    
+    if (adapterInfo.gpuLoad == -1 || adapterInfo.memLoad == -1)
     {
-        adapterInfo.gpuLoad = -1;
+        snprintf(dbuf, 120, "/sys/kernel/debug/dri/%u/amdgpu_pm_info", cardIndex);
         std::ifstream ifs(dbuf, std::ios::binary);
         while (ifs)
         {
@@ -1390,7 +1422,15 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
                 adapterInfo.gpuLoad = strtoul(line.c_str()+10, &endp, 10);
                 if (errno != 0 || endp == line.c_str()+10)
                     throw Error("Can't parse GPU load");
-                break;
+            }
+            if (line.compare(0, 10, "MEM load: ")==0 ||
+                line.compare(0, 10, "MEM Load: ")==0)
+            {
+                errno = 0;
+                char* endp;
+                adapterInfo.memLoad = strtoul(line.c_str()+10, &endp, 10);
+                if (errno != 0 || endp == line.c_str()+10)
+                    throw Error("Can't parse MEM load");
             }
         }
     }
@@ -1603,6 +1643,8 @@ static void printAdaptersInfo(AMDGPUAdapterHandle& handle,
                 "PerfCtrl: " << perfControlNames[int(adapterInfo.perfControl)] << ", ";
         if (adapterInfo.gpuLoad>=0)
             std::cout << "Load: " << adapterInfo.gpuLoad << "%, ";
+        if (adapterInfo.memLoad>=0)
+            std::cout << "MemLoad: " << adapterInfo.memLoad << "%, ";
         std::cout << "Temp: ";
         printTemperature(adapterInfo.temperature/1000.0);
         if ((adapterInfo.extraTemperatures&1) != 0)
@@ -1722,6 +1764,8 @@ static void printAdaptersInfoVerbose(AMDGPUAdapterHandle& handle,
                     perfControlNames[int(adapterInfo.perfControl)] << "\n";
         if (adapterInfo.gpuLoad>=0)
             std::cout << "  GPU Load: " << adapterInfo.gpuLoad << "%\n";
+        if (adapterInfo.memLoad>=0)
+            std::cout << "  Mem Load: " << adapterInfo.memLoad << "%\n";
         std::cout << "  Current BusSpeed: " << adapterInfo.busSpeed << "\n"
                 "  Current BusLanes: " << adapterInfo.busLanes << "\n"
                 "  Temperature";
