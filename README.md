@@ -139,9 +139,11 @@ The `Max Ranges` is minimal and maximal possible settings for graphics card.
 For AMDGPU mode, the AMDCOVC prints:
 
 ```
-Adapter 2: Ellesmere [Radeon RX 470/480/570/580]
-  Core: 300 MHz, Mem: 300 MHz, CoreOD: 0, MemOD: 0
-  PerfCtrl: auto, Temp: 42 C, Fan: 31.7647%
+Adapter 0: PCI 1:0:0: Ellesmere [Radeon RX 470/480/570/570X/580/580X/590]
+  Core: 1077 MHz, Mem: 1750 MHz, CoreOD: 0, MemOD: 0, Vddc: 1000 mV
+  PerfCtrl: manual, Load: 100%, MemLoad: 23%
+  Temp: 58°C, T4: 60°C, Fan: 41.9608%
+  Power: 54.008 W (cap: 127 W)
   Core Clocks: 300 608 910 1077 1145 1191 1236 1290
   Memory Clocks: 300 1750
 ```
