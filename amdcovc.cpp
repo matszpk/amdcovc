@@ -1466,7 +1466,7 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
         snprintf(dbuf, 120, "/sys/class/drm/card%u/device/mem_info_vram_total",
                     cardIndex);
         const bool haveTotal = getFileContentValue(dbuf, total);
-        if (haveUsed && haveTotal)
+        if (haveUsed && haveTotal && total!=0)
             adapterInfo.memLoad = int(::ceil(double(used)*100.0 / double(total)));
     }
     
