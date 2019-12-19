@@ -1005,9 +1005,7 @@ catch(const std::exception& ex)
 static void writeFileContentValue(const char* filename, unsigned int value)
 {
     if (access(filename, F_OK|W_OK))
-    {
         throw Error((std::string("Can't write file '")+filename+"'").c_str());
-    }
     std::ofstream ofs(filename, std::ios::binary);
     try
     {
@@ -1023,9 +1021,7 @@ static void writeFileContentValue(const char* filename, unsigned int value)
 static void writeFileContent(const char* filename, const char* content)
 {
     if (access(filename, F_OK|W_OK))
-    {
         throw Error((std::string("Can't write file '")+filename+"'").c_str());
-    }
     std::ofstream ofs(filename, std::ios::binary);
     try
     {
@@ -3231,7 +3227,7 @@ try
             std::cout << "amdcovc " AMDCOVC_VERSION
             " by Mateusz Szpakowski (matszpk@interia.pl)\n"
             "Program is distributed under terms of the GPLv2.\n"
-            "Program available at https://github.com/matszpk/amdcovc.\n"<< std::endl;
+            "Program available at https://github.com/matszpk/amdcovc.\n" << std::endl;
             return 0;
         }
         else
