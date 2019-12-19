@@ -58,7 +58,7 @@ extern "C" {
 #include <adl_sdk.h>
 #endif
 
-#define AMDCOVC_VERSION "0.4.1"
+#define AMDCOVC_VERSION "0.4.1.1"
 
 enum TermColor {
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
@@ -989,27 +989,6 @@ catch(const std::exception& ex)
     return false;
 }
 
-static bool getFileContentValue(const char* filename, unsigned long long& value)
-try
-{
-    value = 0;
-    std::ifstream ifs(filename, std::ios::binary);
-    ifs.exceptions(std::ios::failbit);
-    std::string line;
-    std::getline(ifs, line);
-    char* p = (char*)line.c_str();
-    char* p2;
-    errno = 0;
-    value = strtoul(p, &p2, 0);
-    if (errno != 0)
-        throw Error("Can't parse value from file");
-    return (p != p2);
-}
-catch(const std::exception& ex)
-{
-    return false;
-}
-
 static bool getFileContentValue(const char* filename, int& value)
 try
 {
@@ -1454,20 +1433,6 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
                     throw Error("Can't parse MEM load");
             }
         }
-    }
-    
-    if (adapterInfo.memLoad == -1)
-    {
-        // for VEGA
-        unsigned long long used, total;
-        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/mem_info_vram_used",
-                    cardIndex);
-        const bool haveUsed = getFileContentValue(dbuf, used);
-        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/mem_info_vram_total",
-                    cardIndex);
-        const bool haveTotal = getFileContentValue(dbuf, total);
-        if (haveUsed && haveTotal && total!=0)
-            adapterInfo.memLoad = int(::ceil(double(used)*100.0 / double(total)));
     }
     
     snprintf(dbuf, 120, "/sys/class/drm/card%u/pp_dpm_pcie", cardIndex);
