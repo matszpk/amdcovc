@@ -1279,6 +1279,18 @@ AMDGPUAdapterInfo AMDGPUAdapterHandle::parseAdapterInfo(int index)
     }
     rlink[linkRead] = 0;
     getFromPCI_AMDGPU(rlink, adapterInfo);
+    // if device_id and vendor_id is not set
+    if (adapterInfo.vendorId==0 && adapterInfo.deviceId==0)
+    {
+        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/vendor", cardIndex);
+        getFileContentValue(dbuf, adapterInfo.vendorId);
+        snprintf(dbuf, 120, "/sys/class/drm/card%u/device/device", cardIndex);
+        getFileContentValue(dbuf, adapterInfo.deviceId);
+        char deviceBuf[128];
+        pci_lookup_name(pciAccess, deviceBuf, 128, PCI_LOOKUP_DEVICE,
+                    adapterInfo.vendorId, adapterInfo.deviceId);
+        adapterInfo.name = deviceBuf;
+    }
     // parse pp_dpm_sclk
     snprintf(dbuf, 120, "/sys/class/drm/card%u/device/pp_dpm_sclk", cardIndex);
     unsigned int activeCoreClockIndex;
