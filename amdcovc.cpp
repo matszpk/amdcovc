@@ -30,6 +30,7 @@
 #include <cstring>
 #include <string>
 #include <memory>
+#include <climits>
 #include <cmath>
 #include <ctime>
 #include <chrono>
@@ -3210,7 +3211,7 @@ try
     
     {
         const char* loc = setlocale(LC_CTYPE, "");
-        const size_t locLen = ::strlen(loc);
+        const size_t locLen = loc != nullptr ? ::strlen(loc) : 0;
         terminalUTF8 = locLen>=6 && ::strcmp(loc+locLen-6, ".UTF-8")==0;
         loc = setlocale(LC_CTYPE, "C");
     }
